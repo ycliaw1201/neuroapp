@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>神經內科診間小幫手 - 快速入口</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+        body { 
+            font-family: 'Noto Sans TC', sans-serif; 
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            min-height: 100vh;
+        }
+        .nav-card {
+            @apply bg-white rounded-3xl p-6 shadow-md border border-white/60 transition-all duration-300 flex flex-col items-center text-center hover:shadow-xl hover:-translate-y-1 active:scale-95 cursor-pointer;
+        }
+        .icon-box {
+            @apply w-16 h-16 rounded-2xl flex items-center justify-center mb-4 transition-colors;
+        }
+    </style>
+</head>
+<body class="py-8 px-4 md:py-16 md:px-8">
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <header class="text-center mb-12 space-y-4">
+            <div class="inline-block p-2 px-4 bg-blue-600 text-white rounded-full text-sm font-bold tracking-wider mb-2">
+                NEUROAPP PORTAL
+            </div>
+            <h1 class="text-3xl md:text-5xl font-extrabold text-slate-800 tracking-tight">神經內科診間小幫手</h1>
+            <p class="text-slate-500 text-lg">點擊下方卡片即可快速進入對應表單系統</p>
+        </header>
+
+        <!-- Navigation Grid -->
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-6">
+            
+            <!-- 初診表單 -->
+            <a href="https://ycliaw1201.github.io/neuroapp/OPD_NewCase.html" class="nav-card">
+                <div class="icon-box bg-blue-100 text-blue-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                </div>
+                <h3 class="font-bold text-slate-800 text-lg">初診表單</h3>
+                <p class="text-slate-400 text-xs mt-2">基本病歷與主訴</p>
+            </a>
+
+            <!-- 頭痛初診 -->
+            <a href="https://ycliaw1201.github.io/neuroapp/OPD_HA.html" class="nav-card">
+                <div class="icon-box bg-red-100 text-red-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                </div>
+                <h3 class="font-bold text-slate-800 text-lg">頭痛初診</h3>
+                <p class="text-slate-400 text-xs mt-2">疼痛性質與頻率</p>
+            </a>
+
+            <!-- 頭暈初診 -->
+            <a href="https://ycliaw1201.github.io/neuroapp/OPD_Dizziness.html" class="nav-card">
+                <div class="icon-box bg-indigo-100 text-indigo-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                </div>
+                <h3 class="font-bold text-slate-800 text-lg">頭暈初診</h3>
+                <p class="text-slate-400 text-xs mt-2">旋轉感與誘發因子</p>
+            </a>
+
+            <!-- 失智初診 -->
+            <a href="https://ycliaw1201.github.io/neuroapp/OPD_Dementia.html" class="nav-card">
+                <div class="icon-box bg-emerald-100 text-emerald-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A10.003 10.003 0 0012 3m0 18a11.622 11.622 0 005.004-1.654m-9.757-4.198A8.978 8.978 0 019 11c0-.89.173-1.74.487-2.519M12 9a2.25 2.25 0 00-2.25 2.25c0 1.242 1.008 2.25 2.25 2.25s2.25-1.008 2.25-2.25A2.25 2.25 0 0012 9z" />
+                    </svg>
+                </div>
+                <h3 class="font-bold text-slate-800 text-lg">失智初診</h3>
+                <p class="text-slate-400 text-xs mt-2">認知功能評估</p>
+            </a>
+
+            <!-- UPDRS量表 -->
+            <a href="https://ycliaw1201.github.io/neuroapp/OPD_UPDRS.html" class="nav-card">
+                <div class="icon-box bg-amber-100 text-amber-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                </div>
+                <h3 class="font-bold text-slate-800 text-lg">UPDRS量表</h3>
+                <p class="text-slate-400 text-xs mt-2">帕金森氏症評估</p>
+            </a>
+
+            <!-- 門診加掛單 -->
+            <a href="https://ycliaw1201.github.io/neuroapp/OPD_Add.html" class="nav-card">
+                <div class="icon-box bg-slate-100 text-slate-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <h3 class="font-bold text-slate-800 text-lg">門診加掛單</h3>
+                <p class="text-slate-400 text-xs mt-2">加掛申請作業</p>
+            </a>
+
+        </div>
+
+        <!-- Footer -->
+        <footer class="mt-20 text-center text-slate-400 text-sm">
+            <p>© 2024 神經內科診間輔助系統</p>
+            <p class="mt-1">由 GitHub Pages 託管與執行</p>
+        </footer>
+    </div>
+</body>
+</html>
