@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UPDRS 巴金森症狀衡量表評估工具</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media print {
+            .no-print { display: none; }
+            body { background-color: white; }
+            .card { border: 1px solid #ccc; box-shadow: none; }
+            details { display: block !important; }
+            summary { display: none; }
+        }
+        .section-title {
+            border-left: 4px solid #2563eb;
+            padding-left: 10px;
+            margin-bottom: 10px;
+        }
+        .option-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .option-item {
+            display: flex;
+            align-items: center;
+            background: #f8fafc;
+            padding: 6px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .option-item:hover {
+            background: #f1f5f9;
+        }
+        input[type="radio"]:checked + span {
+            color: #2563eb;
+            font-weight: bold;
+        }
+        .quick-input {
+            width: 45px;
+            height: 32px;
+            text-align: center;
+            border: 2px solid #cbd5e1;
+            border-radius: 6px;
+            font-weight: bold;
+            color: #1e40af;
+        }
+        .quick-input:focus {
+            border-color: #2563eb;
+            outline: none;
+            background-color: #eff6ff;
+        }
+        summary {
+            cursor: pointer;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            background: #f1f5f9;
+            border-radius: 8px;
+            font-weight: bold;
+            color: #334155;
+        }
+        summary:hover {
+            background: #e2e8f0;
+        }
+        summary::-webkit-details-marker {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen p-4 md:p-8">
+
+    <div class="max-w-5xl mx-auto bg-white shadow-xl rounded-xl p-6 md:p-10 border border-slate-200">
+        <header class="border-bottom pb-6 mb-8 border-b-2 border-slate-100">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="text-center md:text-left">
+                    <h1 class="text-3xl font-bold text-slate-900">UPDRS 巴金森症狀衡量表</h1>
+                    <p class="text-slate-500 mt-1 italic">Unified Parkinson's Disease Rating Scale</p>
+                </div>
+                <div class="flex flex-col items-end gap-2">
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm font-bold text-slate-600">評估日期:</label>
+                        <input type="date" id="assessmentDate" class="border rounded p-1 text-sm">
+                    </div>
+                    <a href="#part3-section" class="no-print bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 shadow-sm transition">
+                        快速跳至第三部分 (動作能力) ↓
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <form id="updrsForm">
+            <!-- Part 1 -->
+            <details class="mb-6 group">
+                <summary>
+                    <span class="text-lg">第一部份：智能、行為、情緒</span>
+                    <span class="text-xs text-blue-600 group-open:hidden">點擊展開錄入內容</span>
+                    <span class="text-xs text-slate-400 hidden group-open:inline">點擊收合</span>
+                </summary>
+                <div class="space-y-4 mt-4 px-2" id="part1-container"></div>
+            </details>
+
+            <!-- Part 2 -->
+            <details class="mb-6 group">
+                <summary>
+                    <span class="text-lg">第二部份：日常生活能力</span>
+                    <span class="text-xs text-blue-600 group-open:hidden">點擊展開錄入內容</span>
+                    <span class="text-xs text-slate-400 hidden group-open:inline">點擊收合</span>
+                </summary>
+                <div class="space-y-4 mt-4 px-2" id="part2-container"></div>
+            </details>
+
+            <!-- Part 3 -->
+            <div class="mb-10 pt-4" id="part3-section">
+                <h2 class="section-title text-xl font-bold text-blue-700">第三部份：動作能力之檢查</h2>
+                <div class="bg-blue-50 p-4 rounded-lg mb-4 text-sm text-blue-800 italic border border-blue-100">
+                    此部分將用於生成下方的自動簡報與代碼摘要。使用 Tab 鍵可快速跳轉輸入框。
+                </div>
+                <div class="space-y-6" id="part3-container"></div>
+            </div>
+
+            <!-- Part 4 -->
+            <details class="mb-10 group">
+                <summary>
+                    <span class="text-lg">第四部份：治療之併發症</span>
+                    <span class="text-xs text-blue-600 group-open:hidden">點擊展開錄入內容</span>
+                    <span class="text-xs text-slate-400 hidden group-open:inline">點擊收合</span>
+                </summary>
+                <div class="space-y-4 mt-4 px-2" id="part4-container"></div>
+            </details>
+
+            <hr class="my-8 border-slate-200">
+
+            <!-- Summary Section -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="bg-slate-900 text-white p-6 rounded-xl shadow-lg">
+                    <h3 class="text-lg font-semibold mb-4 border-b border-slate-700 pb-2">總體分數摘要 Total Scores</h3>
+                    <div class="space-y-2 text-sm">
+                        <p class="flex justify-between">第一部分：<span id="score1">0</span></p>
+                        <p class="flex justify-between">第二部分：<span id="score2">0</span></p>
+                        <p class="flex justify-between">第三部分：<span id="score3">0</span></p>
+                        <p class="flex justify-between">第四部分：<span id="score4">0</span></p>
+                        <div class="pt-2 border-t border-slate-700 mt-2 text-2xl font-bold flex justify-between text-blue-400">
+                            <span>UPDRS Total:</span>
+                            <span id="totalScore">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-blue-50 border-2 border-blue-200 p-6 rounded-xl">
+                    <h3 class="text-lg font-semibold text-blue-900 mb-4 border-b border-blue-200 pb-2">H&Y Stage (H&Y 分級)</h3>
+                    <select id="hyStage" class="w-full p-3 border-2 border-blue-300 rounded-lg text-lg font-bold bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="0">Stage 0 (正常)</option>
+                        <option value="1">Stage 1 (單側影響)</option>
+                        <option value="1.5">Stage 1.5 (單側 + 中軸影響)</option>
+                        <option value="2">Stage 2 (雙側影響, 無平衡受損)</option>
+                        <option value="2.5">Stage 2.5 (輕微雙側, 拉回試驗可恢復)</option>
+                        <option value="3">Stage 3 (中度雙側, 平衡不穩, 可獨立)</option>
+                        <option value="4">Stage 4 (嚴重障礙, 仍可站立走路)</option>
+                        <option value="5">Stage 5 (需坐輪椅或臥床)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Brief Code Summary -->
+            <div class="mb-6 bg-slate-100 border border-slate-300 p-4 rounded-lg">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-md font-bold text-slate-700">病歷簡易摘要 (Part III Code)</h3>
+                    <button type="button" onclick="copyText('briefSummary')" class="no-print bg-slate-500 text-white px-3 py-1 rounded text-xs hover:bg-slate-600 transition">複製代碼</button>
+                </div>
+                <input type="text" id="briefSummary" readonly 
+                    class="w-full p-2 bg-white border border-slate-300 rounded font-mono text-xs text-blue-700 focus:outline-none"
+                    placeholder="完成評估後會生成緊湊代碼...">
+            </div>
+
+            <!-- Chinese Report Summary -->
+            <div class="bg-white border-2 border-slate-800 p-6 rounded-xl shadow-inner">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-slate-900">中文評估報告摘要 (Part III Focus)</h3>
+                    <button type="button" onclick="copyText('medicalNote')" class="no-print bg-slate-800 text-white px-4 py-2 rounded-lg text-sm hover:bg-slate-700 transition shadow-md">複製報告</button>
+                </div>
+                <textarea id="medicalNote" readonly 
+                    class="w-full h-64 p-4 bg-slate-50 border border-slate-300 rounded-lg font-mono text-sm leading-relaxed focus:outline-none"
+                    placeholder="完成評估後會生成詳細中文報告摘要..."></textarea>
+            </div>
+        </form>
+
+        <footer class="mt-12 text-center text-slate-400 text-xs no-print">
+            UPDRS Digital Assessment Tool. 版權依原量表定義。
+        </footer>
+    </div>
+
+    <script>
+        const data = {
+            part1: [
+                { id: 1, title: "智能障礙", opts: ["沒有", "輕微,常遺忘事情", "中度記憶喪失", "重度記憶力喪失", "嚴重記憶力喪失"] },
+                { id: 2, title: "思想錯亂", opts: ["沒有", "鮮明的夢", "良性幻覺", "不時陷入幻覺或妄想", "持續性的幻覺、妄想"] },
+                { id: 3, title: "沮喪", opts: ["沒有", "不時哀傷或罪惡感", "持續性沮喪(一週以上)", "持續性沮喪伴隨活動減退", "持續性沮喪伴隨自殺念頭"] },
+                { id: 4, title: "動機", opts: ["正常", "不如平常積極", "對非例行活動缺乏主動", "對日常活動缺乏主動", "退縮,完全喪失動機"] }
+            ],
+            part2: [
+                { id: 5, title: "語言能力", opts: ["正常", "輕微影響,但可了解", "中度影響", "重度影響", "大半無法瞭解"] },
+                { id: 6, title: "唾液分泌", opts: ["正常", "少許過量", "中度", "嚴重", "嚴重垂涎,需手帕"] },
+                { id: 7, title: "吞嚥", opts: ["正常", "很少哽住", "偶爾哽住", "需要進食半流質", "需插鼻胃管"] },
+                { id: 8, title: "寫字", opts: ["正常", "有點遲緩或字體小", "中度遲緩,可辨認", "嚴重遲緩,難辨認", "大半無法辨認"] },
+                { id: 9, title: "進食能力", opts: ["正常", "緩慢笨拙,不需幫助", "需筷子,有時需幫忙", "必須使用湯匙", "需要別人餵食"] },
+                { id: 10, title: "穿衣", opts: ["正常", "緩慢不需幫忙", "有時需幫忙扣釦子", "需更多幫助,有些能自理", "需要完全幫助"] },
+                { id: 11, title: "衛生清潔", opts: ["正常", "緩慢不需幫忙", "洗澡需幫忙", "盥洗刷牙需幫忙", "需導尿管/器械"] },
+                { id: 12, title: "翻身、調整被單", opts: ["正常", "緩慢不需幫忙", "需費很多力氣", "有企圖心但不能自力", "完全沒辦法"] },
+                { id: 13, title: "跌倒(與凍僵無關)", opts: ["正常", "很少跌倒", "一天少於一次", "平均一天一次", "一天超過一次"] },
+                { id: 14, title: "走路凍僵現象", opts: ["正常", "起步躊躇", "有時候會凍僵", "常常凍僵", "常因凍僵跌倒"] },
+                { id: 15, title: "走路", opts: ["正常", "輕度困難", "中度困難", "嚴重影響走路", "幫助也無法走路"] },
+                { id: 16, title: "顫抖", opts: ["沒有", "輕微,很少出現", "中度,一些困擾", "嚴重,活動被干擾", "非常嚴重"] },
+                { id: 17, title: "異常感覺", opts: ["沒有", "偶而麻木刺痛", "常常麻木刺痛", "常有疼痛感", "非常疼痛"] }
+            ],
+            part3: [
+                { id: 18, title: "語言 (Speech)", opts: ["正常", "輕微減弱", "發音含糊但可了解", "很難了解", "完全不了解"] },
+                { id: 19, title: "面部表情 (Facial Expression)", opts: ["正常", "輕微面無表情", "確定不正常減少", "中度面無表情", "表情全無"] },
+                { id: 20, title: "靜止型顫抖 (Rest Tremor)", sub: ["臉唇頰", "右上肢", "左上肢", "右下肢", "左下肢"], opts: ["沒有", "輕微很少", "持續輕微/間斷中度", "中度常常出現", "幅度大且常出現"] },
+                { id: 21, title: "動作/姿勢型顫抖 (Action/Postural Tremor)", sub: ["右上肢", "左上肢"], opts: ["沒有", "輕微動作時", "中度動作時", "動作及姿勢皆發生", "重度干擾進食"] },
+                { id: 22, title: "僵硬 (Rigidity)", sub: ["頸部", "右上肢", "左上肢", "右下肢", "左下肢"], opts: ["沒有", "極輕微", "輕微至中度", "明顯但動作可完成", "嚴重動作困難"] },
+                { id: 23, title: "手指打拍 (Finger Tapping)", sub: ["右手", "左手"], opts: ["正常(≥15/5s)", "緩慢幅度減(11-14)", "中度疲勞中斷(7-10)", "重度啟動慢(3-6)", "無法動作(0-2)"] },
+                { id: 24, title: "手掌握合 (Hand Movements)", sub: ["右手", "左手"], opts: ["正常", "緩慢幅度減", "中度疲勞中斷", "重度吃力中斷", "無法動作"] },
+                { id: 25, title: "前臂迴旋 (Pronation/Supination)", sub: ["右手", "左手"], opts: ["正常", "遲緩幅度減", "中度遲緩中斷", "重度吃力中斷", "無法動作"] },
+                { id: 26, title: "兩腳靈敏度 (Leg Agility)", sub: ["右下肢", "左下肢"], opts: ["正常", "遲緩幅度減", "中度遲緩中斷", "重度吃力中斷", "無法動作"] },
+                { id: 27, title: "從椅子上站起來 (Arising from Chair)", opts: ["正常", "遲緩/試多次", "可自己推把手站起", "易後跌/試多次站起", "需人幫助"] },
+                { id: 28, title: "姿勢 (Posture)", opts: ["正常挺直", "輕微駝背", "中度駝背/輕度側彎", "中度駝背/中度側彎", "嚴重前屈"] },
+                { id: 29, title: "步態 (Gait)", opts: ["正常", "遲緩/拖步", "走路困難/有時急步", "極端困難需幫助", "有幫助仍不能走"] },
+                { id: 30, title: "姿勢平穩度 (Postural Stability)", opts: ["正常", "後退可自行平衡", "無平衡反應", "非常不穩", "需幫助站穩"] },
+                { id: 31, title: "全身動作遲緩 (Body Bradykinesia)", opts: ["正常", "稍微變慢/幅度減", "輕度變慢/動作少", "中度變慢/動作少", "重度變慢/動作少"] }
+            ],
+            part4: [
+                { id: 32, title: "異動症期間 (Dyskinesia Duration)", opts: ["無", "1-25%", "26-50%", "51-75%", "76-100%"] },
+                { id: 33, title: "異動症殘障程度 (Disability)", opts: ["無", "輕度", "中度", "重度", "完全"] },
+                { id: 34, title: "疼痛性異動症 (Painful Dyskinesia)", opts: ["不痛", "輕度", "中度", "重度", "極嚴重"] },
+                { id: 35, title: "清晨肌張力異常 (Morning Dystonia)", opts: ["無", "有"] },
+                { id: 36, title: "可預測無效期 (Predictable Off)", opts: ["沒有", "有"] },
+                { id: 37, title: "不可預測無效期 (Unpredictable Off)", opts: ["沒有", "有"] },
+                { id: 38, title: "忽然出現無效期 (Sudden Off)", opts: ["沒有", "有"] },
+                { id: 39, title: "無效期比率 (Off Duration %)", opts: ["無", "1-25%", "26-50%", "51-75%", "76-100%"] }
+            ]
+        };
+
+        let tabCounter = 1;
+
+        function renderSection(containerId, sectionData, partNum) {
+            const container = document.getElementById(containerId);
+            sectionData.forEach(q => {
+                const qDiv = document.createElement('div');
+                qDiv.className = "p-4 border rounded-lg bg-white shadow-sm hover:shadow-md transition";
+                
+                let html = `
+                    <div class="flex justify-between items-center mb-2">
+                        <p class="font-bold text-slate-800">${q.id}. ${q.title}</p>
+                    </div>
+                `;
+                
+                if (q.sub) {
+                    q.sub.forEach((subName, subIdx) => {
+                        const name = `q${q.id}_s${subIdx}`;
+                        html += `
+                            <div class="mt-3 mb-2 flex items-center gap-3">
+                                <input type="number" min="0" max="4" class="quick-input" 
+                                    id="input_${name}" tabindex="${tabCounter++}" 
+                                    oninput="syncFromInput('${name}', this.value)">
+                                <span class="text-sm font-semibold text-slate-600">${subName}</span>
+                            </div>
+                            <div class="option-grid">
+                                ${q.opts.map((opt, val) => `
+                                    <label class="option-item">
+                                        <input type="radio" name="${name}" value="${val}" class="mr-2" tabindex="-1" onchange="syncFromRadio('${name}', ${val})">
+                                        <span class="text-xs text-slate-600">${val} - ${opt}</span>
+                                    </label>
+                                `).join('')}
+                            </div>
+                        `;
+                    });
+                } else {
+                    const name = `q${q.id}`;
+                    html += `
+                        <div class="mt-3 mb-2">
+                            <input type="number" min="0" max="4" class="quick-input" 
+                                id="input_${name}" tabindex="${tabCounter++}"
+                                oninput="syncFromInput('${name}', this.value)">
+                        </div>
+                        <div class="option-grid">
+                            ${q.opts.map((opt, val) => `
+                                <label class="option-item">
+                                    <input type="radio" name="${name}" value="${val}" class="mr-2" tabindex="-1" onchange="syncFromRadio('${name}', ${val})">
+                                    <span class="text-xs text-slate-600">${val} - ${opt}</span>
+                                </label>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+                
+                qDiv.innerHTML = html;
+                container.appendChild(qDiv);
+            });
+        }
+
+        function syncFromRadio(name, value) {
+            const input = document.getElementById(`input_${name}`);
+            if (input) input.value = value;
+            calculate();
+        }
+
+        function syncFromInput(name, value) {
+            if (value === "" || value < 0 || value > 4) return;
+            const radios = document.getElementsByName(name);
+            radios.forEach(r => {
+                if (r.value == value) r.checked = true;
+                else r.checked = false;
+            });
+            calculate();
+        }
+
+        function calculate() {
+            let p1 = 0, p2 = 0, p3 = 0, p4 = 0;
+            const formData = new FormData(document.getElementById('updrsForm'));
+            
+            for (let pair of formData.entries()) {
+                const key = pair[0];
+                const val = parseInt(pair[1]);
+                const qNum = parseInt(key.split('_')[0].substring(1));
+                
+                if (qNum <= 4) p1 += val;
+                else if (qNum <= 17) p2 += val;
+                else if (qNum <= 31) p3 += val;
+                else p4 += val;
+            }
+
+            document.getElementById('score1').innerText = p1;
+            document.getElementById('score2').innerText = p2;
+            document.getElementById('score3').innerText = p3;
+            document.getElementById('score4').innerText = p4;
+            document.getElementById('totalScore').innerText = p1 + p2 + p3 + p4;
+
+            generateSummaries(formData);
+        }
+
+        function generateSummaries(formData) {
+            const dateVal = document.getElementById('assessmentDate').value.replace(/-/g, '') || "YYYYMMDD";
+            const hy = document.getElementById('hyStage').value;
+            const score3 = document.getElementById('score3').innerText;
+
+            // --- 1. Brief Code Summary (YYYYMMDD UPDRS III: S...F...) ---
+            const getV = (n) => formData.get(n) || "0";
+            let brief = `${dateVal} UPDRS III: `;
+            brief += `S${getV('q18')}F${getV('q19')}`;
+            brief += `rT${getV('q20_s0')}${getV('q20_s1')}${getV('q20_s2')}${getV('q20_s3')}${getV('q20_s4')}`;
+            brief += `aT${getV('q21_s0')}${getV('q21_s1')}`;
+            brief += `R${getV('q22_s0')}${getV('q22_s1')}${getV('q22_s2')}${getV('q22_s3')}${getV('q22_s4')}`;
+            brief += `FT${getV('q23_s0')}${getV('q23_s1')}`;
+            brief += `HM${getV('q24_s0')}${getV('q24_s1')}`;
+            brief += `PS${getV('q25_s0')}${getV('q25_s1')}`;
+            brief += `LA${getV('q26_s0')}${getV('q26_s1')}`;
+            brief += `AC${getV('q27')}P${getV('q28')}G${getV('q29')}PS${getV('q30')}B${getV('q31')}`;
+            
+            document.getElementById('briefSummary').value = brief;
+
+            // --- 2. Chinese Report Summary ---
+            let report = `【UPDRS 第三部分動作評估報告】\n`;
+            report += `評估日期：${document.getElementById('assessmentDate').value || '未填寫'}\n`;
+            report += `H&Y Stage：${hy}\n`;
+            report += `Part III 總分：${score3}\n`;
+            report += `------------------------------------------\n`;
+
+            data.part3.forEach(q => {
+                if (q.sub) {
+                    report += `${q.id}. ${q.title}:\n`;
+                    q.sub.forEach((s, idx) => {
+                        const val = getV(`q${q.id}_s${idx}`);
+                        report += `   - ${s} (${val}) ${q.opts[val]}\n`;
+                    });
+                } else {
+                    const val = getV(`q${q.id}`);
+                    report += `${q.id}. ${q.title} (${val}) ${q.opts[val]}\n`;
+                }
+            });
+
+            document.getElementById('medicalNote').value = report;
+        }
+
+        function copyText(id) {
+            const copyText = document.getElementById(id);
+            copyText.select();
+            document.execCommand("copy");
+            const btnLabel = id === 'briefSummary' ? '代碼' : '報告';
+            alert(`${btnLabel}已複製到剪貼簿！`);
+        }
+
+        window.onload = () => {
+            // Set default date
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('assessmentDate').value = today;
+
+            renderSection('part1-container', data.part1, 1);
+            renderSection('part2-container', data.part2, 2);
+            renderSection('part3-container', data.part3, 3);
+            renderSection('part4-container', data.part4, 4);
+            
+            document.getElementById('hyStage').addEventListener('change', calculate);
+            calculate(); // Init
+        };
+    </script>
+</body>
+</html>
