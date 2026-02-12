@@ -3,339 +3,373 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>一般頭暈初診問卷系統</title>
+    <title>一般頭暈初診問卷與英文摘要系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
-        body { 
-            font-family: 'Noto Sans TC', sans-serif; 
-            background-color: #f1f5f9; 
-            -webkit-tap-highlight-color: transparent;
-        }
-        
-        /* 自定義按鈕樣式 - 用於 Radio 和 Checkbox */
-        .option-button {
-            @apply flex items-center justify-center p-4 border-2 border-slate-200 rounded-xl bg-white transition-all cursor-pointer text-slate-600 hover:border-blue-300;
-        }
-        
-        input:checked + .option-button {
-            @apply border-blue-600 bg-blue-600 text-white shadow-md ring-2 ring-blue-200 ring-offset-1;
-        }
-
-        /* 隱藏原生輸入框 */
-        .hidden-input {
-            position: absolute;
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .input-field {
-            @apply border-2 border-slate-200 rounded-xl p-4 width-full focus:border-blue-500 focus:outline-none transition-colors bg-white;
-        }
-
-        section {
-            @apply bg-white rounded-2xl p-6 shadow-sm border border-slate-100;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', 'Microsoft JhengHei', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .sticky-summary { position: sticky; top: 2rem; }
     </style>
 </head>
-<body class="py-6 px-4 md:py-12 md:px-8">
-    <div class="max-w-4xl mx-auto space-y-8">
-        <!-- Header -->
-        <header class="text-center space-y-2">
-            <h1 class="text-3xl md:text-4xl font-extrabold text-slate-800">一般頭暈初診問卷</h1>
-            <p class="text-slate-500 text-lg">請根據您的狀況點選，我們將為您整理就醫摘要</p>
-        </header>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
 
-        <form id="dizzinessForm" class="space-y-8 pb-24">
-            <!-- 1. 症狀描述 -->
-            <section>
-                <h2 class="text-xl font-bold text-slate-800 mb-6 flex items-center">
-                    <span class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center mr-3 text-sm">1</span>
-                    症狀描述 (請選出一項最符合的)
-                </h2>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <label>
-                        <input type="radio" name="symptomMain" value="頭重腳輕(Lightheadedness)" class="hidden-input">
-                        <div class="option-button h-full">頭重腳輕 (Lightheadedness)</div>
-                    </label>
+    <div class="max-w-6xl mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- Left: Input Form (8 columns) -->
+            <div class="lg:col-span-8 space-y-6">
+                <header class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <div class="flex items-center gap-3 mb-2">
+                        <i data-lucide="stethoscope" class="text-blue-600 w-8 h-8"></i>
+                        <h1 class="text-2xl font-bold text-slate-900">一般頭暈初診問卷</h1>
+                    </div>
+                    <p class="text-slate-500">請輸入病患填寫的資料，右側將即時生成英文摘要。</p>
+                </header>
 
-                    <div class="space-y-4">
-                        <label>
-                            <input type="radio" name="symptomMain" value="快跌倒的感覺(Falling tendency)" class="hidden-input">
-                            <div class="option-button">快跌倒的感覺 (Falling tendency)</div>
-                        </label>
-                        <div class="grid grid-cols-4 gap-2">
-                            <label><input type="checkbox" name="fallingDir" value="前" class="hidden-input"><div class="option-button py-2 text-sm">前</div></label>
-                            <label><input type="checkbox" name="fallingDir" value="後" class="hidden-input"><div class="option-button py-2 text-sm">後</div></label>
-                            <label><input type="checkbox" name="fallingDir" value="左" class="hidden-input"><div class="option-button py-2 text-sm">左</div></label>
-                            <label><input type="checkbox" name="fallingDir" value="右" class="hidden-input"><div class="option-button py-2 text-sm">右</div></label>
+                <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-200 space-y-8">
+                    
+                    <!-- 1. Symptom Type -->
+                    <section>
+                        <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                            <span class="bg-blue-100 text-blue-700 w-6 h-6 rounded-full flex items-center justify-center text-xs">1</span>
+                            症狀類型 (最符合的一項)
+                        </h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="symptom-type-group">
+                            <label class="flex items-center p-3 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50 transition-all has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+                                <input type="radio" name="symptomType" value="lightheadedness" class="mr-3 w-4 h-4 text-blue-600">
+                                <span class="text-sm">頭重腳輕 (Lightheadedness)</span>
+                            </label>
+                            <label class="flex items-center p-3 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50 transition-all has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+                                <input type="radio" name="symptomType" value="falling" class="mr-3 w-4 h-4 text-blue-600">
+                                <span class="text-sm">快跌倒的感覺 (Falling tendency)</span>
+                            </label>
+                            <label class="flex items-center p-3 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50 transition-all has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+                                <input type="radio" name="symptomType" value="balance" class="mr-3 w-4 h-4 text-blue-600">
+                                <span class="text-sm">走路不平衡 (Loss of balance)</span>
+                            </label>
+                            <label class="flex items-center p-3 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50 transition-all has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+                                <input type="radio" name="symptomType" value="externalVertigo" class="mr-3 w-4 h-4 text-blue-600">
+                                <span class="text-sm">環境在旋轉 (External vertigo)</span>
+                            </label>
+                            <label class="flex items-center p-3 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50 transition-all has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+                                <input type="radio" name="symptomType" value="internalVertigo" class="mr-3 w-4 h-4 text-blue-600">
+                                <span class="text-sm">自身在旋轉 (Internal vertigo)</span>
+                            </label>
+                            <label class="flex items-center p-3 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50 transition-all has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+                                <input type="radio" name="symptomType" value="environmentMoving" class="mr-3 w-4 h-4 text-blue-600">
+                                <span class="text-sm">視野晃動 (Environment moving)</span>
+                            </label>
                         </div>
-                    </div>
 
-                    <div class="space-y-4">
-                        <label>
-                            <input type="radio" name="symptomMain" value="走路時感覺不平衡(Loss of balance)" class="hidden-input">
-                            <div class="option-button">走路不平衡 (Loss of balance)</div>
-                        </label>
-                        <div class="grid grid-cols-4 gap-2">
-                            <label><input type="checkbox" name="balanceDir" value="前" class="hidden-input"><div class="option-button py-2 text-sm">前</div></label>
-                            <label><input type="checkbox" name="balanceDir" value="後" class="hidden-input"><div class="option-button py-2 text-sm">後</div></label>
-                            <label><input type="checkbox" name="balanceDir" value="左" class="hidden-input"><div class="option-button py-2 text-sm">左</div></label>
-                            <label><input type="checkbox" name="balanceDir" value="右" class="hidden-input"><div class="option-button py-2 text-sm">右</div></label>
+                        <!-- Direction Sub-questions -->
+                        <div id="direction-sub" class="hidden mt-4 p-4 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+                            <p class="text-sm font-medium mb-2">偏向哪一邊？</p>
+                            <div class="flex gap-2">
+                                <button type="button" onclick="setDirection('前')" class="dir-btn px-4 py-1.5 rounded-full border bg-white text-sm hover:border-blue-500">前</button>
+                                <button type="button" onclick="setDirection('後')" class="dir-btn px-4 py-1.5 rounded-full border bg-white text-sm hover:border-blue-500">後</button>
+                                <button type="button" onclick="setDirection('左')" class="dir-btn px-4 py-1.5 rounded-full border bg-white text-sm hover:border-blue-500">左</button>
+                                <button type="button" onclick="setDirection('右')" class="dir-btn px-4 py-1.5 rounded-full border bg-white text-sm hover:border-blue-500">右</button>
+                            </div>
                         </div>
-                    </div>
+                    </section>
 
-                    <label>
-                        <input type="radio" name="symptomMain" value="周邊東西在旋轉(External vertigo)" class="hidden-input">
-                        <div class="option-button h-full text-center">感覺周邊的東西在移動/旋轉</div>
-                    </label>
-
-                    <label>
-                        <input type="radio" name="symptomMain" value="自身在移動旋轉(Internal vertigo)" class="hidden-input">
-                        <div class="option-button h-full text-center">感覺自身在移動/旋轉</div>
-                    </label>
-
-                    <div class="space-y-2">
-                        <label>
-                            <input type="radio" name="symptomMain" value="走路時視野晃動(Environment moving)" class="hidden-input">
-                            <div class="option-button">走路時視野會晃動</div>
-                        </label>
-                        <input type="text" name="envMoveDesc" placeholder="請補充描述視野晃動狀況..." class="input-field w-full mt-2">
-                    </div>
-                </div>
-            </section>
-
-            <!-- 2. 時間資訊 -->
-            <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div class="space-y-4">
-                    <h2 class="text-xl font-bold text-slate-800 flex items-center">
-                        <span class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center mr-3 text-sm">2</span>
-                        發生時間
-                    </h2>
-                    <div class="space-y-4">
+                    <!-- 2. Onset -->
+                    <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label class="block text-slate-500 mb-2 font-medium">第一次發生於何時？</label>
-                            <input type="text" name="firstTime" class="input-field w-full" placeholder="例如：去年12月、上週...">
+                            <h2 class="text-lg font-semibold mb-4">2. 第一次發生的時間</h2>
+                            <input type="text" id="first-onset" placeholder="如：2023年10月" class="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                         </div>
                         <div>
-                            <label class="block text-slate-500 mb-2 font-medium">這次是第幾次發生？</label>
-                            <input type="number" name="occurrenceCount" class="input-field w-full" placeholder="請輸入數字">
+                            <h2 class="text-lg font-semibold mb-4">這次是第幾次發生？</h2>
+                            <input type="number" id="episode-count" placeholder="次數" class="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                    </section>
+
+                    <!-- 3. Frequency & Duration -->
+                    <section>
+                        <h2 class="text-lg font-semibold mb-4">3. 發生模式與持續時間</h2>
+                        <div class="flex gap-6 mb-4">
+                            <label class="flex items-center cursor-pointer">
+                                <input type="radio" name="pattern" value="episodic" checked class="mr-2"> 一陣一陣 (Episodic)
+                            </label>
+                            <label class="flex items-center cursor-pointer">
+                                <input type="radio" name="pattern" value="constant" class="mr-2"> 持續存在 (Constant)
+                            </label>
+                        </div>
+                        <div id="episodic-details" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm text-slate-600 whitespace-nowrap">每次持續：</span>
+                                <input type="text" id="duration-val" class="w-20 p-2 border rounded-lg text-sm">
+                                <select id="duration-unit" class="p-2 border rounded-lg text-sm bg-white">
+                                    <option value="seconds">秒</option>
+                                    <option value="minutes">分</option>
+                                    <option value="hours">小時</option>
+                                    <option value="days">天</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm text-slate-600 whitespace-nowrap">頻率：約</span>
+                                <input type="text" id="freq-val" class="w-20 p-2 border rounded-lg text-sm">
+                                <select id="freq-unit" class="p-2 border rounded-lg text-sm bg-white">
+                                    <option value="day">天一次</option>
+                                    <option value="week">週一次</option>
+                                    <option value="month">月一次</option>
+                                </select>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 4. Associated Symptoms -->
+                    <section>
+                        <h2 class="text-lg font-semibold mb-4">4. 伴隨症狀 (複選)</h2>
+                        <div class="flex flex-wrap gap-2" id="associated-container">
+                            <!-- Buttons populated by JS -->
+                        </div>
+                    </section>
+
+                    <!-- 5. Triggers -->
+                    <section>
+                        <h2 class="text-lg font-semibold mb-4">5. 誘發因子 (複選)</h2>
+                        <div class="flex flex-wrap gap-2" id="trigger-container">
+                            <!-- Buttons populated by JS -->
+                        </div>
+                    </section>
+
+                    <!-- 6. Better/Worse -->
+                    <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h2 class="text-lg font-semibold mb-4">6. 什麼狀況下較好？</h2>
+                            <input type="text" id="relieving" placeholder="如：平躺、閉眼" class="w-full p-3 border border-slate-200 rounded-xl text-sm">
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-semibold mb-4">什麼狀況會惡化？</h2>
+                            <input type="text" id="aggravating" placeholder="如：轉頭、光線" class="w-full p-3 border border-slate-200 rounded-xl text-sm">
+                        </div>
+                    </section>
+
+                </div>
+            </div>
+
+            <!-- Right: Summary (4 columns) -->
+            <div class="lg:col-span-4">
+                <div class="sticky-summary space-y-4">
+                    <div class="bg-slate-900 rounded-2xl shadow-xl p-6 text-white">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-lg font-bold flex items-center gap-2">
+                                <i data-lucide="file-text" class="w-5 h-5"></i>
+                                English Summary
+                            </h2>
+                            <button onclick="copySummary()" class="flex items-center gap-2 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs transition-colors">
+                                <i data-lucide="copy" id="copy-icon" class="w-4 h-4"></i>
+                                <span id="copy-text">Copy</span>
+                            </button>
+                        </div>
+
+                        <div id="summary-output" class="bg-slate-800/50 border border-slate-700 rounded-xl p-4 text-sm leading-relaxed min-h-[300px] whitespace-pre-wrap font-mono text-slate-200">
+                            Patient presents with dizziness. Initial assessment...
+                        </div>
+
+                        <div class="mt-6 pt-6 border-t border-slate-700 space-y-4">
+                            <div class="flex items-center justify-between text-[10px] text-slate-500 uppercase tracking-widest">
+                                <span>Medical Documenter v1.0</span>
+                                <span>Status: Syncing</span>
+                            </div>
+                            <button onclick="window.location.reload()" class="w-full py-3 bg-red-900/20 hover:bg-red-900/40 text-red-400 border border-red-900/50 rounded-xl text-sm transition-all flex items-center justify-center gap-2">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i> 重置所有欄位
+                            </button>
                         </div>
                     </div>
-                </div>
 
-                <div class="space-y-4">
-                    <h2 class="text-xl font-bold text-slate-800 flex items-center">
-                        <span class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center mr-3 text-sm">3</span>
-                        發作型態
-                    </h2>
-                    <div class="grid grid-cols-2 gap-4">
-                        <label>
-                            <input type="radio" name="pattern" value="持續存在" class="hidden-input">
-                            <div class="option-button">持續存在</div>
-                        </label>
-                        <label>
-                            <input type="radio" name="pattern" value="一陣一陣" class="hidden-input">
-                            <div class="option-button">一陣一陣</div>
-                        </label>
+                    <div id="copy-message" class="hidden animate-bounce bg-emerald-500 text-white p-3 rounded-xl text-center text-sm font-medium">
+                        ✓ 已成功複製到剪貼簿！
                     </div>
-                    <div>
-                        <label class="block text-slate-500 mb-2 font-medium">兩次症狀間有其他不適嗎？</label>
-                        <input type="text" name="betweenSymptom" class="input-field w-full" placeholder="無則免填">
-                    </div>
-                </div>
-            </section>
-
-            <!-- 3. 持續時間與頻率 -->
-            <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                    <h2 class="text-lg font-bold text-slate-700 mb-4">單次發作持續時間</h2>
-                    <input type="text" name="duration" class="input-field w-full" placeholder="例如：數秒鐘、幾小時...">
-                </div>
-                <div>
-                    <h2 class="text-lg font-bold text-slate-700 mb-4">發作頻率</h2>
-                    <input type="text" name="frequency" class="input-field w-full" placeholder="例如：每天一次、每週兩次...">
-                </div>
-            </section>
-
-            <!-- 4. 伴隨症狀 -->
-            <section>
-                <h2 class="text-xl font-bold text-slate-800 mb-6 flex items-center">
-                    <span class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center mr-3 text-sm">4</span>
-                    伴隨症狀 (複選)
-                </h2>
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                    <label><input type="checkbox" name="assoc" value="複視" class="hidden-input"><div class="option-button py-3 px-2 text-sm">複視</div></label>
-                    <label><input type="checkbox" name="assoc" value="失去意識" class="hidden-input"><div class="option-button py-3 px-2 text-sm">失去意識</div></label>
-                    <label><input type="checkbox" name="assoc" value="視力模糊" class="hidden-input"><div class="option-button py-3 px-2 text-sm">視力模糊</div></label>
-                    <label><input type="checkbox" name="assoc" value="頭痛" class="hidden-input"><div class="option-button py-3 px-2 text-sm">頭痛</div></label>
-                    <label><input type="checkbox" name="assoc" value="噁心嘔吐" class="hidden-input"><div class="option-button py-3 px-2 text-sm">噁心嘔吐</div></label>
-                    <label><input type="checkbox" name="assoc" value="胸悶胸痛" class="hidden-input"><div class="option-button py-3 px-2 text-sm">胸悶胸痛</div></label>
-                    <label><input type="checkbox" name="assoc" value="手腳麻" class="hidden-input"><div class="option-button py-3 px-2 text-sm">手腳麻</div></label>
-                    <label><input type="checkbox" name="assoc" value="手腳無力" class="hidden-input"><div class="option-button py-3 px-2 text-sm">手腳無力</div></label>
-                    <label><input type="checkbox" name="assoc" value="聽力下降" class="hidden-input"><div class="option-button py-3 px-2 text-sm">聽力下降</div></label>
-                    <label><input type="checkbox" name="assoc" value="耳鳴" class="hidden-input"><div class="option-button py-3 px-2 text-sm">耳鳴</div></label>
-                    <label><input type="checkbox" name="assoc" value="喘不過氣" class="hidden-input"><div class="option-button py-3 px-2 text-sm">喘不過氣</div></label>
-                    <label><input type="checkbox" name="assoc" value="心悸" class="hidden-input"><div class="option-button py-3 px-2 text-sm">心悸</div></label>
-                </div>
-            </section>
-
-            <!-- 5. 誘發因子 -->
-            <section>
-                <h2 class="text-xl font-bold text-slate-800 mb-6 flex items-center">
-                    <span class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center mr-3 text-sm">5</span>
-                    誘發因子與生活背景
-                </h2>
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-                    <label><input type="checkbox" name="trigger" value="姿勢變化" class="hidden-input"><div class="option-button py-3 text-sm">姿勢變化</div></label>
-                    <label><input type="checkbox" name="trigger" value="咳嗽出力" class="hidden-input"><div class="option-button py-3 text-sm">咳嗽出力</div></label>
-                    <label><input type="checkbox" name="trigger" value="感冒發燒" class="hidden-input"><div class="option-button py-3 text-sm">感冒發燒</div></label>
-                    <label><input type="checkbox" name="trigger" value="飢餓" class="hidden-input"><div class="option-button py-3 text-sm">飢餓</div></label>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-slate-700 font-bold mb-3">什麼狀況下比較好？</label>
-                        <textarea name="relief" class="input-field w-full h-24" placeholder="例如：躺著、閉眼..."></textarea>
-                    </div>
-                    <div>
-                        <label class="block text-slate-700 font-bold mb-3">什麼狀況下會惡化？</label>
-                        <textarea name="worsen" class="input-field w-full h-24" placeholder="例如：轉頭、進食後..."></textarea>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 7. 病史 -->
-            <section>
-                <h2 class="text-xl font-bold text-slate-800 mb-6 flex items-center">
-                    <span class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center mr-3 text-sm">6</span>
-                    既往病史
-                </h2>
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    <label><input type="checkbox" name="history" value="偏頭痛" class="hidden-input"><div class="option-button py-3">偏頭痛</div></label>
-                    <label><input type="checkbox" name="history" value="中風" class="hidden-input"><div class="option-button py-3">中風</div></label>
-                    <label><input type="checkbox" name="history" value="糖尿病" class="hidden-input"><div class="option-button py-3">糖尿病</div></label>
-                    <label><input type="checkbox" name="history" value="頭部撞擊" class="hidden-input"><div class="option-button py-3">頭部撞擊</div></label>
-                    <label><input type="checkbox" name="history" value="耳鼻喉疾病" class="hidden-input"><div class="option-button py-3">耳鼻喉疾病</div></label>
-                    <label><input type="checkbox" name="history" value="貧血" class="hidden-input"><div class="option-button py-3">貧血/B12缺乏</div></label>
-                </div>
-            </section>
-
-            <!-- 固定底部按鈕列 (適合平板/手機) -->
-            <div class="fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-md border-t border-slate-200 z-40">
-                <div class="max-w-4xl mx-auto">
-                    <button type="button" onclick="generateSummary()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-4 rounded-2xl shadow-xl transition transform active:scale-95 text-xl">
-                        生成問卷摘要報告
-                    </button>
                 </div>
             </div>
-        </form>
 
-        <!-- Result Modal -->
-        <div id="summaryModal" class="hidden fixed inset-0 bg-slate-900/60 flex items-center justify-center p-4 z-50">
-            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[85vh]">
-                <div class="p-5 bg-slate-50 border-b flex justify-between items-center">
-                    <h3 class="font-bold text-slate-800 text-xl">問卷摘要 (醫師評估參考)</h3>
-                    <button onclick="closeModal()" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-200 text-slate-500 text-2xl">✕</button>
-                </div>
-                <div class="p-8 overflow-y-auto">
-                    <pre id="summaryText" class="whitespace-pre-wrap text-slate-700 leading-relaxed font-sans text-lg"></pre>
-                </div>
-                <div class="p-5 border-t bg-white flex flex-col sm:flex-row gap-3">
-                    <button onclick="copyToClipboard()" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl transition shadow-md active:scale-95">
-                        複製摘要內容
-                    </button>
-                    <button onclick="closeModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-4 rounded-xl transition active:scale-95">
-                        關閉視窗
-                    </button>
-                </div>
-            </div>
         </div>
     </div>
 
     <script>
-        function generateSummary() {
-            const form = document.getElementById('dizzinessForm');
-            const formData = new FormData(form);
-            
-            let summary = `【一般頭暈初診問卷摘要報告】\n`;
-            summary += `==============================\n\n`;
+        // State Management
+        let state = {
+            symptomType: '',
+            direction: '',
+            firstOnset: '',
+            episodeCount: '',
+            pattern: 'episodic',
+            durationVal: '',
+            durationUnit: 'minutes',
+            freqVal: '',
+            freqUnit: 'month',
+            associated: [],
+            triggers: [],
+            relieving: '',
+            aggravating: ''
+        };
 
-            // 1. 症狀
-            const symptomMain = formData.get('symptomMain') || '未填寫';
-            summary += `[主要症狀]\n ● ${symptomMain}\n`;
-            
-            if (symptomMain.includes('Falling')) {
-                const dirs = formData.getAll('fallingDir').join(', ') || '無註明方向';
-                summary += `   - 傾向傾斜方向：${dirs}\n`;
-            }
-            if (symptomMain.includes('balance')) {
-                const dirs = formData.getAll('balanceDir').join(', ') || '無註明方向';
-                summary += `   - 不平衡傾斜方向：${dirs}\n`;
-            }
-            const envDesc = formData.get('envMoveDesc');
-            if (envDesc) summary += `   - 視野晃動描述：${envDesc}\n`;
+        const symptomMap = {
+            lightheadedness: 'Lightheadedness',
+            falling: 'Falling tendency',
+            balance: 'Loss of balance',
+            externalVertigo: 'External vertigo',
+            internalVertigo: 'Internal vertigo',
+            environmentMoving: 'Oscillopsia (Environment moving)'
+        };
 
-            summary += `\n[發作病程]\n`;
-            summary += ` ● 首次發生：${formData.get('firstTime') || '未填寫'}\n`;
-            summary += ` ● 發作次數：第 ${formData.get('occurrenceCount') || '?'} 次\n`;
-            summary += ` ● 發作型態：${formData.get('pattern') || '未填寫'}\n`;
-            summary += ` ● 單次持續時間：${formData.get('duration') || '未填寫'}\n`;
-            summary += ` ● 發作頻率：${formData.get('frequency') || '未填寫'}\n`;
-            
-            const between = formData.get('betweenSymptom');
-            if (between) summary += ` ● 間歇期症狀：${between}\n`;
+        const associatedOptions = [
+            { zh: '複視', en: 'Diplopia' }, { zh: '失去意識', en: 'Loss of consciousness' },
+            { zh: '視力模糊', en: 'Blurred vision' }, { zh: '頭痛', en: 'Headache' },
+            { zh: '噁心', en: 'Nausea' }, { zh: '嘔吐', en: 'Vomiting' },
+            { zh: '胸悶', en: 'Chest tightness' }, { zh: '胸痛', en: 'Chest pain' },
+            { zh: '心悸', en: 'Palpitations' }, { zh: '手腳麻', en: 'Numbness' },
+            { zh: '手腳無力', en: 'Weakness' }, { zh: '聽力下降', en: 'Hearing loss' },
+            { zh: '耳鳴', en: 'Tinnitus' }
+        ];
 
-            // 伴隨與誘發
-            summary += `\n[症狀關聯]\n`;
-            const assocs = formData.getAll('assoc');
-            summary += ` ● 伴隨症狀：${assocs.length > 0 ? assocs.join(', ') : '無特別伴隨症狀'}\n`;
+        const triggerOptions = [
+            { zh: '姿勢變化(躺下)', en: 'Positional (lying down)' },
+            { zh: '姿勢變化(起身)', en: 'Positional (standing up)' },
+            { zh: '姿勢變化(轉頭)', en: 'Positional (head turning)' },
+            { zh: '用力', en: 'Valsalva maneuver' },
+            { zh: '搭飛機', en: 'Air travel' },
+            { zh: '潛水', en: 'Diving' },
+            { zh: '感冒發燒', en: 'Common cold/fever' }
+        ];
 
-            const triggers = formData.getAll('trigger');
-            summary += ` ● 誘發因子：${triggers.length > 0 ? triggers.join(', ') : '無明顯誘發因子'}\n`;
-            
-            summary += `\n[生活變因]\n`;
-            summary += ` ● 改善狀況：${formData.get('relief') || '無特別描述'}\n`;
-            summary += ` ● 惡化狀況：${formData.get('worsen') || '無特別描述'}\n`;
-
-            // 病史
-            const histories = formData.getAll('history');
-            summary += `\n[既往病史]\n ● ${histories.length > 0 ? histories.join(', ') : '無相關病史紀錄'}\n`;
-            
-            summary += `\n==============================\n`;
-            summary += `報告生成日期：${new Date().toLocaleString('zh-TW')}`;
-
-            document.getElementById('summaryText').innerText = summary;
-            document.getElementById('summaryModal').classList.remove('hidden');
+        // Initialize UI
+        function init() {
+            lucide.createIcons();
+            renderCheckboxes('associated-container', associatedOptions, 'associated');
+            renderCheckboxes('trigger-container', triggerOptions, 'triggers');
+            setupEventListeners();
+            updateSummary();
         }
 
-        function closeModal() {
-            document.getElementById('summaryModal').classList.add('hidden');
+        function renderCheckboxes(containerId, options, stateKey) {
+            const container = document.getElementById(containerId);
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white transition-all hover:bg-slate-50';
+                btn.innerText = opt.zh;
+                btn.onclick = () => {
+                    const index = state[stateKey].indexOf(opt.en);
+                    if (index > -1) {
+                        state[stateKey].splice(index, 1);
+                        btn.classList.remove('bg-blue-600', 'text-white', 'border-blue-600');
+                    } else {
+                        state[stateKey].push(opt.en);
+                        btn.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
+                    }
+                    updateSummary();
+                };
+                container.appendChild(btn);
+            });
         }
 
-        function copyToClipboard() {
-            const text = document.getElementById('summaryText').innerText;
-            const tempTextArea = document.createElement("textarea");
-            tempTextArea.value = text;
-            document.body.appendChild(tempTextArea);
-            tempTextArea.select();
-            try {
-                document.execCommand('copy');
-                alert("摘要已成功複製！您可以將其貼到筆記本或 LINE 給醫師參考。");
-            } catch (err) {
-                alert("抱歉，您的設備不支援自動複製，請手動全選複製。");
-            }
-            document.body.removeChild(tempTextArea);
+        function setupEventListeners() {
+            // Symptom Type
+            document.querySelectorAll('input[name="symptomType"]').forEach(input => {
+                input.onchange = (e) => {
+                    state.symptomType = e.target.value;
+                    document.getElementById('direction-sub').classList.toggle('hidden', !['falling', 'balance'].includes(state.symptomType));
+                    updateSummary();
+                };
+            });
+
+            // Pattern
+            document.querySelectorAll('input[name="pattern"]').forEach(input => {
+                input.onchange = (e) => {
+                    state.pattern = e.target.value;
+                    document.getElementById('episodic-details').classList.toggle('hidden', state.pattern === 'constant');
+                    updateSummary();
+                };
+            });
+
+            // Text Inputs
+            ['first-onset', 'episode-count', 'duration-val', 'freq-val', 'relieving', 'aggravating'].forEach(id => {
+                const key = id.replace(/-([a-z])/g, (g) => g[1].toUpperCase()).replace('Val', 'Val');
+                const field = document.getElementById(id);
+                field.oninput = (e) => {
+                    // map id to state key manually to avoid mismatch
+                    if(id === 'first-onset') state.firstOnset = e.target.value;
+                    if(id === 'episode-count') state.episodeCount = e.target.value;
+                    if(id === 'duration-val') state.durationVal = e.target.value;
+                    if(id === 'freq-val') state.freqVal = e.target.value;
+                    if(id === 'relieving') state.relieving = e.target.value;
+                    if(id === 'aggravating') state.aggravating = e.target.value;
+                    updateSummary();
+                };
+            });
+
+            // Selects
+            document.getElementById('duration-unit').onchange = (e) => { state.durationUnit = e.target.value; updateSummary(); };
+            document.getElementById('freq-unit').onchange = (e) => { state.freqUnit = e.target.value; updateSummary(); };
         }
 
-        // 監聽點擊外部關閉彈窗
-        window.onclick = function(event) {
-            const modal = document.getElementById('summaryModal');
-            if (event.target == modal) {
-                closeModal();
-            }
+        function setDirection(d) {
+            state.direction = d;
+            document.querySelectorAll('.dir-btn').forEach(btn => {
+                btn.classList.toggle('bg-blue-600', btn.innerText === d);
+                btn.classList.toggle('text-white', btn.innerText === d);
+            });
+            updateSummary();
         }
+
+        function updateSummary() {
+            let summary = "Patient presents with dizziness. ";
+
+            if (state.symptomType) {
+                summary += `Primary symptom is described as ${symptomMap[state.symptomType]}. `;
+                if (['falling', 'balance'].includes(state.symptomType) && state.direction) {
+                    const dMap = {'前':'forward', '後':'backward', '左':'to the left', '右':'to the right'};
+                    summary += `(Tends to lean ${dMap[state.direction] || state.direction}). `;
+                }
+            }
+
+            summary += `Onset: ${state.firstOnset || '[Not specified]'}. Current episode count: ${state.episodeCount || '1'}. `;
+            summary += `The condition is ${state.pattern}. `;
+
+            if (state.pattern === 'episodic' && state.durationVal) {
+                summary += `Each episode lasts approx. ${state.durationVal} ${state.durationUnit}. `;
+                if (state.freqVal) {
+                    summary += `Frequency: ~${state.freqVal} per ${state.freqUnit}. `;
+                }
+            }
+
+            if (state.associated.length > 0) {
+                summary += `Associated symptoms include: ${state.associated.join(', ')}. `;
+            }
+
+            if (state.triggers.length > 0) {
+                summary += `Triggered by: ${state.triggers.join(', ')}. `;
+            }
+
+            if (state.relieving) summary += `Relieved by: ${state.relieving}. `;
+            if (state.aggravating) summary += `Aggravated by: ${state.aggravating}. `;
+
+            document.getElementById('summary-output').innerText = summary;
+        }
+
+        function copySummary() {
+            const text = document.getElementById('summary-output').innerText;
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+
+            // UI Feedback
+            const msg = document.getElementById('copy-message');
+            msg.classList.remove('hidden');
+            setTimeout(() => msg.classList.add('hidden'), 2000);
+        }
+
+        window.onload = init;
     </script>
 </body>
 </html>
