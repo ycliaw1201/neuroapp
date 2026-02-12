@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>一般頭暈初診</title>
+    <title>一般頭暈初診問卷與英文摘要系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -102,19 +102,21 @@
                     <!-- 3. Frequency & Duration -->
                     <section>
                         <h2 class="text-lg font-semibold mb-4">3. 發生模式與持續時間</h2>
-                        <div class="flex gap-6 mb-4">
-                            <label class="flex items-center cursor-pointer">
-                                <input type="radio" name="pattern" value="episodic" checked class="mr-2"> 一陣一陣 (Episodic)
+                        <div class="flex flex-col sm:flex-row gap-3 mb-5">
+                            <label class="flex-1 text-center p-3 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50 transition-all has-[:checked]:border-blue-500 has-[:checked]:bg-blue-100 has-[:checked]:text-blue-800 has-[:checked]:font-medium">
+                                <input type="radio" name="pattern" value="episodic" checked class="hidden">
+                                一陣一陣 (Episodic)
                             </label>
-                            <label class="flex items-center cursor-pointer">
-                                <input type="radio" name="pattern" value="constant" class="mr-2"> 持續存在 (Constant)
+                            <label class="flex-1 text-center p-3 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50 transition-all has-[:checked]:border-blue-500 has-[:checked]:bg-blue-100 has-[:checked]:text-blue-800 has-[:checked]:font-medium">
+                                <input type="radio" name="pattern" value="constant" class="hidden">
+                                持續存在 (Constant)
                             </label>
                         </div>
-                        <div id="episodic-details" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div id="episodic-details" class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-slate-50 rounded-xl border border-dashed border-slate-300">
                             <div class="flex items-center gap-2">
-                                <span class="text-sm text-slate-600 whitespace-nowrap">每次持續：</span>
-                                <input type="text" id="duration-val" class="w-20 p-2 border rounded-lg text-sm">
-                                <select id="duration-unit" class="p-2 border rounded-lg text-sm bg-white">
+                                <span class="text-sm text-slate-700 whitespace-nowrap font-medium">每次持續：</span>
+                                <input type="text" id="duration-val" class="w-20 p-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <select id="duration-unit" class="p-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
                                     <option value="seconds">秒</option>
                                     <option value="minutes">分</option>
                                     <option value="hours">小時</option>
@@ -122,9 +124,9 @@
                                 </select>
                             </div>
                             <div class="flex items-center gap-2">
-                                <span class="text-sm text-slate-600 whitespace-nowrap">頻率：約</span>
-                                <input type="text" id="freq-val" class="w-20 p-2 border rounded-lg text-sm">
-                                <select id="freq-unit" class="p-2 border rounded-lg text-sm bg-white">
+                                <span class="text-sm text-slate-700 whitespace-nowrap font-medium">頻率：約</span>
+                                <input type="text" id="freq-val" class="w-20 p-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <select id="freq-unit" class="p-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
                                     <option value="day">天一次</option>
                                     <option value="week">週一次</option>
                                     <option value="month">月一次</option>
@@ -159,11 +161,11 @@
                     <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <h2 class="text-lg font-semibold mb-4">6. 什麼狀況下較好？</h2>
-                            <input type="text" id="relieving" placeholder="如：平躺、閉眼" class="w-full p-3 border border-slate-200 rounded-xl text-sm">
+                            <input type="text" id="relieving" placeholder="如：平躺、閉眼" class="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                         </div>
                         <div>
                             <h2 class="text-lg font-semibold mb-4">什麼狀況會惡化？</h2>
-                            <input type="text" id="aggravating" placeholder="如：轉頭、光線" class="w-full p-3 border border-slate-200 rounded-xl text-sm">
+                            <input type="text" id="aggravating" placeholder="如：轉頭、光線" class="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                         </div>
                     </section>
 
@@ -273,16 +275,16 @@
             const container = document.getElementById(containerId);
             options.forEach(opt => {
                 const btn = document.createElement('button');
-                btn.className = 'px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white transition-all hover:bg-slate-50';
+                btn.className = 'px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white transition-all hover:bg-slate-50 text-slate-700';
                 btn.innerText = opt.zh;
                 btn.onclick = () => {
                     const index = state[stateKey].indexOf(opt.en);
                     if (index > -1) {
                         state[stateKey].splice(index, 1);
-                        btn.classList.remove('bg-blue-600', 'text-white', 'border-blue-600');
+                        btn.classList.remove('bg-blue-100', 'text-blue-800', 'border-blue-400', 'font-medium');
                     } else {
                         state[stateKey].push(opt.en);
-                        btn.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
+                        btn.classList.add('bg-blue-100', 'text-blue-800', 'border-blue-400', 'font-medium');
                     }
                     updateSummary();
                 };
@@ -336,8 +338,13 @@
         function setDirection(d) {
             state.direction = d;
             document.querySelectorAll('.dir-btn').forEach(btn => {
-                btn.classList.toggle('bg-blue-600', btn.innerText === d);
-                btn.classList.toggle('text-white', btn.innerText === d);
+                btn.classList.toggle('bg-blue-100', btn.innerText === d);
+                btn.classList.toggle('text-blue-800', btn.innerText === d);
+                btn.classList.toggle('border-blue-400', btn.innerText === d);
+                btn.classList.toggle('font-medium', btn.innerText === d);
+                
+                // Remove older classes in case they were stuck
+                btn.classList.remove('bg-blue-600', 'text-white'); 
             });
             updateSummary();
         }
