@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>門診加掛單產生器 - 廖誼佳醫師</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- html2canvas & jsPDF for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&family=Noto+Serif+TC:wght@400;700;900&display=swap');
+        
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f3f4f6;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* 防止整個網頁出現卷軸 */
+            height: 100vh;
+        }
+
+        /* A5 原始尺寸 (210mm x 148mm) */
+        .a5-landscape {
+            font-family: 'Noto Serif TC', serif;
+            width: 210mm;
+            height: 148mm;
+            background: white;
+            position: relative;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            flex-shrink: 0;
+            color: #1a1a1a;
+            visibility: hidden; 
+        }
+
+        .preview-area {
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+    </style>
+</head>
+<body class="flex flex-col lg:flex-row h-screen w-screen">
+
+    <!-- 左側：輸入表單 (可獨立捲動) -->
+    <div class="w-full lg:w-[400px] h-full bg-white shadow-2xl z-20 flex flex-col border-r border-gray-200">
+        <!-- 標題區 -->
+        <div class="p-6 border-b border-gray-100 bg-white sticky top-0 z-10">
+            <h1 class="text-2xl font-bold text-blue-800 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                加掛單設定
+            </h1>
+        </div>
+
+        <!-- 表單滾動區 -->
+        <div class="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+            <form id="addonForm" class="space-y-6">
+                
+                <!-- 基本資料區塊：科別、醫師、日期 -->
+                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 grid grid-cols-1 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-wider">科別</label>
+                        <input type="text" id="deptInput" value="神經內科" class="w-full border border-gray-300 rounded-lg p-2.5 font-bold text-gray-800 focus:ring-2 focus:ring-blue-500 outline-none transition" oninput="updatePreview()">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-wider">醫師姓名</label>
+                        <div class="relative">
+                            <input type="text" id="drInput" value="廖誼佳" placeholder="輸入姓名" class="w-full border border-gray-300 rounded-lg p-2.5 font-bold text-gray-800 focus:ring-2 focus:ring-blue-500 outline-none transition" oninput="updatePreview()">
+                            <div class="absolute right-3 top-3 text-gray-400 text-sm font-medium pointer-events-none">醫師</div>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-blue-700 mb-1 uppercase tracking-wider">看診日期 (配合診次)</label>
+                        <input type="date" id="dateInput" class="w-full border-2 border-blue-200 rounded-lg p-2.5 font-bold text-blue-900 focus:ring-2 focus:ring-blue-500 outline-none transition bg-white" onchange="updatePreview()">
+                        <p class="text-xs text-gray-500 mt-1">請選擇該診次的實際日期</p>
+                    </div>
+                </div>
+
+                <!-- 診次選擇 -->
+                <div>
+                    <label class="block text-base font-bold text-gray-800 mb-3 pl-2 border-l-4 border-blue-600">時間診次</label>
+                    <div class="space-y-2">
+                        <label class="group flex items-center space-x-3 cursor-pointer p-3 rounded-lg border border-transparent hover:bg-gray-50 hover:border-gray-200 transition">
+                            <input type="radio" name="clinicSlot" value="週一 下午 229診" class="w-5 h-5 text-blue-600 focus:ring-blue-500" checked onchange="updatePreview()">
+                            <span class="text-gray-700 font-medium group-hover:text-blue-700">週一 下午 229診</span>
+                        </label>
+                        <label class="group flex items-center space-x-3 cursor-pointer p-3 rounded-lg border border-transparent hover:bg-gray-50 hover:border-gray-200 transition">
+                            <input type="radio" name="clinicSlot" value="週三 上午 229診" class="w-5 h-5 text-blue-600 focus:ring-blue-500" onchange="updatePreview()">
+                            <span class="text-gray-700 font-medium group-hover:text-blue-700">週三 上午 229診</span>
+                        </label>
+                        <label class="group flex items-center space-x-3 cursor-pointer p-3 rounded-lg border border-transparent hover:bg-gray-50 hover:border-gray-200 transition">
+                            <input type="radio" name="clinicSlot" value="週五 上午 C115診" class="w-5 h-5 text-blue-600 focus:ring-blue-500" onchange="updatePreview()">
+                            <span class="text-gray-700 font-medium group-hover:text-blue-700">週五 上午 C115診</span>
+                        </label>
+                        <label class="group flex items-center space-x-3 cursor-pointer p-3 rounded-lg border border-transparent hover:bg-gray-50 hover:border-gray-200 transition">
+                            <input type="radio" name="clinicSlot" value="週二 早上 肌電圖室" class="w-5 h-5 text-blue-600 focus:ring-blue-500" onchange="updatePreview()">
+                            <span class="text-gray-700 font-medium group-hover:text-blue-700">週二 早上 肌電圖室</span>
+                        </label>
+                        <div class="flex items-center space-x-3 p-3 pt-1">
+                            <input type="radio" name="clinicSlot" id="slotOtherRadio" value="other" class="w-5 h-5 text-blue-600 focus:ring-blue-500" onchange="updatePreview()">
+                            <span class="whitespace-nowrap text-gray-700 font-medium">其他：</span>
+                            <input type="text" id="slotOtherInput" class="flex-1 border-b-2 border-gray-300 focus:border-blue-500 outline-none px-1 py-1 text-gray-800 bg-transparent" placeholder="自訂診次" oninput="document.getElementById('slotOtherRadio').checked = true; updatePreview()">
+                        </div>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+
+        <!-- 底部按鈕區 -->
+        <div class="p-6 border-t border-gray-200 bg-gray-50">
+            <button type="button" onclick="generatePDF()" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold text-lg py-4 px-6 rounded-xl shadow-lg transform transition active:scale-[0.98] flex items-center justify-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                下載 PDF (A5)
+            </button>
+        </div>
+    </div>
+
+    <!-- 右側：自動縮放預覽區 -->
+    <div class="flex-1 h-full preview-area relative overflow-hidden flex items-center justify-center p-8">
+        
+        <!-- 浮動提示 -->
+        <div class="absolute top-6 bg-white/80 backdrop-blur px-4 py-2 rounded-full text-sm text-gray-500 shadow-sm border border-gray-200 z-10">
+            即時預覽 (自動縮放)
+        </div>
+
+        <!-- 縮放容器 -->
+        <div id="preview-wrapper" style="transform-origin: center center; transition: transform 0.2s;">
+            <!-- A5 內容 -->
+            <div id="slip-content" class="a5-landscape p-8 bg-white flex flex-col relative justify-between border-8 border-white">
+                
+                <!-- 內縮裝飾框 -->
+                <div class="absolute inset-4 border-2 border-gray-800 pointer-events-none opacity-50"></div>
+                
+                <!-- 頂部區塊：抬頭式設計 -->
+                <div class="flex justify-between items-end border-b-2 border-gray-900 pb-4 mx-4 mt-2 relative z-10">
+                    <h1 class="text-4xl font-black tracking-widest text-gray-900 font-serif">門診加掛單</h1>
+                    <div class="text-right flex flex-col items-end">
+                        <div class="text-xl font-bold text-gray-500 tracking-wider mb-1" id="display-dept">神經內科</div>
+                        <div class="text-3xl font-black text-gray-900 leading-none" id="display-dr">廖誼佳 醫師</div>
+                    </div>
+                </div>
+
+                <!-- 主要內容區 -->
+                <div class="flex-grow flex flex-col justify-center px-8 relative z-10 space-y-6">
+                    
+                    <!-- 說明文句 -->
+                    <div class="text-2xl font-bold text-gray-800 leading-relaxed pl-2 text-center">
+                        煩請掛號組協助加掛：
+                    </div>
+
+                    <!-- 核心資訊卡 (Ticket Style) -->
+                    <div class="bg-gray-50 border-2 border-gray-900 rounded-xl p-5 text-center shadow-[6px_6px_0px_0px_rgba(26,32,44,1)] transform transition-transform hover:-translate-y-1">
+                        <!-- 看診日期 -->
+                        <div class="text-3xl font-bold text-blue-900 mb-2" id="display-date-main">
+                            <!-- JS將填入 2023/10/23 (週一) -->
+                        </div>
+                        <!-- 診次名稱 -->
+                        <div class="text-5xl font-black text-gray-900 tracking-wide leading-tight" id="display-slot">
+                            週一 下午 229診
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- 底部簽核 -->
+                <div class="flex justify-between items-end px-4 mb-2 relative z-10">
+                    <div class="text-base text-gray-500 font-medium">
+                        開立日期：<span id="current-date" class="font-bold text-gray-700"></span>
+                    </div>
+                    <div class="text-center">
+                        <div class="h-8 w-32 border-b-2 border-gray-800 mb-1"></div>
+                        <div class="text-lg font-bold text-gray-800 tracking-widest">醫師簽章</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 初始化: 設定預設日期為今天 ---
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        const todayStr = `${yyyy}-${mm}-${dd}`;
+        
+        document.getElementById('dateInput').value = todayStr;
+
+        // 星期對照表
+        const dayNames = ["週日", "週一", "週二", "週三", "週四", "週五", "週六"];
+
+        // --- 即時預覽更新邏輯 ---
+        function updatePreview() {
+            // 1. 更新看診日期 (主畫面)
+            const dateVal = document.getElementById('dateInput').value;
+            if (dateVal) {
+                const dateObj = new Date(dateVal);
+                const dayName = dayNames[dateObj.getDay()];
+                const formattedDate = dateVal.replace(/-/g, '/');
+                document.getElementById('display-date-main').textContent = `${formattedDate} (${dayName})`;
+            } else {
+                document.getElementById('display-date-main').textContent = "";
+            }
+
+            // 2. 更新開立日期 (頁尾 - 固定為今天)
+            const printDate = new Date();
+            const printY = printDate.getFullYear();
+            const printM = String(printDate.getMonth() + 1).padStart(2, '0');
+            const printD = String(printDate.getDate()).padStart(2, '0');
+            document.getElementById('current-date').textContent = `${printY}/${printM}/${printD}`;
+
+            // 更新科別
+            document.getElementById('display-dept').textContent = document.getElementById('deptInput').value || " ";
+            
+            // 更新醫師
+            const drName = document.getElementById('drInput').value.trim();
+            document.getElementById('display-dr').textContent = drName ? `${drName} 醫師` : " 醫師";
+
+            // 診次邏輯
+            const slotRadios = document.getElementsByName('clinicSlot');
+            let selectedSlot = "";
+            for (const radio of slotRadios) {
+                if (radio.checked) {
+                    if (radio.value === 'other') {
+                        selectedSlot = document.getElementById('slotOtherInput').value || "請填寫診次";
+                    } else {
+                        selectedSlot = radio.value;
+                    }
+                    break;
+                }
+            }
+            document.getElementById('display-slot').textContent = selectedSlot;
+        }
+
+        // --- 自動縮放邏輯 (Auto Fit) ---
+        function fitPreviewToScreen() {
+            const container = document.querySelector('.preview-area');
+            const wrapper = document.getElementById('preview-wrapper');
+            const content = document.getElementById('slip-content');
+
+            const containerWidth = container.clientWidth - 64; 
+            const containerHeight = container.clientHeight - 64;
+
+            const contentWidth = content.offsetWidth;
+            const contentHeight = content.offsetHeight;
+
+            const scaleX = containerWidth / contentWidth;
+            const scaleY = containerHeight / contentHeight;
+            const scale = Math.min(scaleX, scaleY) * 0.95;
+
+            wrapper.style.transform = `scale(${scale})`;
+            content.style.visibility = 'visible';
+        }
+
+        window.addEventListener('resize', fitPreviewToScreen);
+        window.addEventListener('load', fitPreviewToScreen);
+        setTimeout(fitPreviewToScreen, 500);
+
+
+        // --- PDF 下載邏輯 ---
+        async function generatePDF() {
+            const originalElement = document.getElementById('slip-content');
+            const btn = document.querySelector('button');
+            const originalText = btn.innerHTML;
+            
+            btn.innerHTML = `<span class="animate-spin inline-block mr-2 border-2 border-white border-t-transparent rounded-full w-4 h-4"></span> 處理中...`;
+            btn.disabled = true;
+
+            try {
+                // 1. 複製元素 (避免縮放偏移)
+                const clonedElement = originalElement.cloneNode(true);
+                const container = document.createElement('div');
+                container.style.position = 'absolute';
+                container.style.top = '0';
+                container.style.left = '0';
+                container.style.zIndex = '-1000';
+                container.style.width = '210mm';
+                container.style.height = '148mm';
+                container.style.overflow = 'hidden';
+                container.appendChild(clonedElement);
+                document.body.appendChild(container);
+
+                clonedElement.style.visibility = 'visible';
+                clonedElement.style.transform = 'none';
+
+                // 2. 截圖
+                const canvas = await html2canvas(clonedElement, {
+                    scale: 3, 
+                    useCORS: true,
+                    logging: false,
+                    backgroundColor: '#ffffff'
+                });
+
+                document.body.removeChild(container);
+
+                const imgData = canvas.toDataURL('image/jpeg', 1.0);
+                
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({
+                    orientation: 'landscape',
+                    unit: 'mm',
+                    format: 'a5'
+                });
+
+                const pdfWidth = 210;
+                const pdfHeight = 148;
+
+                pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+
+                const drName = document.getElementById('drInput').value.replace(/\s/g, '') || '醫師';
+                
+                // 檔名使用選定的看診日期
+                const dateVal = document.getElementById('dateInput').value || ""; 
+                const dateFilename = dateVal.replace(/-/g, ''); 
+                const filename = `加掛單_${drName}_${dateFilename}.pdf`;
+                
+                pdf.save(filename);
+
+            } catch (error) {
+                console.error('PDF Generation Error:', error);
+                alert('PDF 產生失敗，請再試一次。');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // 初次載入
+        updatePreview();
+    </script>
+</body>
+</html>
