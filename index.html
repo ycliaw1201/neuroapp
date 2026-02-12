@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>神經科門診整合工作台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+            overflow: hidden; /* 防止主頁面捲動，由內部元素處理 */
+        }
+        .sidebar-item.active {
+            background-color: #1e40af; /* blue-800 */
+            color: white;
+            border-right: 4px solid #60a5fa; /* blue-400 */
+        }
+        .iframe-container {
+            height: calc(100vh - 64px);
+        }
+        @media (min-width: 768px) {
+            .iframe-container {
+                height: 100vh;
+            }
+        }
+        /* 載入動畫 */
+        .loader {
+            border-top-color: #3498db;
+            -webkit-animation: spinner 1.5s linear infinite;
+            animation: spinner 1.5s linear infinite;
+        }
+        @-webkit-keyframes spinner {
+            0% { -webkit-transform: rotate(0deg); }
+            100% { -webkit-transform: rotate(360deg); }
+        }
+        @keyframes spinner {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <div class="flex flex-col md:flex-row h-screen">
+        
+        <!-- 左側選單欄 -->
+        <aside id="sidebar" class="w-full md:w-64 bg-slate-900 text-slate-300 flex-shrink-0 z-20 shadow-xl">
+            <div class="p-6 flex items-center space-x-3 bg-slate-800">
+                <div class="bg-blue-500 p-2 rounded-lg">
+                    <i class="fas fa-brain text-white text-xl"></i>
+                </div>
+                <h1 class="text-xl font-bold text-white tracking-tight">神經科門診</h1>
+            </div>
+            
+            <nav class="mt-4 overflow-y-auto max-h-[calc(100vh-100px)]">
+                <ul class="space-y-1 px-2" id="nav-list">
+                    <!-- 選單項目將由 JS 生成 -->
+                </ul>
+            </nav>
+
+            <div class="absolute bottom-0 w-64 p-4 text-xs text-slate-500 hidden md:block">
+                系統狀態: 運行中
+            </div>
+        </aside>
+
+        <!-- 右側內容區 -->
+        <main class="flex-grow relative flex flex-col">
+            <!-- 手機版 Header -->
+            <header class="md:hidden bg-slate-800 text-white p-4 flex justify-between items-center">
+                <span id="mobile-title" class="font-bold">初診表單</span>
+                <button onclick="toggleSidebar()" class="p-2">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </header>
+
+            <!-- 載入指示器 -->
+            <div id="loading-overlay" class="absolute inset-0 bg-white/80 z-10 flex flex-col items-center justify-center transition-opacity duration-300">
+                <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mb-4"></div>
+                <p class="text-slate-500 font-medium">載入中...</p>
+            </div>
+
+            <!-- Iframe 區域 -->
+            <div class="iframe-container w-full overflow-hidden">
+                <iframe 
+                    id="content-frame" 
+                    src="https://ycliaw1201.github.io/neuroapp/OPD_NewCase.html" 
+                    class="w-full h-full border-none shadow-inner"
+                    onload="hideLoading()">
+                </iframe>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const pages = [
+            { id: 'new-case', title: '初診表單', url: 'https://ycliaw1201.github.io/neuroapp/OPD_NewCase.html', icon: 'fa-user-plus' },
+            { id: 'headache', title: '頭痛初診', url: 'https://ycliaw1201.github.io/neuroapp/OPD_HA.html', icon: 'fa-head-side-virus' },
+            { id: 'dizziness', title: '頭暈初診', url: 'https://ycliaw1201.github.io/neuroapp/OPD_Dizziness.html', icon: 'fa-spinner' },
+            { id: 'dementia', title: '失智初診', url: 'https://ycliaw1201.github.io/neuroapp/OPD_Dementia.html', icon: 'fa-brain' },
+            { id: 'updrs', title: 'UPDRS量表', url: 'https://ycliaw1201.github.io/neuroapp/OPD_UPDRS.html', icon: 'fa-clipboard-check' },
+            { id: 'add-on', title: '門診加掛單', url: 'https://ycliaw1201.github.io/neuroapp/OPD_Add.html', icon: 'fa-plus-circle' }
+        ];
+
+        let activePageId = 'new-case';
+        const frame = document.getElementById('content-frame');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const navList = document.getElementById('nav-list');
+        const mobileTitle = document.getElementById('mobile-title');
+
+        // 生成選單
+        function initNav() {
+            navList.innerHTML = '';
+            pages.forEach(page => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <button 
+                        onclick="switchPage('${page.id}')" 
+                        id="btn-${page.id}"
+                        class="sidebar-item w-full flex items-center space-x-3 px-4 py-4 rounded-lg transition-all duration-200 hover:bg-slate-800 group"
+                    >
+                        <i class="fas ${page.icon} w-5 text-center group-hover:text-blue-400"></i>
+                        <span class="font-medium">${page.title}</span>
+                    </button>
+                `;
+                navList.appendChild(li);
+            });
+            updateActiveUI();
+        }
+
+        // 切換頁面
+        function switchPage(id) {
+            if (activePageId === id) return;
+            
+            showLoading();
+            activePageId = id;
+            const page = pages.find(p => p.id === id);
+            
+            // 更新 iframe 網址
+            frame.src = page.url;
+            mobileTitle.innerText = page.title;
+            
+            updateActiveUI();
+            
+            // 如果是手機版，點擊後隱藏選單
+            if (window.innerWidth < 768) {
+                toggleSidebar();
+            }
+        }
+
+        // 更新按鈕樣式
+        function updateActiveUI() {
+            document.querySelectorAll('.sidebar-item').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            const activeBtn = document.getElementById(`btn-${activePageId}`);
+            if (activeBtn) activeBtn.classList.add('active');
+        }
+
+        // 載入動畫控制
+        function showLoading() {
+            loadingOverlay.style.opacity = '1';
+            loadingOverlay.style.pointerEvents = 'auto';
+        }
+
+        function hideLoading() {
+            setTimeout(() => {
+                loadingOverlay.style.opacity = '0';
+                loadingOverlay.style.pointerEvents = 'none';
+            }, 300);
+        }
+
+        // 手機版選單切換
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar.classList.contains('hidden')) {
+                sidebar.classList.remove('hidden');
+            } else {
+                if (window.innerWidth < 768) {
+                    sidebar.classList.add('hidden');
+                }
+            }
+        }
+
+        // 監聽視窗大小調整
+        window.addEventListener('resize', () => {
+            const sidebar = document.getElementById('sidebar');
+            if (window.innerWidth >= 768) {
+                sidebar.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('hidden');
+            }
+        });
+
+        // 初始化
+        window.onload = () => {
+            initNav();
+            if (window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.add('hidden');
+            }
+        };
+    </script>
+</body>
+</html>
