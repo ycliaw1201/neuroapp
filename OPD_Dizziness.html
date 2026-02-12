@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>一般頭暈初診問卷與英文摘要系統</title>
+    <title>一般頭暈初診</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -12,22 +12,21 @@
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .sticky-summary { position: sticky; top: 2rem; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen">
 
-    <div class="max-w-6xl mx-auto px-4 py-8">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <div class="max-w-4xl mx-auto px-4 py-8">
+        <div class="flex flex-col gap-8">
             
-            <!-- Left: Input Form (8 columns) -->
-            <div class="lg:col-span-8 space-y-6">
+            <!-- 上半部：輸入表單 -->
+            <div class="space-y-6">
                 <header class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                     <div class="flex items-center gap-3 mb-2">
                         <i data-lucide="stethoscope" class="text-blue-600 w-8 h-8"></i>
                         <h1 class="text-2xl font-bold text-slate-900">一般頭暈初診問卷</h1>
                     </div>
-                    <p class="text-slate-500">請輸入病患填寫的資料，右側將即時生成英文摘要。</p>
+                    <p class="text-slate-500">請輸入病患填寫的資料，下方將即時生成英文摘要。</p>
                 </header>
 
                 <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-200 space-y-8">
@@ -63,16 +62,27 @@
                                 <input type="radio" name="symptomType" value="environmentMoving" class="mr-3 w-4 h-4 text-blue-600">
                                 <span class="text-sm">視野晃動 (Environment moving)</span>
                             </label>
+                            <label class="flex items-center p-3 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50 transition-all has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 md:col-span-2">
+                                <input type="radio" name="symptomType" value="other" class="mr-3 w-4 h-4 text-blue-600">
+                                <span class="text-sm">其他 (Other)</span>
+                            </label>
+                        </div>
+                        
+                        <!-- 其他症狀文字框 -->
+                        <div id="symptom-other-sub" class="hidden mt-3">
+                            <input type="text" id="symptom-other-val" placeholder="請輸入其他症狀描述..." class="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                         </div>
 
                         <!-- Direction Sub-questions -->
                         <div id="direction-sub" class="hidden mt-4 p-4 bg-slate-50 rounded-xl border border-dashed border-slate-300">
-                            <p class="text-sm font-medium mb-2">偏向哪一邊？</p>
-                            <div class="flex gap-2">
-                                <button type="button" onclick="setDirection('前')" class="dir-btn px-4 py-1.5 rounded-full border bg-white text-sm hover:border-blue-500">前</button>
-                                <button type="button" onclick="setDirection('後')" class="dir-btn px-4 py-1.5 rounded-full border bg-white text-sm hover:border-blue-500">後</button>
-                                <button type="button" onclick="setDirection('左')" class="dir-btn px-4 py-1.5 rounded-full border bg-white text-sm hover:border-blue-500">左</button>
-                                <button type="button" onclick="setDirection('右')" class="dir-btn px-4 py-1.5 rounded-full border bg-white text-sm hover:border-blue-500">右</button>
+                            <p class="text-sm font-medium mb-3">偏向哪一邊？</p>
+                            <div class="flex flex-wrap gap-2">
+                                <button type="button" onclick="setDirection('前')" class="dir-btn px-4 py-1.5 rounded-full border bg-white text-sm hover:border-blue-500 transition-colors">前</button>
+                                <button type="button" onclick="setDirection('後')" class="dir-btn px-4 py-1.5 rounded-full border bg-white text-sm hover:border-blue-500 transition-colors">後</button>
+                                <button type="button" onclick="setDirection('左')" class="dir-btn px-4 py-1.5 rounded-full border bg-white text-sm hover:border-blue-500 transition-colors">左</button>
+                                <button type="button" onclick="setDirection('右')" class="dir-btn px-4 py-1.5 rounded-full border bg-white text-sm hover:border-blue-500 transition-colors">右</button>
+                                <button type="button" onclick="setDirection('不確定')" class="dir-btn px-4 py-1.5 rounded-full border bg-white text-sm hover:border-blue-500 transition-colors">不確定</button>
+                                <button type="button" onclick="setDirection('不定向')" class="dir-btn px-4 py-1.5 rounded-full border bg-white text-sm hover:border-blue-500 transition-colors">不定向</button>
                             </div>
                         </div>
                     </section>
@@ -126,16 +136,22 @@
                     <!-- 4. Associated Symptoms -->
                     <section>
                         <h2 class="text-lg font-semibold mb-4">4. 伴隨症狀 (複選)</h2>
-                        <div class="flex flex-wrap gap-2" id="associated-container">
+                        <div class="flex flex-wrap gap-2 mb-3" id="associated-container">
                             <!-- Buttons populated by JS -->
+                        </div>
+                        <div>
+                            <input type="text" id="associated-other" placeholder="其他伴隨症狀 (自由填寫)..." class="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                         </div>
                     </section>
 
                     <!-- 5. Triggers -->
                     <section>
                         <h2 class="text-lg font-semibold mb-4">5. 誘發因子 (複選)</h2>
-                        <div class="flex flex-wrap gap-2" id="trigger-container">
+                        <div class="flex flex-wrap gap-2 mb-3" id="trigger-container">
                             <!-- Buttons populated by JS -->
+                        </div>
+                        <div>
+                            <input type="text" id="trigger-other" placeholder="其他誘發因子 (自由填寫)..." class="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                         </div>
                     </section>
 
@@ -154,38 +170,32 @@
                 </div>
             </div>
 
-            <!-- Right: Summary (4 columns) -->
-            <div class="lg:col-span-4">
-                <div class="sticky-summary space-y-4">
-                    <div class="bg-slate-900 rounded-2xl shadow-xl p-6 text-white">
-                        <div class="flex items-center justify-between mb-4">
-                            <h2 class="text-lg font-bold flex items-center gap-2">
-                                <i data-lucide="file-text" class="w-5 h-5"></i>
-                                English Summary
-                            </h2>
-                            <button onclick="copySummary()" class="flex items-center gap-2 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs transition-colors">
+            <!-- 下半部：Note Summary -->
+            <div class="space-y-4">
+                <div class="bg-slate-900 rounded-2xl shadow-xl p-6 text-white">
+                    <div class="flex items-center justify-between mb-4 border-b border-slate-700 pb-4">
+                        <h2 class="text-xl font-bold flex items-center gap-2">
+                            <i data-lucide="file-text" class="w-6 h-6 text-blue-400"></i>
+                            Note Summary
+                        </h2>
+                        <div class="flex gap-3">
+                            <button onclick="window.location.reload()" class="flex items-center gap-2 px-3 py-1.5 bg-red-900/40 hover:bg-red-900/60 text-red-300 rounded-lg text-sm transition-colors">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                <span>Reset</span>
+                            </button>
+                            <button onclick="copySummary()" class="flex items-center gap-2 px-4 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-medium transition-colors">
                                 <i data-lucide="copy" id="copy-icon" class="w-4 h-4"></i>
                                 <span id="copy-text">Copy</span>
                             </button>
                         </div>
-
-                        <div id="summary-output" class="bg-slate-800/50 border border-slate-700 rounded-xl p-4 text-sm leading-relaxed min-h-[300px] whitespace-pre-wrap font-mono text-slate-200">
-                            Patient presents with dizziness. Initial assessment...
-                        </div>
-
-                        <div class="mt-6 pt-6 border-t border-slate-700 space-y-4">
-                            <div class="flex items-center justify-between text-[10px] text-slate-500 uppercase tracking-widest">
-                                <span>Medical Documenter v1.0</span>
-                                <span>Status: Syncing</span>
-                            </div>
-                            <button onclick="window.location.reload()" class="w-full py-3 bg-red-900/20 hover:bg-red-900/40 text-red-400 border border-red-900/50 rounded-xl text-sm transition-all flex items-center justify-center gap-2">
-                                <i data-lucide="trash-2" class="w-4 h-4"></i> 重置所有欄位
-                            </button>
-                        </div>
                     </div>
 
-                    <div id="copy-message" class="hidden animate-bounce bg-emerald-500 text-white p-3 rounded-xl text-center text-sm font-medium">
-                        ✓ 已成功複製到剪貼簿！
+                    <div id="summary-output" class="bg-slate-800/50 border border-slate-700 rounded-xl p-5 text-[15px] leading-relaxed min-h-[250px] whitespace-pre-wrap font-mono text-slate-200">
+                        Patient presents with dizziness. Initial assessment...
+                    </div>
+
+                    <div id="copy-message" class="hidden mt-4 bg-emerald-500 text-white p-3 rounded-xl text-center text-sm font-medium transition-all">
+                        ✓ Note Summary 已成功複製到剪貼簿！
                     </div>
                 </div>
             </div>
@@ -197,6 +207,7 @@
         // State Management
         let state = {
             symptomType: '',
+            symptomTypeOther: '',
             direction: '',
             firstOnset: '',
             episodeCount: '',
@@ -206,7 +217,9 @@
             freqVal: '',
             freqUnit: 'month',
             associated: [],
+            associatedOther: '',
             triggers: [],
+            triggerOther: '',
             relieving: '',
             aggravating: ''
         };
@@ -217,7 +230,8 @@
             balance: 'Loss of balance',
             externalVertigo: 'External vertigo',
             internalVertigo: 'Internal vertigo',
-            environmentMoving: 'Oscillopsia (Environment moving)'
+            environmentMoving: 'Oscillopsia (Environment moving)',
+            other: 'Other'
         };
 
         const associatedOptions = [
@@ -238,6 +252,12 @@
             { zh: '搭飛機', en: 'Air travel' },
             { zh: '潛水', en: 'Diving' },
             { zh: '感冒發燒', en: 'Common cold/fever' }
+        ];
+
+        const positionalTriggersEn = [
+            'Positional (lying down)', 
+            'Positional (standing up)', 
+            'Positional (head turning)'
         ];
 
         // Initialize UI
@@ -276,6 +296,7 @@
                 input.onchange = (e) => {
                     state.symptomType = e.target.value;
                     document.getElementById('direction-sub').classList.toggle('hidden', !['falling', 'balance'].includes(state.symptomType));
+                    document.getElementById('symptom-other-sub').classList.toggle('hidden', state.symptomType !== 'other');
                     updateSummary();
                 };
             });
@@ -290,17 +311,19 @@
             });
 
             // Text Inputs
-            ['first-onset', 'episode-count', 'duration-val', 'freq-val', 'relieving', 'aggravating'].forEach(id => {
-                const key = id.replace(/-([a-z])/g, (g) => g[1].toUpperCase()).replace('Val', 'Val');
+            ['first-onset', 'episode-count', 'duration-val', 'freq-val', 'relieving', 'aggravating', 'symptom-other-val', 'associated-other', 'trigger-other'].forEach(id => {
                 const field = document.getElementById(id);
+                if (!field) return;
                 field.oninput = (e) => {
-                    // map id to state key manually to avoid mismatch
                     if(id === 'first-onset') state.firstOnset = e.target.value;
                     if(id === 'episode-count') state.episodeCount = e.target.value;
                     if(id === 'duration-val') state.durationVal = e.target.value;
                     if(id === 'freq-val') state.freqVal = e.target.value;
                     if(id === 'relieving') state.relieving = e.target.value;
                     if(id === 'aggravating') state.aggravating = e.target.value;
+                    if(id === 'symptom-other-val') state.symptomTypeOther = e.target.value;
+                    if(id === 'associated-other') state.associatedOther = e.target.value;
+                    if(id === 'trigger-other') state.triggerOther = e.target.value;
                     updateSummary();
                 };
             });
@@ -320,38 +343,75 @@
         }
 
         function updateSummary() {
-            let summary = "Patient presents with dizziness. ";
+            let summary = "Patient presents with dizziness. \n\n";
 
+            // 1. Symptom Type
             if (state.symptomType) {
-                summary += `Primary symptom is described as ${symptomMap[state.symptomType]}. `;
+                if (state.symptomType === 'other') {
+                    summary += `[Symptom] Primary symptom: ${state.symptomTypeOther || 'Not specified'}. \n`;
+                } else {
+                    summary += `[Symptom] Primary symptom: ${symptomMap[state.symptomType]}. \n`;
+                }
+                
                 if (['falling', 'balance'].includes(state.symptomType) && state.direction) {
-                    const dMap = {'前':'forward', '後':'backward', '左':'to the left', '右':'to the right'};
-                    summary += `(Tends to lean ${dMap[state.direction] || state.direction}). `;
+                    const dMap = {
+                        '前':'forward', 
+                        '後':'backward', 
+                        '左':'to the left', 
+                        '右':'to the right',
+                        '不確定': 'unsure direction',
+                        '不定向': 'non-directional'
+                    };
+                    summary += `          (Direction: ${dMap[state.direction] || state.direction}) \n`;
                 }
             }
 
-            summary += `Onset: ${state.firstOnset || '[Not specified]'}. Current episode count: ${state.episodeCount || '1'}. `;
-            summary += `The condition is ${state.pattern}. `;
+            // 2. Onset & Pattern
+            summary += `[History] Onset: ${state.firstOnset || 'Not specified'}. Episode count: ${state.episodeCount || '1'}. \n`;
+            summary += `          Pattern: ${state.pattern === 'constant' ? 'Constant' : 'Episodic'}. \n`;
 
             if (state.pattern === 'episodic' && state.durationVal) {
-                summary += `Each episode lasts approx. ${state.durationVal} ${state.durationUnit}. `;
+                summary += `          Duration: ~${state.durationVal} ${state.durationUnit}. `;
                 if (state.freqVal) {
                     summary += `Frequency: ~${state.freqVal} per ${state.freqUnit}. `;
                 }
+                summary += `\n`;
             }
 
-            if (state.associated.length > 0) {
-                summary += `Associated symptoms include: ${state.associated.join(', ')}. `;
+            // 3. Associated Symptoms (+/-)
+            let assocList = associatedOptions.map(opt => {
+                return `${opt.en} (${state.associated.includes(opt.en) ? '+' : '-'})`;
+            });
+            summary += `\n[Associated Symptoms]\n${assocList.join(', ')}. \n`;
+            
+            if (state.associatedOther) {
+                summary += `Other: ${state.associatedOther}\n`;
             }
 
-            if (state.triggers.length > 0) {
-                summary += `Triggered by: ${state.triggers.join(', ')}. `;
+            // 4. Triggers (Positional logic)
+            const selectedPositional = state.triggers.filter(t => positionalTriggersEn.includes(t));
+            const selectedNonPositional = state.triggers.filter(t => !positionalTriggersEn.includes(t));
+
+            summary += `\n[Triggers & Factors]\n`;
+            if (selectedPositional.length === 0) {
+                summary += `Position (-) \n`;
+            } else {
+                const directions = selectedPositional.map(t => t.replace('Positional (', '').replace(')', ''));
+                summary += `Position (+) [${directions.join(', ')}] \n`;
             }
 
-            if (state.relieving) summary += `Relieved by: ${state.relieving}. `;
-            if (state.aggravating) summary += `Aggravated by: ${state.aggravating}. `;
+            if (selectedNonPositional.length > 0) {
+                summary += `Other triggers: ${selectedNonPositional.join(', ')} \n`;
+            }
+            if (state.triggerOther) {
+                summary += `Additional triggers: ${state.triggerOther} \n`;
+            }
 
-            document.getElementById('summary-output').innerText = summary;
+            // 5. Relieving / Aggravating
+            if (state.relieving) summary += `Relieved by: ${state.relieving} \n`;
+            if (state.aggravating) summary += `Aggravated by: ${state.aggravating} \n`;
+
+            document.getElementById('summary-output').innerText = summary.trim();
         }
 
         function copySummary() {
@@ -366,7 +426,7 @@
             // UI Feedback
             const msg = document.getElementById('copy-message');
             msg.classList.remove('hidden');
-            setTimeout(() => msg.classList.add('hidden'), 2000);
+            setTimeout(() => msg.classList.add('hidden'), 3000);
         }
 
         window.onload = init;
