@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>一般頭暈初診問卷系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; }
+        .form-section { display: none; }
+        .form-section.active { display: block; }
+        .checkbox-group { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; cursor: pointer; }
+        .input-text { border: 1px solid #e2e8f0; border-radius: 0.375rem; padding: 0.5rem; width: 100%; margin-top: 0.25rem; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200">
+        <!-- Header -->
+        <div class="bg-blue-600 p-6 text-white text-center">
+            <h1 class="text-2xl font-bold">一般頭暈初診問卷</h1>
+            <p class="text-blue-100 text-sm mt-1">請填寫以下資訊，完成後點擊生成摘要</p>
+        </div>
+
+        <form id="dizzinessForm" class="p-6 space-y-8">
+            <!-- 1. 症狀描述 -->
+            <section>
+                <h2 class="text-lg font-bold text-slate-800 border-l-4 border-blue-500 pl-3 mb-4">1. 症狀描述 (最符合的一項)</h2>
+                <div class="space-y-3">
+                    <label class="checkbox-group">
+                        <input type="radio" name="symptomMain" value="頭重腳輕(Lightheadedness)" class="w-4 h-4 text-blue-600">
+                        <span>頭重腳輕 (Lightheadedness)</span>
+                    </label>
+                    <div class="ml-6 space-y-2">
+                        <label class="checkbox-group">
+                            <input type="radio" name="symptomMain" value="快跌倒的感覺(Falling tendency)" class="w-4 h-4 text-blue-600">
+                            <span>快跌倒的感覺 (Falling tendency)</span>
+                        </label>
+                        <div class="grid grid-cols-2 gap-2 ml-6 text-sm">
+                            <label><input type="checkbox" name="fallingDir" value="前"> 前</label>
+                            <label><input type="checkbox" name="fallingDir" value="後"> 後</label>
+                            <label><input type="checkbox" name="fallingDir" value="左"> 左</label>
+                            <label><input type="checkbox" name="fallingDir" value="右"> 右</label>
+                        </div>
+                    </div>
+                    <div class="ml-6 space-y-2">
+                        <label class="checkbox-group">
+                            <input type="radio" name="symptomMain" value="走路時感覺不平衡(Loss of balance)" class="w-4 h-4 text-blue-600">
+                            <span>走路時感覺不平衡 (Loss of balance)</span>
+                        </label>
+                        <div class="grid grid-cols-2 gap-2 ml-6 text-sm">
+                            <label><input type="checkbox" name="balanceDir" value="前"> 前</label>
+                            <label><input type="checkbox" name="balanceDir" value="後"> 後</label>
+                            <label><input type="checkbox" name="balanceDir" value="左"> 左</label>
+                            <label><input type="checkbox" name="balanceDir" value="右"> 右</label>
+                        </div>
+                    </div>
+                    <label class="checkbox-group">
+                        <input type="radio" name="symptomMain" value="感覺周邊的東西在移動、加速、旋轉(External vertigo)" class="w-4 h-4 text-blue-600">
+                        <span>感覺周邊東西在移動/旋轉 (External vertigo)</span>
+                    </label>
+                    <label class="checkbox-group">
+                        <input type="radio" name="symptomMain" value="感覺自身在移動、加速、旋轉(Internal vertigo)" class="w-4 h-4 text-blue-600">
+                        <span>感覺自身在移動/旋轉 (Internal vertigo)</span>
+                    </label>
+                    <div class="space-y-1">
+                        <label class="checkbox-group">
+                            <input type="radio" name="symptomMain" value="走路時視野晃動(Environment moving)" class="w-4 h-4 text-blue-600">
+                            <span>走路時視野晃動 (Environment moving)</span>
+                        </label>
+                        <input type="text" name="envMoveDesc" placeholder="請描述描述..." class="input-text ml-6 w-[calc(100%-1.5rem)]">
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. 發生時間 -->
+            <section>
+                <h2 class="text-lg font-bold text-slate-800 border-l-4 border-blue-500 pl-3 mb-4">2. 發生時間</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600">第一次發生於何時？</label>
+                        <input type="text" name="firstTime" class="input-text" placeholder="例如：2023年10月">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600">這次是第幾次發生？</label>
+                        <input type="number" name="occurrenceCount" class="input-text" placeholder="次數">
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. 持續時間與頻率 -->
+            <section>
+                <h2 class="text-lg font-bold text-slate-800 border-l-4 border-blue-500 pl-3 mb-4">3. 持續時間與頻率</h2>
+                <div class="space-y-4">
+                    <div class="flex gap-4">
+                        <label><input type="radio" name="pattern" value="持續存在"> 持續存在</label>
+                        <label><input type="radio" name="pattern" value="一陣一陣"> 一陣一陣</label>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600">一次暈眩持續多久？</label>
+                            <input type="text" name="duration" class="input-text" placeholder="例如：30秒 / 2小時">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600">發作頻率？</label>
+                            <input type="text" name="frequency" class="input-text" placeholder="例如：一天一次 / 每週二次">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600">兩次症狀間是否有其他不適？</label>
+                        <input type="text" name="betweenSymptom" class="input-text" placeholder="描述其他不適...">
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. 伴隨症狀 -->
+            <section>
+                <h2 class="text-lg font-bold text-slate-800 border-l-4 border-blue-500 pl-3 mb-4">4. 伴隨症狀 (複選)</h2>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
+                    <label><input type="checkbox" name="assoc" value="複視"> 複視</label>
+                    <label><input type="checkbox" name="assoc" value="失去意識"> 失去意識</label>
+                    <label><input type="checkbox" name="assoc" value="視力模糊"> 視力模糊</label>
+                    <label><input type="checkbox" name="assoc" value="夜間視力下降"> 夜間視力下降</label>
+                    <label><input type="checkbox" name="assoc" value="頭痛"> 頭痛</label>
+                    <label><input type="checkbox" name="assoc" value="噁心嘔吐"> 噁心嘔吐</label>
+                    <label><input type="checkbox" name="assoc" value="胸悶/胸痛"> 胸悶/胸痛</label>
+                    <label><input type="checkbox" name="assoc" value="喘不過氣"> 喘不過氣</label>
+                    <label><input type="checkbox" name="assoc" value="心悸"> 心悸</label>
+                    <label><input type="checkbox" name="assoc" value="手腳麻"> 手腳麻</label>
+                    <label><input type="checkbox" name="assoc" value="手腳無力"> 手腳無力</label>
+                    <label><input type="checkbox" name="assoc" value="吞嚥困難"> 吞嚥困難</label>
+                    <label><input type="checkbox" name="assoc" value="聽力下降"> 聽力下降</label>
+                    <label><input type="checkbox" name="assoc" value="耳鳴"> 耳鳴</label>
+                </div>
+            </section>
+
+            <!-- 5. 誘發因子 -->
+            <section>
+                <h2 class="text-lg font-bold text-slate-800 border-l-4 border-blue-500 pl-3 mb-4">5. 誘發因子</h2>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
+                    <label><input type="checkbox" name="trigger" value="姿勢變化"> 姿勢變化</label>
+                    <label><input type="checkbox" name="trigger" value="咳嗽/出力"> 咳嗽/出力</label>
+                    <label><input type="checkbox" name="trigger" value="搭乘飛機"> 搭乘飛機</label>
+                    <label><input type="checkbox" name="trigger" value="潛水/游泳"> 潛水/游泳</label>
+                    <label><input type="checkbox" name="trigger" value="感冒發燒"> 感冒發燒</label>
+                    <label><input type="checkbox" name="trigger" value="月經期"> 月經期</label>
+                    <label><input type="checkbox" name="trigger" value="飢餓"> 飢餓</label>
+                    <label><input type="checkbox" name="trigger" value="飯後"> 飯後</label>
+                </div>
+                <input type="text" name="triggerOther" class="input-text mt-2" placeholder="其他誘發因子...">
+            </section>
+
+            <!-- 6. 改善與惡化 -->
+            <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-800 border-l-4 border-blue-500 pl-3 mb-2">什麼狀況下比較好？</h2>
+                    <textarea name="relief" class="input-text h-20" placeholder="例如：躺著休息、閉眼..."></textarea>
+                </div>
+                <div>
+                    <h2 class="text-lg font-bold text-slate-800 border-l-4 border-blue-500 pl-3 mb-2">什麼狀況下會惡化？</h2>
+                    <textarea name="worsen" class="input-text h-20" placeholder="例如：轉頭、光線太亮..."></textarea>
+                </div>
+            </section>
+
+            <!-- 7. 既往病史 -->
+            <section>
+                <h2 class="text-lg font-bold text-slate-800 border-l-4 border-blue-500 pl-3 mb-4">7. 既往病史</h2>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
+                    <label><input type="checkbox" name="history" value="頭部撞擊(送醫/昏迷)"> 頭部撞擊</label>
+                    <label><input type="checkbox" name="history" value="偏頭痛"> 偏頭痛</label>
+                    <label><input type="checkbox" name="history" value="中風"> 中風</label>
+                    <label><input type="checkbox" name="history" value="糖尿病"> 糖尿病</label>
+                    <label><input type="checkbox" name="history" value="B12缺乏"> B12缺乏</label>
+                    <label><input type="checkbox" name="history" value="婦科疾病"> 婦科疾病</label>
+                    <label><input type="checkbox" name="history" value="耳鼻喉科疾病"> 耳鼻喉科疾病</label>
+                </div>
+            </section>
+
+            <div class="pt-6">
+                <button type="button" onclick="generateSummary()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200">
+                    生成問卷摘要報告
+                </button>
+            </div>
+        </form>
+
+        <!-- Result Modal -->
+        <div id="summaryModal" class="hidden fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                <div class="p-4 bg-slate-100 border-b flex justify-between items-center">
+                    <h3 class="font-bold text-slate-800 text-lg">問卷摘要 (醫師評估參考)</h3>
+                    <button onclick="closeModal()" class="text-slate-500 hover:text-slate-700">✕</button>
+                </div>
+                <div class="p-6 overflow-y-auto bg-slate-50">
+                    <pre id="summaryText" class="whitespace-pre-wrap text-slate-700 leading-relaxed font-sans"></pre>
+                </div>
+                <div class="p-4 border-t bg-white flex gap-3">
+                    <button onclick="copyToClipboard()" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-lg transition">
+                        複製到剪貼簿
+                    </button>
+                    <button onclick="closeModal()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 rounded-lg transition">
+                        關閉
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function generateSummary() {
+            const form = document.getElementById('dizzinessForm');
+            const formData = new FormData(form);
+            
+            let summary = `【一般頭暈初診問卷摘要】\n`;
+            summary += `------------------------------\n`;
+
+            // 1. 症狀
+            const symptomMain = formData.get('symptomMain') || '未填寫';
+            summary += `● 主要症狀：${symptomMain}\n`;
+            if (symptomMain.includes('Falling')) {
+                const dirs = formData.getAll('fallingDir').join(', ') || '無註明方向';
+                summary += `   - 跌倒傾向方向：${dirs}\n`;
+            }
+            if (symptomMain.includes('Loss of balance')) {
+                const dirs = formData.getAll('balanceDir').join(', ') || '無註明方向';
+                summary += `   - 不平衡方向：${dirs}\n`;
+            }
+            const envDesc = formData.get('envMoveDesc');
+            if (envDesc) summary += `   - 視野晃動描述：${envDesc}\n`;
+
+            // 2. 時間
+            summary += `● 發生時間：\n`;
+            summary += `   - 首次發作：${formData.get('firstTime') || '未填寫'}\n`;
+            summary += `   - 發作次數：第 ${formData.get('occurrenceCount') || '?'} 次\n`;
+
+            // 3. 頻率
+            summary += `● 發作型態：${formData.get('pattern') || '未填寫'}\n`;
+            summary += `   - 單次持續：${formData.get('duration') || '未填寫'}\n`;
+            summary += `   - 頻率：${formData.get('frequency') || '未填寫'}\n`;
+            if (formData.get('betweenSymptom')) {
+                summary += `   - 間歇期症狀：${formData.get('betweenSymptom')}\n`;
+            }
+
+            // 4. 伴隨
+            const assocs = formData.getAll('assoc');
+            summary += `● 伴隨症狀：${assocs.length > 0 ? assocs.join(', ') : '無'}\n`;
+
+            // 5. 誘發
+            const triggers = formData.getAll('trigger');
+            const triggerOther = formData.get('triggerOther');
+            let triggerFinal = [...triggers];
+            if (triggerOther) triggerFinal.push(triggerOther);
+            summary += `● 誘發因子：${triggerFinal.length > 0 ? triggerFinal.join(', ') : '無'}\n`;
+
+            // 6. 改善/惡化
+            summary += `● 改善狀況：${formData.get('relief') || '未填寫'}\n`;
+            summary += `● 惡化狀況：${formData.get('worsen') || '未填寫'}\n`;
+
+            // 7. 病史
+            const histories = formData.getAll('history');
+            summary += `● 既往病史：${histories.length > 0 ? histories.join(', ') : '無'}\n`;
+            
+            summary += `------------------------------\n`;
+            summary += `生成時間：${new Date().toLocaleString('zh-TW')}`;
+
+            document.getElementById('summaryText').innerText = summary;
+            document.getElementById('summaryModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('summaryModal').classList.add('hidden');
+        }
+
+        function copyToClipboard() {
+            const text = document.getElementById('summaryText').innerText;
+            const tempTextArea = document.createElement("textarea");
+            tempTextArea.value = text;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+            alert("摘要已複製到剪貼簿，您可以將其貼給醫師或記錄下來。");
+        }
+    </script>
+</body>
+</html>
