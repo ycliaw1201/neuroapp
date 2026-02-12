@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neuro Clinical Note Generator</title>
+    
+    <!-- 1. 引入 Tailwind CSS (樣式) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 2. 設定 React 和 Babel -->
+    <script type="importmap">
+      {
+        "imports": {
+          "react": "https://esm.sh/react@18.2.0",
+          "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+          "react/jsx-runtime": "https://esm.sh/react@18.2.0/jsx-runtime",
+          "lucide-react": "https://esm.sh/lucide-react@0.263.1"
+        }
+      }
+    </script>
+    <script type="module" src="https://esm.sh/run"></script>
+</head>
+<body class="bg-gray-100">
+    <div id="root"></div>
+
+    <!-- 3. 應用程式主邏輯 -->
+    <script type="text/babel" data-type="module">
+        import React, { useState, useEffect } from 'react';
+        import { createRoot } from 'react-dom/client';
+        import { Copy, Check, RotateCcw, User, FileText, HeartPulse, Activity, Syringe, Plane, Wine, Cigarette, Briefcase, GraduationCap } from 'lucide-react';
+
+        const NeuroNoteGenerator = () => {
+          const getTodayDate = () => {
+            const d = new Date();
+            return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+          };
+        
+          const initialCountries = {
+            '台灣': false, '日本': false, '美國': false, '中國': false, '菲律賓': false, '泰國': false
+          };
+        
+          const initialState = {
+            chartNo: '',
+            date: getTodayDate(),
+            visitType: 'First neuro visit',
+            age: '',
+            sex: 'F',
+            
+            // Residence
+            live: '宜蘭',
+            liveOther: '',
+        
+            rh: 'RH',
+            veg: false,
+            
+            married: 'Unmarried',
+            offsprings: '', 
+            
+            job: '',
+            edu: '',
+            eduType: '',
+            
+            // Medical Hx
+            phx: '',
+            dm: false,
+            htn: false,
+            dl: false,
+            stroke: false,
+            ami: false,
+            afib: false,
+            cancer: false,
+            cancerNote: '',
+            
+            // Surgery Hx
+            shx: '',
+            spineOp: false,
+            brainOp: false,
+        
+            fhx: '',
+            
+            // Habits
+            travel: false,
+            travelCountries: initialCountries,
+            travelNote: '',
+        
+            allergy: false,
+            allergyFood: '',
+            allergyDrug: '',
+        
+            alcohol: false,
+            alcoholType: 'Social',
+        
+            smoking: false,
+            smokingQuit: false,
+            smokingQuitYears: '',
+            smokingAmount: '1 PPD x 10 years',
+        
+            // Female specific
+            menopause: false,
+            pregnancyStatus: 'Denied',
+            lmp: '',
+          };
+        
+          const [formData, setFormData] = useState(initialState);
+          const [generatedText, setGeneratedText] = useState('');
+          const [copied, setCopied] = useState(false);
+        
+          // EDU Options
+          const eduOptions = [
+            { label: '不識字', val: '0' },
+            { label: '國小', val: '6' },
+            { label: '國中', val: '9' },
+            { label: '高中', val: '12' },
+            { label: '大學', val: '16' },
+            { label: '碩士', val: '18' },
+            { label: '博士', val: '>20' },
+          ];
+        
+          // Job Options
+          const jobOptions = ['農', '工', '教師', '家管'];
+        
+          const handleChange = (e) => {
+            const { name, value, type, checked } = e.target;
+            setFormData(prev => ({
+              ...prev,
+              [name]: type === 'checkbox' ? checked : value
+            }));
+          };
+        
+          // Generic Toggle Handler
+          const toggleBool = (key) => {
+            setFormData(prev => ({ ...prev, [key]: !prev[key] }));
+          };
+        
+          const handleCountryToggle = (country) => {
+            setFormData(prev => ({
+              ...prev,
+              travelCountries: {
+                ...prev.travelCountries,
+                [country]: !prev.travelCountries[country]
+              }
+            }));
+          };
+        
+          const setEdu = (val, type) => {
+            setFormData(prev => ({ ...prev, edu: val, eduType: type }));
+          };
+        
+          const setJob = (val) => {
+            setFormData(prev => ({ ...prev, job: val }));
+          };
+        
+          // Generate text
+          useEffect(() => {
+            const {
+              date, visitType,
+              age, sex, live, liveOther, rh, veg, married, offsprings, job, edu,
+              phx, dm, htn, dl, stroke, ami, afib, cancer, cancerNote,
+              shx, spineOp, brainOp, fhx,
+              travel, travelCountries, travelNote,
+              allergy, allergyFood, allergyDrug,
+              alcohol, alcoholType,
+              smoking, smokingAmount, smokingQuit, smokingQuitYears,
+              menopause, pregnancyStatus, lmp
+            } = formData;
+        
+            const fmtBool = (val) => val ? '(+)' : '(-)';
+            
+            // Line 1
+            const line1 = `${date} ${visitType}.`;
+        
+            // Line 2
+            const finalLive = live === '其他' ? liveOther : live;
+            
+            let offspringsStr = '';
+            if (offsprings && offsprings.trim() !== '') {
+              const parentTitle = sex === 'F' ? 'mother' : 'father';
+              offspringsStr = `${parentTitle} of ${offsprings}`;
+            }
+        
+            let line2Parts = [
+              age,
+              sex,
+              finalLive,
+              rh,
+              `Veg${fmtBool(veg)}`,
+              married,
+              offspringsStr,
+              job ? `Job=${job}` : '',
+              edu ? `EDU=${edu}` : ''
+            ];
+            const line2 = line2Parts.filter(p => p && p !== '').join(', ');
+        
+            // Line 3: Medical Hx
+            const cancerStr = cancer ? `Cancer(${cancerNote || '+'})` : 'Cancer(-)';
+            
+            let shxParts = [];
+            if (spineOp) shxParts.push('Spine Op');
+            if (brainOp) shxParts.push('Brain Op');
+            if (shx) shxParts.push(shx);
+            const finalShx = shxParts.length > 0 ? shxParts.join(', ') : '';
+        
+            let medHxParts = [
+              `PHx=${phx}`,
+              `DM${fmtBool(dm)}`,
+              `HTN${fmtBool(htn)}`,
+              `D/L${fmtBool(dl)}`,
+              `Stroke${fmtBool(stroke)}`,
+              `AMI${fmtBool(ami)}`,
+              `Afib${fmtBool(afib)}`,
+              cancerStr,
+              `SHx=${finalShx}`,
+              `FHx=${fhx}`
+            ];
+            const line3 = medHxParts.join(', ');
+        
+            // Line 4: Habits
+            // Travel
+            let travelStr = 'Travel(-)';
+            if (travel) {
+              const countries = Object.entries(travelCountries)
+                .filter(([_, active]) => active)
+                .map(([name]) => name);
+              if (travelNote) countries.push(travelNote);
+              travelStr = `Travel(${countries.length > 0 ? countries.join(', ') : '+'})`;
+            }
+        
+            // Allergy
+            let allergyStr = 'Allergy(-)';
+            if (allergy) {
+              const algParts = [];
+              if (allergyFood) algParts.push(`Food:${allergyFood}`);
+              if (allergyDrug) algParts.push(`Drug:${allergyDrug}`);
+              allergyStr = `Allergy(${algParts.length > 0 ? algParts.join(', ') : '+'})`;
+            }
+        
+            // Alcohol
+            const alcStr = alcohol ? `Alc(${alcoholType})` : 'Alc(-)';
+        
+            // Smoking
+            let smkStr = 'Smk(-)';
+            if (smoking) {
+                if (smokingQuit) {
+                    smkStr = `Smk(Ex-smoker, quit ${smokingQuitYears || '?'}y)`;
+                } else {
+                    smkStr = `Smk(${smokingAmount})`;
+                }
+            }
+        
+            const line4 = [travelStr, allergyStr, alcStr, smkStr].join(', ');
+        
+            // Line 5: Female
+            let line5 = '';
+            if (sex === 'F') {
+              let parts = [];
+              if (menopause) {
+                parts.push('Menopause(+)');
+              } else {
+                if (pregnancyStatus && pregnancyStatus !== 'N/A') parts.push(`Pregnancy: ${pregnancyStatus}`);
+                if (lmp) parts.push(`LMP: ${lmp}`);
+              }
+              line5 = parts.join(', ');
+            }
+        
+            const fullText = [line1, line2, line3, line4, line5].filter(l => l.trim() !== '').join('\n');
+            setGeneratedText(fullText);
+          }, [formData]);
+        
+          const handleCopy = () => {
+            const textArea = document.createElement("textarea");
+            textArea.value = generatedText;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+              document.execCommand('copy');
+              setCopied(true);
+              setTimeout(() => setCopied(false), 2000);
+            } catch (err) {
+              console.error('Copy failed', err);
+            }
+            document.body.removeChild(textArea);
+          };
+        
+          const handleReset = () => {
+            if (confirm('確定要清除所有資料嗎？')) {
+              setFormData(initialState);
+            }
+          };
+        
+          const SectionTitle = ({ icon: Icon, title }) => (
+            <h2 className="flex items-center gap-2 font-bold text-slate-700 text-xl mb-4 border-b border-gray-200 pb-3 mt-2">
+              <Icon size={24} className="text-blue-500" /> {title}
+            </h2>
+          );
+        
+          const ToggleBtn = ({ label, active, onClick, colorClass = "bg-blue-600 border-blue-600 text-white" }) => (
+            <button
+              onClick={onClick}
+              className={`
+                relative flex-1 min-w-[80px] sm:min-w-[100px] py-3 px-2 rounded-lg border-2 text-base font-bold shadow-sm transition-all duration-200 active:scale-95
+                flex items-center justify-center gap-1
+                ${active ? colorClass : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'}
+              `}
+            >
+              {label}
+              {active && <Check size={16} strokeWidth={3} />}
+            </button>
+          );
+        
+          return (
+            <div className="min-h-screen bg-gray-100 p-3 sm:p-6 font-sans text-gray-800 pb-32">
+              <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200">
+                
+                <div className="bg-slate-800 p-4 sm:p-5 flex justify-between items-center text-white sticky top-0 z-20 shadow-md">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-500 rounded-lg">
+                      <Activity className="w-6 h-6 text-white" />
+                    </div>
+                    <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Neuro Note Gen</h1>
+                  </div>
+                  <button 
+                    onClick={handleReset}
+                    className="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg transition-colors text-gray-200 font-medium active:scale-95"
+                  >
+                    <RotateCcw size={18} /> <span className="hidden sm:inline">重置</span>
+                  </button>
+                </div>
+        
+                <div className="p-4 sm:p-8 space-y-10">
+                  
+                  <section>
+                    <SectionTitle icon={User} title="基本資料 (Demographics)" />
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6">
+                      <div className="col-span-1">
+                         <label className="text-sm font-bold text-gray-500 uppercase tracking-wide block mb-2">Chart No.</label>
+                         <input type="text" name="chartNo" value={formData.chartNo} onChange={handleChange} className="w-full h-12 px-4 text-lg bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all" placeholder="12345678" />
+                      </div>
+                      <div className="col-span-1">
+                         <label className="text-sm font-bold text-gray-500 uppercase tracking-wide block mb-2">Date</label>
+                         <input type="text" name="date" value={formData.date} onChange={handleChange} className="w-full h-12 px-4 text-lg bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+                      </div>
+                    </div>
+        
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
+                      <div>
+                         <label className="text-sm font-bold text-gray-500 uppercase tracking-wide block mb-2">Age</label>
+                         <input type="number" name="age" value={formData.age} onChange={handleChange} className="w-full h-12 px-4 text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="89" />
+                      </div>
+                      <div>
+                         <label className="text-sm font-bold text-gray-500 uppercase tracking-wide block mb-2">Sex</label>
+                         <select name="sex" value={formData.sex} onChange={handleChange} className="w-full h-12 px-4 text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                           <option value="M">Male</option>
+                           <option value="F">Female</option>
+                         </select>
+                      </div>
+                       <div>
+                         <label className="text-sm font-bold text-gray-500 uppercase tracking-wide block mb-2">Hand</label>
+                         <select name="rh" value={formData.rh} onChange={handleChange} className="w-full h-12 px-4 text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                           <option value="RH">RH (右)</option>
+                           <option value="LH">LH (左)</option>
+                           <option value="Both">Both</option>
+                         </select>
+                      </div>
+                      <div className="flex items-end">
+                          <ToggleBtn 
+                            label="Veg (素食)" 
+                            active={formData.veg} 
+                            onClick={() => toggleBool('veg')} 
+                            colorClass="bg-green-600 border-green-600 text-white"
+                          />
+                      </div>
+                    </div>
+        
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                      <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                          <label className="text-sm font-bold text-gray-500 uppercase tracking-wide block mb-2">Residence</label>
+                          <div className="flex gap-3">
+                            <select name="live" value={formData.live} onChange={handleChange} className="flex-1 h-12 px-4 text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                              {['宜蘭', '員山', '壯圍', '頭城', '礁溪', '羅東', '蘇澳', '台北', '其他'].map(city => (
+                                <option key={city} value={city}>{city}</option>
+                              ))}
+                            </select>
+                            {formData.live === '其他' && (
+                              <input type="text" name="liveOther" value={formData.liveOther} onChange={handleChange} className="flex-1 h-12 px-4 text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none animate-in fade-in slide-in-from-left-2" placeholder="輸入城市" />
+                            )}
+                          </div>
+                      </div>
+        
+                      <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                          <div className="flex gap-4">
+                            <div className="flex-1">
+                              <label className="text-sm font-bold text-gray-500 uppercase tracking-wide block mb-2">Marital</label>
+                              <select name="married" value={formData.married} onChange={handleChange} className="w-full h-12 px-4 text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                                <option value="Married">Married</option>
+                                <option value="Unmarried">Unmarried</option>
+                                <option value="Widowed">Widowed</option>
+                                <option value="Divorced">Divorced</option>
+                              </select>
+                            </div>
+                            <div className="flex-1">
+                              <label className="text-sm font-bold text-gray-500 uppercase tracking-wide block mb-2">Offsprings</label>
+                              <input type="text" name="offsprings" value={formData.offsprings} onChange={handleChange} className="w-full h-12 px-4 text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="3" />
+                            </div>
+                          </div>
+                      </div>
+                    </div>
+        
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <div className="p-5 bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
+                         <div className="flex items-center gap-2 mb-3">
+                            <Briefcase size={20} className="text-gray-500"/>
+                            <label className="text-sm font-bold text-gray-500 uppercase tracking-wide">Job</label>
+                         </div>
+                         <div className="flex flex-wrap gap-2 mb-3">
+                            {jobOptions.map(opt => (
+                               <button
+                                 key={opt}
+                                 onClick={() => setJob(opt)}
+                                 className={`px-4 py-2 rounded-lg text-base font-medium border-2 transition-all active:scale-95 ${formData.job === opt ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'}`}
+                               >
+                                 {opt}
+                               </button>
+                            ))}
+                         </div>
+                         <input type="text" name="job" value={formData.job} onChange={handleChange} className="w-full h-12 px-4 text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="農 / 工 / 其他..." />
+                      </div>
+        
+                      <div className="p-5 bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
+                         <div className="flex items-center gap-2 mb-3">
+                            <GraduationCap size={20} className="text-gray-500"/>
+                            <label className="text-sm font-bold text-gray-500 uppercase tracking-wide">Education</label>
+                         </div>
+                         <div className="flex flex-wrap gap-2 mb-4">
+                            {eduOptions.map((opt) => (
+                              <button
+                                key={opt.val}
+                                onClick={() => setEdu(opt.val, 'predefined')}
+                                className={`px-3 py-2 text-sm sm:text-base font-bold rounded-lg border-2 transition-all active:scale-95 ${
+                                  formData.edu === opt.val && formData.eduType === 'predefined'
+                                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' 
+                                    : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
+                                }`}
+                              >
+                                {opt.label}
+                              </button>
+                            ))}
+                         </div>
+                         <div className="flex items-center gap-3">
+                            <span className="text-base font-bold text-gray-500 whitespace-nowrap">年數:</span>
+                            <input 
+                              type="text" 
+                              name="edu" 
+                              value={formData.edu} 
+                              onChange={(e) => {
+                                handleChange(e);
+                                setFormData(prev => ({...prev, eduType: 'manual'}));
+                              }}
+                              className="w-full h-12 px-4 text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" 
+                              placeholder="e.g. 14" 
+                            />
+                         </div>
+                      </div>
+                    </div>
+                  </section>
+        
+                  <section>
+                    <SectionTitle icon={HeartPulse} title="過去病史 (Medical Hx)" />
+                    
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+                      {[
+                        { key: 'dm', label: 'DM' },
+                        { key: 'htn', label: 'HTN' },
+                        { key: 'dl', label: 'D/L' },
+                        { key: 'stroke', label: 'Stroke' },
+                        { key: 'ami', label: 'AMI' },
+                        { key: 'afib', label: 'Afib' },
+                      ].map((item) => (
+                        <ToggleBtn 
+                          key={item.key}
+                          label={item.label}
+                          active={formData[item.key]}
+                          onClick={() => toggleBool(item.key)}
+                          colorClass="bg-red-600 border-red-600 text-white"
+                        />
+                      ))}
+        
+                      <div className={`col-span-2 flex items-center p-1 rounded-lg border-2 transition-all ${formData.cancer ? 'bg-red-50 border-red-300' : 'bg-white border-gray-300'}`}>
+                        <button
+                           onClick={() => toggleBool('cancer')}
+                           className={`px-4 py-2 rounded-md font-bold text-base flex items-center gap-2 transition-colors ${formData.cancer ? 'text-red-700' : 'text-gray-500'}`}
+                        >
+                          Cancer {formData.cancer && <Check size={18} />}
+                        </button>
+                        {formData.cancer && (
+                           <input 
+                              type="text" 
+                              name="cancerNote" 
+                              value={formData.cancerNote} 
+                              onChange={handleChange} 
+                              className="flex-1 h-10 px-2 ml-2 bg-white border-b-2 border-red-300 focus:border-red-500 outline-none text-red-800 placeholder-red-300"
+                              placeholder="部位 (Site)"
+                              autoFocus
+                            />
+                        )}
+                      </div>
+                    </div>
+        
+                    <div className="space-y-6">
+                       <div>
+                          <label className="text-sm font-bold text-gray-500 uppercase tracking-wide block mb-2">Past Hx (PHx)</label>
+                          <input type="text" name="phx" value={formData.phx} onChange={handleChange} className="w-full h-12 px-4 text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="其他疾病..." />
+                       </div>
+        
+                       <div className="bg-blue-50 p-5 rounded-xl border border-blue-100">
+                          <label className="text-sm font-bold text-gray-500 uppercase tracking-wide block mb-3">Surgery Hx (SHx)</label>
+                          <div className="flex flex-col lg:flex-row gap-4">
+                             <div className="flex gap-3 shrink-0">
+                                <ToggleBtn label="脊椎手術" active={formData.spineOp} onClick={() => toggleBool('spineOp')} />
+                                <ToggleBtn label="腦部手術" active={formData.brainOp} onClick={() => toggleBool('brainOp')} />
+                             </div>
+                             <input type="text" name="shx" value={formData.shx} onChange={handleChange} className="w-full h-auto min-h-[50px] px-4 text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white" placeholder="其他手術..." />
+                          </div>
+                       </div>
+                       
+                       <div>
+                        <label className="text-sm font-bold text-gray-500 uppercase tracking-wide block mb-2">Family Hx (FHx)</label>
+                        <input type="text" name="fhx" value={formData.fhx} onChange={handleChange} className="w-full h-12 px-4 text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                      </div>
+                    </div>
+                  </section>
+        
+                  <section>
+                    <SectionTitle icon={FileText} title="生活習慣 (Habits)" />
+        
+                    <div className="space-y-4">
+                      <div className={`p-5 rounded-xl border-2 transition-all ${formData.allergy ? 'bg-orange-50 border-orange-300' : 'bg-white border-gray-200'}`}>
+                         <div className="flex items-center justify-between mb-3 cursor-pointer" onClick={() => toggleBool('allergy')}>
+                            <div className="flex items-center gap-3">
+                              <Syringe size={24} className={formData.allergy ? 'text-orange-500' : 'text-gray-400'} />
+                              <span className={`text-xl font-bold ${formData.allergy ? 'text-orange-700' : 'text-gray-600'}`}>Allergy (過敏)</span>
+                            </div>
+                            <div className={`w-6 h-6 rounded border flex items-center justify-center ${formData.allergy ? 'bg-orange-500 border-orange-500 text-white' : 'border-gray-300'}`}>
+                              {formData.allergy && <Check size={16} />}
+                            </div>
+                         </div>
+                         
+                         {formData.allergy && (
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
+                              <input type="text" name="allergyFood" value={formData.allergyFood} onChange={handleChange} placeholder="食物過敏" className="w-full h-12 px-4 text-lg bg-white border border-orange-200 rounded-lg" />
+                              <input type="text" name="allergyDrug" value={formData.allergyDrug} onChange={handleChange} placeholder="藥物過敏" className="w-full h-12 px-4 text-lg bg-white border border-orange-200 rounded-lg" />
+                           </div>
+                         )}
+                      </div>
+        
+                      <div className={`p-5 rounded-xl border-2 transition-all ${formData.alcohol ? 'bg-yellow-50 border-yellow-300' : 'bg-white border-gray-200'}`}>
+                         <div className="flex items-center justify-between mb-4 cursor-pointer" onClick={() => toggleBool('alcohol')}>
+                            <div className="flex items-center gap-3">
+                              <Wine size={24} className={formData.alcohol ? 'text-yellow-600' : 'text-gray-400'} />
+                              <span className={`text-xl font-bold ${formData.alcohol ? 'text-yellow-800' : 'text-gray-600'}`}>Alcohol (飲酒)</span>
+                            </div>
+                            <div className={`w-6 h-6 rounded border flex items-center justify-center ${formData.alcohol ? 'bg-yellow-500 border-yellow-500 text-white' : 'border-gray-300'}`}>
+                              {formData.alcohol && <Check size={16} />}
+                            </div>
+                         </div>
+        
+                         {formData.alcohol && (
+                           <div className="flex gap-3 animate-in fade-in slide-in-from-top-2">
+                              {['Few', 'Social', 'Often'].map(opt => (
+                                <button
+                                  key={opt}
+                                  onClick={() => setFormData(p => ({ ...p, alcoholType: opt }))}
+                                  className={`flex-1 py-3 px-2 rounded-lg border-2 text-base font-bold transition-all active:scale-95 ${
+                                    formData.alcoholType === opt 
+                                      ? 'bg-yellow-500 text-white border-yellow-600 shadow-md' 
+                                      : 'bg-white text-gray-600 border-gray-300'
+                                  }`}
+                                >
+                                  {opt}
+                                </button>
+                              ))}
+                           </div>
+                         )}
+                      </div>
+        
+                      <div className={`p-5 rounded-xl border-2 transition-all ${formData.smoking ? 'bg-gray-100 border-gray-400' : 'bg-white border-gray-200'}`}>
+                         <div className="flex items-center justify-between mb-4 cursor-pointer" onClick={() => toggleBool('smoking')}>
+                            <div className="flex items-center gap-3">
+                              <Cigarette size={24} className={formData.smoking ? 'text-gray-800' : 'text-gray-400'} />
+                              <span className={`text-xl font-bold ${formData.smoking ? 'text-gray-900' : 'text-gray-600'}`}>Smoking (抽菸)</span>
+                            </div>
+                             <div className={`w-6 h-6 rounded border flex items-center justify-center ${formData.smoking ? 'bg-gray-800 border-gray-800 text-white' : 'border-gray-300'}`}>
+                              {formData.smoking && <Check size={16} />}
+                            </div>
+                         </div>
+        
+                         {formData.smoking && (
+                           <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                              <div className="flex bg-white rounded-lg border border-gray-300 overflow-hidden w-full sm:w-80 h-12">
+                                 <button 
+                                   onClick={() => setFormData(p => ({ ...p, smokingQuit: false }))}
+                                   className={`flex-1 text-base font-bold transition-colors ${!formData.smokingQuit ? 'bg-gray-700 text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+                                 >
+                                   持續抽菸 (Active)
+                                 </button>
+                                 <button 
+                                   onClick={() => setFormData(p => ({ ...p, smokingQuit: true }))}
+                                   className={`flex-1 text-base font-bold transition-colors ${formData.smokingQuit ? 'bg-green-600 text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+                                 >
+                                   已戒菸 (Quit)
+                                 </button>
+                              </div>
+        
+                              <div>
+                                  <label className="text-sm font-bold text-gray-500 block mb-2">量 (Amount)</label>
+                                  <input type="text" name="smokingAmount" value={formData.smokingAmount} onChange={handleChange} className="w-full h-12 px-4 text-lg border border-gray-300 rounded-lg" placeholder="1 PPD x 10 years" />
+                              </div>
+        
+                              {formData.smokingQuit && (
+                                  <div className="animate-in fade-in slide-in-from-left-2">
+                                      <label className="text-sm font-bold text-green-700 block mb-2">已戒菸多久 (Years)</label>
+                                      <input type="number" name="smokingQuitYears" value={formData.smokingQuitYears} onChange={handleChange} className="w-full h-12 px-4 text-lg border-2 border-green-400 rounded-lg focus:ring-green-500 outline-none" placeholder="e.g. 5" />
+                                  </div>
+                              )}
+                           </div>
+                         )}
+                      </div>
+        
+                      <div className={`p-5 rounded-xl border-2 transition-all ${formData.travel ? 'bg-blue-50 border-blue-300' : 'bg-white border-gray-200'}`}>
+                         <div className="flex items-center justify-between mb-4 cursor-pointer" onClick={() => toggleBool('travel')}>
+                            <div className="flex items-center gap-3">
+                              <Plane size={24} className={formData.travel ? 'text-blue-600' : 'text-gray-400'} />
+                              <span className={`text-xl font-bold ${formData.travel ? 'text-blue-800' : 'text-gray-600'}`}>Travel (旅遊)</span>
+                            </div>
+                            <div className={`w-6 h-6 rounded border flex items-center justify-center ${formData.travel ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-300'}`}>
+                              {formData.travel && <Check size={16} />}
+                            </div>
+                         </div>
+        
+                         {formData.travel && (
+                           <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                              <div className="flex flex-wrap gap-3">
+                                {Object.keys(formData.travelCountries).map(country => (
+                                  <button 
+                                    key={country}
+                                    onClick={() => handleCountryToggle(country)}
+                                    className={`px-4 py-2 text-base font-bold rounded-full border-2 transition-all active:scale-95 ${formData.travelCountries[country] ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'}`}
+                                  >
+                                    {country}
+                                  </button>
+                                ))}
+                              </div>
+                              <input type="text" name="travelNote" value={formData.travelNote} onChange={handleChange} placeholder="其他國家 / 備註" className="w-full h-12 px-4 text-lg border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-300 outline-none" />
+                           </div>
+                         )}
+                      </div>
+        
+                    </div>
+                  </section>
+        
+                  {formData.sex === 'F' && (
+                    <div className="bg-pink-50 p-6 sm:p-8 rounded-2xl border-2 border-pink-100 space-y-6 animate-in fade-in slide-in-from-top-4 duration-300 shadow-sm">
+                      <h2 className="font-bold text-pink-700 text-xl flex items-center gap-2">
+                        <User size={24} /> 女性病患專屬 (Female)
+                      </h2>
+                      
+                      <div className="space-y-4">
+                         <label className="flex items-center gap-3 cursor-pointer p-4 bg-white rounded-xl border border-pink-200 hover:border-pink-300 transition-colors">
+                            <input type="checkbox" name="menopause" checked={formData.menopause} onChange={handleChange} className="w-6 h-6 text-pink-600 rounded focus:ring-pink-500" />
+                            <span className="text-gray-800 font-bold text-lg">已停經 (Menopause)</span>
+                         </label>
+        
+                         {!formData.menopause && (
+                           <div className="pl-2 sm:pl-4 space-y-4">
+                             <div className="p-4 bg-white/60 rounded-xl border border-pink-100">
+                                <label className="text-base text-gray-700 font-bold block mb-3">懷孕狀態:</label>
+                                <div className="flex flex-col sm:flex-row gap-4">
+                                  {['Denied', 'Possible', 'Confirmed'].map(status => (
+                                    <label key={status} className="flex items-center gap-2 cursor-pointer p-2 rounded hover:bg-pink-50 transition-colors">
+                                      <input 
+                                        type="radio" 
+                                        name="pregnancyStatus" 
+                                        value={status} 
+                                        checked={formData.pregnancyStatus === status} 
+                                        onChange={handleChange} 
+                                        className="w-5 h-5 text-pink-600 focus:ring-pink-500"
+                                      />
+                                      <span className="text-base font-medium">{status}</span>
+                                    </label>
+                                  ))}
+                                </div>
+                             </div>
+                             
+                             <div>
+                               <label className="text-sm font-bold text-gray-500 uppercase tracking-wide block mb-2">LMP (末次月經)</label>
+                               <input type="text" name="lmp" value={formData.lmp} onChange={handleChange} className="w-full h-12 px-4 text-lg border border-pink-200 rounded-lg focus:ring-2 focus:ring-pink-400 outline-none" placeholder="Regular / Date" />
+                             </div>
+                           </div>
+                         )}
+                      </div>
+                    </div>
+                  )}
+        
+                </div>
+        
+                <div className="bg-slate-900 border-t-4 border-blue-500 p-4 sm:p-8 pb-10">
+                    <h2 className="text-white font-bold mb-4 flex items-center justify-between text-xl">
+                      <span>生成結果 (Result)</span>
+                      <button
+                        onClick={handleCopy}
+                        className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold text-sm shadow-lg transition-all transform active:scale-95 active:shadow-none ${
+                          copied 
+                            ? 'bg-green-500 text-white scale-105' 
+                            : 'bg-blue-600 text-white hover:bg-blue-500'
+                        }`}
+                      >
+                        {copied ? <Check size={20} /> : <Copy size={20} />}
+                        {copied ? '已複製！' : '複製文字'}
+                      </button>
+                    </h2>
+                    
+                    <textarea
+                      readOnly
+                      value={generatedText}
+                      className="w-full h-56 bg-slate-800 text-green-400 font-mono text-base sm:text-lg p-5 rounded-xl focus:outline-none resize-none leading-relaxed shadow-inner border border-slate-700"
+                    />
+                </div>
+        
+              </div>
+            </div>
+          );
+        };
+        
+        // Render
+        const root = createRoot(document.getElementById('root'));
+        root.render(<NeuroNoteGenerator />);
+    </script>
+</body>
+</html>
