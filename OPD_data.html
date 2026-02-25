@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab Data Organizer</title>
+    <!-- 引入 Tailwind CSS (若離線使用無網路，外觀會變為純文字，但功能依舊正常；建議在有網路環境開啟一次讓瀏覽器快取) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 FontAwesome 圖示 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* 隱藏捲軸但保留捲動功能 */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-50 font-sans text-slate-800 p-4 md:p-8">
+
+    <!-- 設定彈出視窗 (預設隱藏) -->
+    <div id="settings-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col">
+            <div class="p-6 border-b flex justify-between items-center bg-blue-50 rounded-t-xl">
+                <h3 class="text-xl font-bold text-blue-900 flex items-center gap-2">
+                    <i class="fas fa-cog"></i> 設定分類關鍵字
+                </h3>
+                <button onclick="closeSettings()" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div class="p-6 space-y-8">
+                <div class="bg-yellow-50 p-4 rounded-lg text-sm text-yellow-800 mb-4">
+                    <strong>提示：</strong> 住院格式檢體 (Blood, Urine, Nasal swab...) 將以醒目藍色框框顯示。<br/>
+                    已增加對 <strong>Nasal swab</strong> 及無空格文字的支援。
+                </div>
+
+                <!-- Tumor Markers -->
+                <div>
+                    <div class="flex justify-between items-center mb-3">
+                        <h4 class="font-semibold text-gray-700 flex items-center gap-2">
+                            <i class="fas fa-exclamation-circle text-orange-500"></i> Tumor Markers
+                        </h4>
+                        <button onclick="addItem('tumorMarkers')" class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded hover:bg-blue-200 transition flex items-center gap-1">
+                            <i class="fas fa-plus"></i> 新增
+                        </button>
+                    </div>
+                    <div id="tumor-list" class="flex flex-wrap gap-2"></div>
+                </div>
+
+                <!-- Autoimmune -->
+                <div>
+                    <div class="flex justify-between items-center mb-3">
+                        <h4 class="font-semibold text-gray-700 flex items-center gap-2">
+                            <i class="fas fa-check-circle text-teal-500"></i> Autoimmune Profile
+                        </h4>
+                        <button onclick="addItem('autoimmune')" class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded hover:bg-blue-200 transition flex items-center gap-1">
+                            <i class="fas fa-plus"></i> 新增
+                        </button>
+                    </div>
+                    <div id="autoimmune-list" class="flex flex-wrap gap-2"></div>
+                </div>
+            </div>
+
+            <div class="p-4 border-t bg-gray-50 rounded-b-xl flex justify-end gap-3">
+                <button onclick="closeSettings()" class="px-4 py-2 text-gray-600 hover:bg-gray-200 rounded-lg">取消</button>
+                <button onclick="saveSettings()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 shadow-sm">
+                    <i class="fas fa-save"></i> 儲存設定
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主要內容 -->
+    <div class="max-w-6xl mx-auto">
+        <header class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                    <i class="fas fa-file-medical text-blue-600"></i> Lab Data Organizer
+                </h1>
+                <p class="text-slate-500 text-sm mt-1">
+                    自動判別住院格式並群組化 (醒目顯示)、過濾 eGFR、統一日期
+                </p>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="loadExample()" class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition shadow-sm text-sm">
+                    <i class="fas fa-undo"></i> 載入範例
+                </button>
+                <button onclick="openSettings()" class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition shadow-sm text-sm">
+                    <i class="fas fa-cog"></i> 設定 WNL 關鍵字
+                </button>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 h-[calc(100vh-140px)] min-h-[500px]">
+            <!-- 左側：輸入 -->
+            <div class="flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-slate-100 px-4 py-3 border-b border-slate-200 font-medium text-slate-700 flex justify-between items-center">
+                    <span>原始資料輸入 (Raw Data)</span>
+                    <span class="text-xs text-slate-400">支援民國年與住院檢體群組</span>
+                </div>
+                <textarea id="input-textarea" class="flex-1 p-4 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 font-mono text-sm leading-relaxed" placeholder="請在此貼上 Lab 資料..."></textarea>
+            </div>
+
+            <!-- 右側：輸出 -->
+            <div class="flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-blue-50 px-4 py-3 border-b border-blue-100 font-medium text-blue-800 flex justify-between items-center">
+                    <span>整理結果 (MM/DD 格式)</span>
+                    <button id="copy-btn" onclick="copyToClipboard()" disabled class="flex items-center gap-1.5 px-3 py-1 rounded text-xs font-medium transition-all bg-white text-blue-600 border border-blue-200 hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i id="copy-icon" class="fas fa-clipboard"></i>
+                        <span id="copy-text">複製文字</span>
+                    </button>
+                </div>
+                <div id="output-container" class="flex-1 p-6 bg-slate-50 overflow-auto">
+                    <!-- 預設提示文字 -->
+                    <div class="h-full flex flex-col items-center justify-center text-slate-400">
+                        <i class="fas fa-arrow-right text-4xl mb-4 text-slate-200"></i>
+                        <p>請在左側輸入資料以檢視結果</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript 邏輯 -->
+    <script>
+        const DEFAULT_MAPPINGS = {
+            tumorMarkers: ['CEA', 'AFP', 'CA19-9', 'CA-125', 'PSA', 'CA15-3', 'SCC'],
+            autoimmune: ['ANA', 'dsDNA', 'RF', 'C3', 'C4', 'Anti-SSA', 'Anti-Ro', 'Anti-SSB', 'Anti-La', 'Atyp-pANCA', 'Pattern:']
+        };
+
+        const DEFAULT_INPUT_EXAMPLE = `115/01/15 17:10  Blood        K           4.0       mmol/L
+115/01/15 17:10  Blood        Na          130       mmol/L
+115/01/15 17:15  Urine        Protein     Negative  qual.
+115/01/15 17:20  Nasal swabInfl A Ag      Negative
+2023/10/05 CEA 1.2 Negative
+2023/11/12 ANA 1:80 Positive`;
+
+        const REPLACEMENT_RULES = [
+            { p: /CREA/gi, r: 'Crea' },
+            { p: /Free T4/gi, r: 'fT4' },
+            { p: /Homocystei/gi, r: 'HCys' },
+            { p: /Non-Reactive/gi, r: '(-)' },
+            { p: /Platelet/gi, r: 'Plt' },
+            { p: /\^p/g, r: ', ' },
+            { p: /Triglyceride \(TG\)/gi, r: 'TG' },
+            { p: /ANTI-DS-DNA IgG/gi, r: 'dsDNA' },
+            { p: /Anti-SSA\(RO\)/gi, r: 'Anti-Ro' },
+            { p: /Anti-SSB\(La\)/gi, r: 'Anti-La' },
+            { p: /Comment ANA pattern :/gi, r: 'Pattern:' },
+            { p: /Atypical pANCA/gi, r: 'Atyp-pANCA' },
+            { p: /STS-/gi, r: '' },
+            { p: /定量/g, r: '' },
+            { p: /\(1hr\)/g, r: '' },
+            { p: /gene typin Negative/gi, r: 'gene typin (-)' },
+            { p: /TOTAL CALCIUM/gi, r: 'T-Ca' },
+            { p: /INORGANIC PHOSPHORUS/gi, r: 'IP' },
+            { p: /FREE Ca/gi, r: 'F-Ca' },
+            { p: /Nasal swab(?=[A-Za-z])/gi, r: 'Nasal swab ' } 
+        ];
+
+        let mappings = JSON.parse(JSON.stringify(DEFAULT_MAPPINGS));
+        let tempMappings = null;
+        let structuredOutputData = [];
+
+        const textarea = document.getElementById('input-textarea');
+        const outputContainer = document.getElementById('output-container');
+        const copyBtn = document.getElementById('copy-btn');
+        const copyIcon = document.getElementById('copy-icon');
+        const copyText = document.getElementById('copy-text');
+        const modal = document.getElementById('settings-modal');
+
+        // 綁定輸入事件
+        textarea.addEventListener('input', processData);
+
+        function loadExample() {
+            textarea.value = DEFAULT_INPUT_EXAMPLE;
+            processData();
+        }
+
+        const extractDate = (str) => {
+            const dateRegex = /(\d{3,4}[\/\-]\d{1,2}[\/\-]\d{1,2})|(\d{2}[\/\-]\d{1,2}[\/\-]\d{1,2})|(\d{1,2}[\/\-]\d{1,2})/;
+            const match = str.match(dateRegex);
+            return match ? match[0] : null;
+        };
+
+        const toMonthDay = (dateStr) => {
+            if (!dateStr) return '';
+            const normalized = dateStr.replace(/-/g, '/');
+            const parts = normalized.split('/');
+            if (parts.length === 3) return `${parts[1]}/${parts[2]}`;
+            if (parts.length === 2) return `${parts[0]}/${parts[1]}`;
+            return dateStr;
+        };
+
+        const removeAllDates = (str) => {
+            let clean = str.replace(/\b\d{2,4}[\/\-]\d{1,2}[\/\-]\d{1,2}\b/g, '');
+            clean = clean.replace(/\b\d{1,2}[\/\-]\d{1,2}\b/g, '');
+            return clean;
+        };
+
+        const applyReplacements = (text) => {
+            let newText = text;
+            REPLACEMENT_RULES.forEach(rule => {
+                newText = newText.replace(rule.p, rule.r);
+            });
+            return newText;
+        };
+
+        const parseResult = (line) => {
+            const lowerLine = line.toLowerCase();
+            const isPositive = lowerLine.includes('positive') || lowerLine.includes('pos') || lowerLine.includes('(+)');
+            const isNegative = lowerLine.includes('negative') || lowerLine.includes('neg') || lowerLine.includes('(-)');
+            return { isPositive, isNegative };
+        };
+
+        const identifyCategory = (content, currentMappings) => {
+            let category = 'other';
+            let testName = content.trim(); 
+            const nameForCheck = testName.replace(/\(\+\)/g, '').replace(/\(\-\)/g, '').trim();
+
+            const checkList = [
+                { type: 'tumorMarkers', list: currentMappings.tumorMarkers },
+                { type: 'autoimmune', list: currentMappings.autoimmune }
+            ];
+
+            let foundMatch = false;
+
+            for (const group of checkList) {
+                for (const item of group.list) {
+                    if (nameForCheck.toLowerCase().includes(item.toLowerCase())) {
+                        category = group.type;
+                        foundMatch = true;
+                        if (parseResult(content).isPositive || parseResult(content).isNegative) {
+                            testName = item; 
+                        }
+                        break; 
+                    }
+                }
+                if (foundMatch) break;
+            }
+            
+            if (!foundMatch && (parseResult(content).isPositive || parseResult(content).isNegative)) {
+                let tempName = content.replace(/positive|pos|negative|neg|non-reactive|\(\+\)|\(\-\)/gi, '').trim();
+                tempName = tempName.replace(/\s+\d+(\.\d+)?$/, '').trim();
+                
+                if (tempName) {
+                    testName = tempName;
+                } else {
+                    const parts = content.split(' ');
+                    if (parts.length > 0) testName = parts[0];
+                }
+            }
+
+            return { category, testName };
+        };
+
+        function processData() {
+            const inputText = textarea.value;
+            if (!inputText.trim()) {
+                structuredOutputData = [];
+                renderOutput();
+                return;
+            }
+
+            const lines = inputText.split('\n').filter(line => line.trim() !== '');
+            const dataByDate = {}; 
+            let lastDateKey = 'Unknown';
+
+            lines.forEach(line => {
+                if (line.toLowerCase().includes('egfr')) return;
+
+                let currentLine = line.trim();
+                currentLine = currentLine.replace(/Nasal swab/gi, 'Nasal swab '); 
+
+                let specimen = null;
+                const hospitalFormatRegex = /^(\d{3,4}[\/\-]\d{1,2}[\/\-]\d{1,2})\s+(\d{1,2}:\d{2})\s+/;
+                const hospitalMatch = currentLine.match(hospitalFormatRegex);
+
+                if (hospitalMatch) {
+                    const lineWithoutDateTime = currentLine.replace(hospitalFormatRegex, '');
+                    const parts = lineWithoutDateTime.trim().split(/\s+/);
+                    
+                    if (parts.length > 0) {
+                        const firstTwoWords = parts.slice(0, 2).join(' ').toLowerCase();
+                        let startIndex = 1;
+
+                        if (firstTwoWords.includes('nasal swab')) {
+                            specimen = "Nasal swab";
+                            startIndex = 2;
+                        } else {
+                            specimen = parts[0]; 
+                            startIndex = 1;
+                        }
+                        
+                        const remainingParts = parts.slice(startIndex);
+                        
+                        if (remainingParts.length > 0) {
+                            const lastPart = remainingParts[remainingParts.length - 1];
+                            const isResult = /negative|positive|pos|neg|\(\+\)|\(\-\)/i.test(lastPart);
+                            const isNumber = !isNaN(parseFloat(lastPart)) && isFinite(lastPart);
+                            const endSlice = (isResult || isNumber) ? undefined : -1;
+                            
+                            currentLine = remainingParts.slice(0, endSlice).join(' ');
+                            currentLine = `${hospitalMatch[1]} ${currentLine}`; 
+                        }
+                    }
+                }
+
+                const rawDate = extractDate(currentLine);
+                let dateKey = rawDate ? toMonthDay(rawDate) : lastDateKey;
+                if (dateKey !== 'Unknown') lastDateKey = dateKey;
+
+                let content = currentLine;
+                content = removeAllDates(content).trim();
+                content = applyReplacements(content);
+
+                const { isPositive, isNegative } = parseResult(content);
+                const { category, testName } = identifyCategory(content, mappings);
+
+                let finalResultStr = content;
+
+                if (isPositive) {
+                    finalResultStr = `${testName} (+)`;
+                } else if (isNegative) {
+                    finalResultStr = `${testName} (-)`;
+                } else {
+                    finalResultStr = content.replace(/\s+/g, ' ').trim();
+                }
+
+                if (!finalResultStr) return;
+
+                if (!dataByDate[dateKey]) {
+                    dataByDate[dateKey] = [];
+                }
+
+                dataByDate[dateKey].push({
+                    testName, category, specimen, isPositive, isNegative, finalResultStr
+                });
+            });
+
+            structuredOutputData = Object.keys(dataByDate).map(date => {
+                const items = dataByDate[date];
+                const hospitalItems = items.filter(i => i.specimen);
+                const standardItems = items.filter(i => !i.specimen);
+                const finalParts = []; 
+
+                const tumorList = standardItems.filter(i => i.category === 'tumorMarkers');
+                const immuneList = standardItems.filter(i => i.category === 'autoimmune');
+                const otherList = standardItems.filter(i => i.category === 'other');
+
+                const pushText = (txt) => finalParts.push({ type: 'text', text: txt });
+
+                if (tumorList.length > 0) {
+                    const allNegative = tumorList.every(i => i.isNegative);
+                    if (allNegative) pushText('Tumor marker WNL');
+                    else tumorList.forEach(i => pushText(i.finalResultStr));
+                }
+
+                if (immuneList.length > 0) {
+                    const allNegative = immuneList.every(i => i.isNegative);
+                    if (allNegative) pushText('Autoimmune profile WNL');
+                    else immuneList.forEach(i => pushText(i.finalResultStr));
+                }
+
+                otherList.forEach(i => pushText(i.finalResultStr));
+
+                const specimenGroups = {};
+                hospitalItems.forEach(i => {
+                    if (!specimenGroups[i.specimen]) specimenGroups[i.specimen] = [];
+                    specimenGroups[i.specimen].push(i.finalResultStr);
+                });
+
+                Object.entries(specimenGroups).forEach(([spec, contents]) => {
+                    finalParts.push({ type: 'specimen', label: spec, text: contents.join(', ') });
+                });
+
+                return { date, items: finalParts };
+            });
+
+            renderOutput();
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, tag => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+            }[tag] || tag));
+        }
+
+        function renderOutput() {
+            outputContainer.innerHTML = '';
+
+            if (structuredOutputData.length === 0) {
+                copyBtn.disabled = true;
+                outputContainer.innerHTML = `
+                    <div class="h-full flex flex-col items-center justify-center text-slate-400">
+                        <i class="fas fa-arrow-right text-4xl mb-4 text-slate-200"></i>
+                        <p>請在左側輸入資料以檢視結果</p>
+                    </div>`;
+                return;
+            }
+
+            copyBtn.disabled = false;
+            const fragment = document.createDocumentFragment();
+
+            structuredOutputData.forEach(row => {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'bg-white p-3 rounded border border-slate-200 shadow-sm text-sm leading-6 flex flex-wrap items-center gap-y-2 mb-3';
+
+                const dateSpan = document.createElement('span');
+                dateSpan.className = 'font-bold text-slate-900 mr-2';
+                dateSpan.textContent = row.date;
+                rowDiv.appendChild(dateSpan);
+
+                row.items.forEach((item, idx) => {
+                    if (idx > 0) {
+                        const commaSpan = document.createElement('span');
+                        commaSpan.className = 'text-slate-400 mr-2';
+                        commaSpan.textContent = ',';
+                        rowDiv.appendChild(commaSpan);
+                    }
+
+                    if (item.type === 'specimen') {
+                        const badgeSpan = document.createElement('span');
+                        badgeSpan.className = 'inline-flex items-center border border-blue-200 bg-blue-50 rounded px-1.5 py-0.5 mx-1 shadow-sm';
+                        badgeSpan.innerHTML = `
+                            <span class="text-xs font-bold text-white bg-blue-600 px-1.5 py-0.5 rounded mr-2 shadow-sm uppercase tracking-wide">${escapeHTML(item.label)}</span>
+                            <span class="text-slate-700 font-medium">${escapeHTML(item.text)}</span>
+                        `;
+                        rowDiv.appendChild(badgeSpan);
+                    } else {
+                        const textSpan = document.createElement('span');
+                        textSpan.className = 'text-slate-700';
+                        textSpan.textContent = item.text;
+                        rowDiv.appendChild(textSpan);
+                    }
+                });
+                fragment.appendChild(rowDiv);
+            });
+
+            outputContainer.appendChild(fragment);
+        }
+
+        function copyToClipboard() {
+            const textToCopy = structuredOutputData.map(row => {
+                const rowContent = row.items.map(item => {
+                    if (item.type === 'specimen') return `[${item.label}] ${item.text}`;
+                    return item.text;
+                }).join(', ');
+                return `${row.date} ${rowContent}`;
+            }).join('\n');
+
+            const ta = document.createElement("textarea");
+            ta.value = textToCopy;
+            ta.style.position = "fixed";
+            ta.style.left = "-9999px";
+            ta.style.top = "0";
+            document.body.appendChild(ta);
+            ta.focus();
+            ta.select();
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    copyBtn.classList.remove('bg-white', 'text-blue-600');
+                    copyBtn.classList.add('bg-green-500', 'text-white', 'border-green-500');
+                    copyIcon.className = 'fas fa-check-circle';
+                    copyText.textContent = '已複製';
+                    
+                    setTimeout(() => {
+                        copyBtn.classList.remove('bg-green-500', 'text-white', 'border-green-500');
+                        copyBtn.classList.add('bg-white', 'text-blue-600');
+                        copyIcon.className = 'fas fa-clipboard';
+                        copyText.textContent = '複製文字';
+                    }, 2000);
+                }
+            } catch (err) {
+                console.error('無法複製文字', err);
+            }
+            document.body.removeChild(ta);
+        }
+
+        // Settings Modal Logic
+        function openSettings() {
+            tempMappings = JSON.parse(JSON.stringify(mappings));
+            renderSettingsList();
+            modal.classList.remove('hidden');
+        }
+
+        function closeSettings() {
+            modal.classList.add('hidden');
+            tempMappings = null;
+        }
+
+        function saveSettings() {
+            mappings = JSON.parse(JSON.stringify(tempMappings));
+            closeSettings();
+            processData(); // Re-run with new mappings
+        }
+
+        function addItem(category) {
+            const newVal = prompt(`新增 ${category === 'tumorMarkers' ? 'Tumor Marker' : 'Autoimmune'} 關鍵字:`);
+            if (newVal && newVal.trim() !== '') {
+                tempMappings[category].push(newVal.trim());
+                renderSettingsList();
+            }
+        }
+
+        function removeItem(category, item) {
+            tempMappings[category] = tempMappings[category].filter(i => i !== item);
+            renderSettingsList();
+        }
+
+        function renderSettingsList() {
+            const createTagHTML = (item, category) => `
+                <span class="bg-gray-100 border border-gray-200 px-3 py-1 rounded-full text-sm flex items-center gap-2 group">
+                    ${escapeHTML(item)}
+                    <button onclick="removeItem('${category}', '${escapeHTML(item.replace(/'/g, "\\'"))}')" class="text-gray-400 hover:text-red-500">
+                        <i class="fas fa-trash-alt text-xs"></i>
+                    </button>
+                </span>
+            `;
+
+            document.getElementById('tumor-list').innerHTML = tempMappings.tumorMarkers.map(i => createTagHTML(i, 'tumorMarkers')).join('');
+            document.getElementById('autoimmune-list').innerHTML = tempMappings.autoimmune.map(i => createTagHTML(i, 'autoimmune')).join('');
+        }
+    </script>
+</body>
+</html>
