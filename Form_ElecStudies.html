@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>其他電生理檢查報告系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 簡單的淡入動畫 */
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-50 text-gray-800 p-4 md:p-8 font-sans">
+    <div class="max-w-6xl mx-auto space-y-6">
+        
+        <!-- Header -->
+        <header class="flex items-center space-x-3 mb-8">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+            </svg>
+            <h1 class="text-2xl font-bold text-gray-900">其他電生理檢查報告系統</h1>
+        </header>
+
+        <div class="flex flex-col lg:flex-row gap-6">
+            <!-- Main Controls -->
+            <div class="flex-1 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                
+                <!-- Tabs -->
+                <div class="flex flex-wrap border-b border-gray-200 bg-gray-50" id="tabs-container">
+                    <button data-tab="facial" class="tab-btn flex items-center px-6 py-4 text-sm font-medium transition-colors bg-white text-blue-600 border-b-2 border-blue-600">
+                        <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                        Facial nerve lesion
+                    </button>
+                    <button data-tab="hemi" class="tab-btn flex items-center px-6 py-4 text-sm font-medium transition-colors text-gray-500 hover:text-gray-700 hover:bg-gray-100">
+                        <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                        Hemifacial spasm
+                    </button>
+                    <button data-tab="rst" class="tab-btn flex items-center px-6 py-4 text-sm font-medium transition-colors text-gray-500 hover:text-gray-700 hover:bg-gray-100">
+                        <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                        3 Hz RST
+                    </button>
+                    <button data-tab="vep" class="tab-btn flex items-center px-6 py-4 text-sm font-medium transition-colors text-gray-500 hover:text-gray-700 hover:bg-gray-100">
+                        <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        VEP
+                    </button>
+                </div>
+
+                <!-- Tab Content -->
+                <div class="p-6 space-y-8">
+                    
+                    <!-- FACIAL NERVE LESION -->
+                    <div id="sec-facial" class="tab-section fade-in space-y-6">
+                        <div>
+                            <h3 class="text-sm font-semibold text-gray-900 mb-3">檢查結果 (Status)</h3>
+                            <div class="flex space-x-4">
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    <input type="radio" name="fac-stat" id="fac-stat-norm" value="normal" checked class="text-blue-600 focus:ring-blue-500 w-4 h-4" />
+                                    <span>Normal (正常)</span>
+                                </label>
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    <input type="radio" name="fac-stat" id="fac-stat-abn" value="abnormal" class="text-blue-600 focus:ring-blue-500 w-4 h-4" />
+                                    <span>Abnormal (異常)</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div id="fac-abn-panel" class="hidden grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-red-50 rounded-lg border border-red-100">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Right facial nerve CMAP</label>
+                                <input type="number" step="0.1" id="fac-r-cmap" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="輸入數值..." />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Left facial nerve CMAP</label>
+                                <input type="number" step="0.1" id="fac-l-cmap" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="輸入數值..." />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- HEMIFACIAL SPASM -->
+                    <div id="sec-hemi" class="tab-section hidden fade-in space-y-6">
+                        <div>
+                            <h3 class="text-sm font-semibold text-gray-900 mb-3">電的位置 (Stimulation Side)</h3>
+                            <div class="flex space-x-4">
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    <input type="radio" name="hemi-side" id="hemi-side-l" value="left" checked class="text-blue-600 focus:ring-blue-500 w-4 h-4" />
+                                    <span>左 (Left)</span>
+                                </label>
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    <input type="radio" name="hemi-side" id="hemi-side-r" value="right" class="text-blue-600 focus:ring-blue-500 w-4 h-4" />
+                                    <span>右 (Right)</span>
+                                </label>
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    <input type="radio" name="hemi-side" id="hemi-side-b" value="bilateral" class="text-blue-600 focus:ring-blue-500 w-4 h-4" />
+                                    <span>雙側 (Bilateral)</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="text-sm font-semibold text-gray-900 mb-3">檢查結果 (Status)</h3>
+                            <div class="flex space-x-4">
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    <input type="radio" name="hemi-stat" id="hemi-stat-norm" value="normal" checked class="text-blue-600 focus:ring-blue-500 w-4 h-4" />
+                                    <span>Normal (正常區塊)</span>
+                                </label>
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    <input type="radio" name="hemi-stat" id="hemi-stat-abn" value="abnormal" class="text-blue-600 focus:ring-blue-500 w-4 h-4" />
+                                    <span>Abnormal (異常區塊)</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div id="hemi-abn-panel" class="hidden grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-red-50 rounded-lg border border-red-100">
+                            <p class="col-span-full text-sm text-gray-600 mb-2">請輸入兩側數值以計算百分比：</p>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Right facial nerve CMAP</label>
+                                <input type="number" step="0.1" id="hemi-r-cmap" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="輸入數值..." />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Left facial nerve CMAP</label>
+                                <input type="number" step="0.1" id="hemi-l-cmap" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="輸入數值..." />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3 Hz RST -->
+                    <div id="sec-rst" class="tab-section hidden fade-in space-y-6">
+                        <div>
+                            <h3 class="text-sm font-semibold text-gray-900 mb-3">電的位置 (Stimulation Side)</h3>
+                            <div class="flex space-x-4">
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    <input type="radio" name="rst-side" id="rst-side-l" value="left" checked class="text-blue-600 focus:ring-blue-500 w-4 h-4" />
+                                    <span>左 (Left)</span>
+                                </label>
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    <input type="radio" name="rst-side" id="rst-side-r" value="right" class="text-blue-600 focus:ring-blue-500 w-4 h-4" />
+                                    <span>右 (Right)</span>
+                                </label>
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    <input type="radio" name="rst-side" id="rst-side-b" value="bilateral" class="text-blue-600 focus:ring-blue-500 w-4 h-4" />
+                                    <span>雙側 (Bilateral)</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="text-sm font-semibold text-gray-900 mb-3">檢查結果 (Status)</h3>
+                            <div class="flex space-x-4">
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    <input type="radio" name="rst-stat" id="rst-stat-norm" value="normal" checked class="text-blue-600 focus:ring-blue-500 w-4 h-4" />
+                                    <span>Normal (正常區塊)</span>
+                                </label>
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    <input type="radio" name="rst-stat" id="rst-stat-abn" value="abnormal" class="text-blue-600 focus:ring-blue-500 w-4 h-4" />
+                                    <span>Abnormal (異常區塊)</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- VEP -->
+                    <div id="sec-vep" class="tab-section hidden fade-in space-y-6">
+                        
+                        <!-- Methods -->
+                        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                            <h3 class="text-sm font-bold text-gray-800 mb-4 uppercase tracking-wider border-b pb-2">Methods</h3>
+                            <div class="flex flex-wrap items-center gap-6">
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    <input type="radio" name="vep-meth" id="vep-meth-pat" value="Pattern" checked class="text-blue-600 focus:ring-blue-500 w-4 h-4" />
+                                    <span class="font-medium">Pattern</span>
+                                </label>
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    <input type="radio" name="vep-meth" id="vep-meth-gog" value="Goggle" class="text-blue-600 focus:ring-blue-500 w-4 h-4" />
+                                    <span class="font-medium">Goggle</span>
+                                </label>
+                                <div class="flex items-center space-x-2 cursor-pointer">
+                                    <input type="radio" name="vep-meth" id="vep-meth-oth" value="others" class="text-blue-600 focus:ring-blue-500 w-4 h-4" />
+                                    <label for="vep-meth-oth" class="font-medium">Others:</label>
+                                    <input type="text" id="vep-meth-oth-val" disabled class="w-40 px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-400 text-sm" placeholder="輸入其他方法" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Findings -->
+                        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                            <h3 class="text-sm font-bold text-gray-800 mb-4 uppercase tracking-wider border-b pb-2">Findings</h3>
+                            <div class="space-y-3">
+                                <div id="wrap-vep-f1" class="p-3 rounded-lg border transition-all flex items-center flex-wrap gap-2 text-sm bg-gray-50 border-gray-200 hover:border-blue-300">
+                                    <input type="checkbox" id="vep-f1" class="rounded text-blue-600 focus:ring-blue-500 w-4 h-4 mr-2" />
+                                    <span id="text-vep-f1-1" class="text-gray-700">Prolonged peak latencies (adult&gt;114 ms) at</span>
+                                    <input type="text" id="vep-f1-eye" class="w-24 px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white" placeholder="left/right" />
+                                    <span id="text-vep-f1-2" class="text-gray-700">eye(s)</span>
+                                </div>
+                                
+                                <div id="wrap-vep-f2" class="p-3 rounded-lg border transition-all flex items-center flex-wrap gap-2 text-sm bg-gray-50 border-gray-200 hover:border-blue-300">
+                                    <input type="checkbox" id="vep-f2" class="rounded text-blue-600 focus:ring-blue-500 w-4 h-4 mr-2" />
+                                    <span id="text-vep-f2-1" class="text-gray-700">Side difference in latency &gt;7 ms; Left</span>
+                                    <input type="text" id="vep-f2-l" class="w-16 px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white" />
+                                    <span id="text-vep-f2-2" class="text-gray-700">ms, Right</span>
+                                    <input type="text" id="vep-f2-r" class="w-16 px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white" />
+                                    <span id="text-vep-f2-3" class="text-gray-700">ms</span>
+                                </div>
+
+                                <div id="wrap-vep-f3" class="p-3 rounded-lg border transition-all flex items-center flex-wrap gap-2 text-sm bg-gray-50 border-gray-200 hover:border-blue-300">
+                                    <input type="checkbox" id="vep-f3" class="rounded text-blue-600 focus:ring-blue-500 w-4 h-4 mr-2" />
+                                    <span id="text-vep-f3-1" class="text-gray-700">Side difference in amplitude &gt;50%, lower response during stimuli at</span>
+                                    <input type="text" id="vep-f3-eye" class="w-24 px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white" placeholder="left/right" />
+                                    <span id="text-vep-f3-2" class="text-gray-700">eye</span>
+                                </div>
+
+                                <div id="wrap-vep-f4" class="p-3 rounded-lg border transition-all flex items-center flex-wrap gap-2 text-sm bg-gray-50 border-gray-200 hover:border-blue-300">
+                                    <input type="checkbox" id="vep-f4" class="rounded text-blue-600 focus:ring-blue-500 w-4 h-4 mr-2" />
+                                    <span id="text-vep-f4-1" class="text-gray-700">Difficulty in recognition of response pattern at</span>
+                                    <input type="text" id="vep-f4-eye" class="w-24 px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white" placeholder="left/right" />
+                                    <span id="text-vep-f4-2" class="text-gray-700">eye(s)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Impression -->
+                        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                            <h3 class="text-sm font-bold text-gray-800 mb-4 uppercase tracking-wider border-b pb-2">Impression</h3>
+                            <div class="space-y-3">
+                                <label id="wrap-vep-i1" class="flex items-start p-3 rounded-lg border cursor-pointer transition-all text-sm bg-blue-50 border-blue-200 shadow-sm text-blue-900 font-medium">
+                                    <input type="checkbox" id="vep-i1" checked class="rounded text-blue-600 focus:ring-blue-500 w-4 h-4 mt-0.5 mr-3" />
+                                    <span>Normal VEP response upon visual stimulation to each eye.</span>
+                                </label>
+                                
+                                <div id="wrap-vep-i2" class="p-3 rounded-lg border transition-all flex items-center flex-wrap gap-2 text-sm bg-gray-50 border-gray-200 text-gray-700 hover:border-blue-300">
+                                    <input type="checkbox" id="vep-i2" class="rounded text-blue-600 focus:ring-blue-500 w-4 h-4 mr-2" />
+                                    <select id="vep-i2-side" class="border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                                        <option value="Left">Left</option>
+                                        <option value="Right">Right</option>
+                                        <option value="Bilateral">Bilateral</option>
+                                    </select>
+                                    <span>optic nerve dysfunction.</span>
+                                </div>
+
+                                <label id="wrap-vep-i3" class="flex items-start p-3 rounded-lg border cursor-pointer transition-all text-sm bg-gray-50 border-gray-200 text-gray-700 hover:border-blue-300">
+                                    <input type="checkbox" id="vep-i3" class="rounded text-blue-600 focus:ring-blue-500 w-4 h-4 mt-0.5 mr-3 flex-shrink-0" />
+                                    <span class="leading-relaxed">Delayed onset of P100 bilaterally, suggesting dysfunction along visual conduction pathway. Possible localization including bilateral retina up to occipital cortex. Suggest clinical correlations.</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Preview / Output Area -->
+            <div class="flex-1 lg:max-w-md w-full bg-gray-900 rounded-xl shadow-xl border border-gray-800 flex flex-col overflow-hidden">
+                <div class="px-4 py-3 bg-gray-800 border-b border-gray-700 flex justify-between items-center">
+                    <span class="text-gray-200 font-medium text-sm">報告預覽 (Report Preview)</span>
+                    <button id="copy-btn" onclick="copyReport()" class="flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 bg-blue-600 hover:bg-blue-500 text-white">
+                        <span id="copy-icon-default" class="flex items-center">
+                            <svg class="w-4 h-4 mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                            複製報告
+                        </span>
+                        <span id="copy-icon-success" class="hidden items-center">
+                            <svg class="w-4 h-4 mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                            已複製
+                        </span>
+                    </button>
+                </div>
+                <div class="p-4 flex-1">
+                    <textarea id="report-output" readonly class="w-full h-full min-h-[400px] bg-transparent text-gray-300 font-mono text-sm resize-none focus:outline-none leading-relaxed" placeholder="報告將在此自動生成..."></textarea>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        let activeTab = 'facial';
+
+        // Helper functions
+        const getEl = (id) => document.getElementById(id);
+        const getVal = (id) => getEl(id).value;
+        const getChecked = (id) => getEl(id).checked;
+        const setVisible = (id, show) => getEl(id).classList.toggle('hidden', !show);
+        const setFlexGrid = (id, show) => {
+            const el = getEl(id);
+            if (show) {
+                el.classList.remove('hidden');
+                el.classList.add('grid');
+            } else {
+                el.classList.add('hidden');
+                el.classList.remove('grid');
+            }
+        };
+
+        // Tab Switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                activeTab = e.currentTarget.dataset.tab;
+                
+                // Update Tab Styling
+                document.querySelectorAll('.tab-btn').forEach(b => {
+                    if (b.dataset.tab === activeTab) {
+                        b.className = 'tab-btn flex items-center px-6 py-4 text-sm font-medium transition-colors bg-white text-blue-600 border-b-2 border-blue-600';
+                    } else {
+                        b.className = 'tab-btn flex items-center px-6 py-4 text-sm font-medium transition-colors text-gray-500 hover:text-gray-700 hover:bg-gray-100';
+                    }
+                });
+
+                // Update Sections visibility
+                document.querySelectorAll('.tab-section').forEach(sec => {
+                    if (sec.id === `sec-${activeTab}`) {
+                        sec.classList.remove('hidden');
+                    } else {
+                        sec.classList.add('hidden');
+                    }
+                });
+
+                resetTabState();
+                updateLogic();
+            });
+        });
+
+        function resetTabState() {
+            if (activeTab === 'facial') {
+                getEl('fac-stat-norm').checked = true;
+                getEl('fac-r-cmap').value = '';
+                getEl('fac-l-cmap').value = '';
+            } else if (activeTab === 'hemi') {
+                getEl('hemi-stat-norm').checked = true;
+                getEl('hemi-side-l').checked = true;
+                getEl('hemi-r-cmap').value = '';
+                getEl('hemi-l-cmap').value = '';
+            } else if (activeTab === 'rst') {
+                getEl('rst-stat-norm').checked = true;
+                getEl('rst-side-l').checked = true;
+            }
+        }
+
+        // Attach event listeners to all inputs
+        document.querySelectorAll('input, select').forEach(el => {
+            el.addEventListener('input', updateLogic);
+            el.addEventListener('change', updateLogic);
+        });
+
+        // Main Logic and UI Update
+        function updateLogic() {
+            let text = '';
+
+            // --- Update UI States (Visibility, Classes, Enables) ---
+            
+            // Facial
+            const facIsAbn = getChecked('fac-stat-abn');
+            setFlexGrid('fac-abn-panel', facIsAbn);
+
+            // Hemifacial
+            const hemiIsAbn = getChecked('hemi-stat-abn');
+            const hemiIsBi = getChecked('hemi-side-b');
+            // If Hemifacial becomes abnormal while Bilateral is selected, force it to Left (matching React logic)
+            if (hemiIsAbn && hemiIsBi && activeTab === 'hemi') {
+                getEl('hemi-side-l').checked = true;
+            }
+            setFlexGrid('hemi-abn-panel', hemiIsAbn);
+
+            // VEP
+            const vepMethOth = getChecked('vep-meth-oth');
+            getEl('vep-meth-oth-val').disabled = !vepMethOth;
+            
+            // VEP UI Classes for checked states
+            const updateVepCard = (cbId, wrapId, textIds) => {
+                const isChecked = getChecked(cbId);
+                const wrap = getEl(wrapId);
+                if (isChecked) {
+                    wrap.className = 'p-3 rounded-lg border transition-all flex items-center flex-wrap gap-2 text-sm bg-blue-50 border-blue-200 shadow-sm text-blue-900 font-medium';
+                } else {
+                    wrap.className = 'p-3 rounded-lg border transition-all flex items-center flex-wrap gap-2 text-sm bg-gray-50 border-gray-200 text-gray-700 hover:border-blue-300';
+                }
+                if (textIds) {
+                    textIds.forEach(id => {
+                        const t = getEl(id);
+                        if(t) t.className = isChecked ? 'text-blue-900 font-medium' : 'text-gray-700';
+                    });
+                }
+            };
+            
+            updateVepCard('vep-f1', 'wrap-vep-f1', ['text-vep-f1-1', 'text-vep-f1-2']);
+            updateVepCard('vep-f2', 'wrap-vep-f2', ['text-vep-f2-1', 'text-vep-f2-2', 'text-vep-f2-3']);
+            updateVepCard('vep-f3', 'wrap-vep-f3', ['text-vep-f3-1', 'text-vep-f3-2']);
+            updateVepCard('vep-f4', 'wrap-vep-f4', ['text-vep-f4-1', 'text-vep-f4-2']);
+            updateVepCard('vep-i1', 'wrap-vep-i1');
+            updateVepCard('vep-i2', 'wrap-vep-i2');
+            updateVepCard('vep-i3', 'wrap-vep-i3');
+
+
+            // --- Generate Report Text ---
+
+            if (activeTab === 'facial') {
+                if (getChecked('fac-stat-norm')) {
+                    text = `1. The motor conduction study of facial nerves showed comparable CMAP amplitude and DLs.\n2. The blink reflex showed normal response of left R1, R2 and normal right R2 when stimulating left side; normal right R1, R2 and normal response of left R2 when stimulating right side.\n\nImpression:\nNormal facial nerves and blink study.`;
+                } else {
+                    const r = parseFloat(getVal('fac-r-cmap'));
+                    const l = parseFloat(getVal('fac-l-cmap'));
+                    
+                    if (!isNaN(r) && !isNaN(l) && r !== 0 && l !== 0) {
+                        if (r > l) {
+                            const pct = Math.round((l / r) * 100);
+                            text = `1. The motor conduction study of left facial nerve showed decreased CMAP amplitude (${pct}% of right side) with relatively prolonged DL.\n2. The blink reflex showed no response of left R1, R2 and normal right R2 when stimulating left side; normal right R1, R2 and no response of left R2 when stimulating right side.\n\nImpression:\nLeft facial nerve lesion with motor axonal loss (CMAP=${pct}% of right side)`;
+                        } else if (l > r) {
+                            const pct = Math.round((r / l) * 100);
+                            text = `1. The motor conduction study of right facial nerve showed decreased CMAP amplitude (${pct}% of left side) with relatively prolonged DL.\n2. The blink reflex showed no response of right R1 and R2 with normal left R2 when stimulating right side; normal left R1, R2 and no response of right R2 when stimulating left side.\n\nImpression:\nRight facial nerve lesion with motor axonal loss (CMAP=${pct}% of left side)`;
+                        } else {
+                            text = `1. The motor conduction study of bilateral facial nerves showed decreased CMAP amplitude with relatively prolonged DL. (CMAP values are equal, please verify side of lesion).\n2. The blink reflex showed abnormalities.\n\nImpression:\nFacial nerve lesion.`;
+                        }
+                    } else {
+                        text = `Please enter valid CMAP values for both Right and Left sides to calculate the report.`;
+                    }
+                }
+            } 
+            else if (activeTab === 'hemi') {
+                let side = getChecked('hemi-side-l') ? 'left' : getChecked('hemi-side-r') ? 'right' : 'bilateral';
+                
+                if (getChecked('hemi-stat-norm')) {
+                    text = `Bilateral facial nerve showed normal DLs and CMAP amplitudes.\nThe trigeminal nerve stimulation ${side} V1 showed no muscle response at ${side} Orbicularis oris muscle.\n\nImpression:\nNo ${side} facial nerve hyperactivity.`;
+                } else {
+                    const r = parseFloat(getVal('hemi-r-cmap'));
+                    const l = parseFloat(getVal('hemi-l-cmap'));
+                    let pctText = "___";
+                    let oppSide = side === 'left' ? 'right' : 'left';
+                    
+                    if (!isNaN(r) && !isNaN(l)) {
+                        if (side === 'left' && r !== 0) pctText = Math.round((l / r) * 100);
+                        if (side === 'right' && l !== 0) pctText = Math.round((r / l) * 100);
+                    }
+
+                    text = `1. The motor conduction study of ${side} facial nerve showed mild decreased CMAP amplitude (${pctText}% of ${oppSide} side) with comparable DL.\n2. The blink reflex showed normal left R1 and R2 with normal right R2 when stimulating left side, normal right R1 and R2 with normal left R2 when stimulating right side.\n3. The trigeminal nerve stimulation (${side} V1) evoked the muscle response at ${side} Orbicularis oris muscle, which was similar as the R2 recorded at ${side} Orbicularis oculi.\n\nImpression:\n${side.charAt(0).toUpperCase() + side.slice(1)} facial nerve hyperactivity.`;
+                }
+            }
+            else if (activeTab === 'rst') {
+                let side = getChecked('rst-side-l') ? 'left' : getChecked('rst-side-r') ? 'right' : 'bilateral';
+
+                if (getChecked('rst-stat-norm')) {
+                    text = `The 3 Hz repetitive stimulation test of ${side} facial, deltoid, and APB muscles showed negative finding.\n\nImpression:\nNormal study of 3-Hz repetitive nerve stimulation test.`;
+                } else {
+                    text = `The 3 Hz repetitive stimulation test of ${side} facial, deltoid, and APB muscles showed a decremental response for more than 10%.\n\nImpression:\nDecremental response of 3-Hz repetitive nerve stimulation test, compatible with post-synaptic neuromuscular junction disorder.`;
+                }
+            }
+            else if (activeTab === 'vep') {
+                // Findings
+                let findingsArr = [];
+                if (getChecked('vep-f1')) findingsArr.push(`Prolonged peak latencies (adult>114 ms) at ${getVal('vep-f1-eye') || '___'} eye(s)`);
+                if (getChecked('vep-f2')) findingsArr.push(`Side difference in latency >7 ms; Left ${getVal('vep-f2-l') || '___'} ms, Right ${getVal('vep-f2-r') || '___'} ms`);
+                if (getChecked('vep-f3')) findingsArr.push(`Side difference in amplitude >50%, lower response during stimuli at ${getVal('vep-f3-eye') || '___'} eye`);
+                if (getChecked('vep-f4')) findingsArr.push(`Difficulty in recognition of response pattern at ${getVal('vep-f4-eye') || '___'} eye(s)`);
+                
+                let findingsStr = findingsArr.length > 0 
+                    ? findingsArr.map((item, index) => `${index + 1}. ${item}`).join('\n')
+                    : "No specific abnormal findings selected.";
+
+                // Impressions
+                let impArr = [];
+                if (getChecked('vep-i1')) impArr.push(`Normal VEP response upon visual stimulation to each eye.`);
+                if (getChecked('vep-i2')) impArr.push(`${getVal('vep-i2-side')} optic nerve dysfunction.`);
+                if (getChecked('vep-i3')) impArr.push(`Delayed onset of P100 bilaterally, suggesting dysfunction along visual conduction pathway. Possible localization including bilateral retina up to occipital cortex. Suggest clinical correlations.`);
+
+                let impStr = impArr.length > 0
+                    ? impArr.map((item, index) => `${index + 1}. ${item}`).join('\n')
+                    : "No impression selected.";
+
+                let methodDisplay = getChecked('vep-meth-oth') ? (getVal('vep-meth-oth-val') || '___') : (getChecked('vep-meth-pat') ? 'Pattern' : 'Goggle');
+
+                text = `Methods: ${methodDisplay}\n\nFindings:\n${findingsStr}\n\nImpression:\n${impStr}`;
+            }
+
+            // Output
+            getEl('report-output').value = text;
+        }
+
+        // Copy Feature
+        function copyReport() {
+            const text = getEl('report-output').value;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = getEl('copy-btn');
+                btn.className = 'flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 bg-green-500/20 text-green-400';
+                getEl('copy-icon-default').classList.add('hidden');
+                getEl('copy-icon-success').classList.remove('hidden');
+                getEl('copy-icon-success').style.display = 'flex'; // override
+
+                setTimeout(() => {
+                    btn.className = 'flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 bg-blue-600 hover:bg-blue-500 text-white';
+                    getEl('copy-icon-default').classList.remove('hidden');
+                    getEl('copy-icon-success').classList.add('hidden');
+                    getEl('copy-icon-success').style.display = '';
+                }, 2000);
+            });
+        }
+
+        // Initialize on load
+        updateLogic();
+    </script>
+</body>
+</html>
