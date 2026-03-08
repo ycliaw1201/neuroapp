@@ -1,0 +1,574 @@
+import React, { useState, useEffect } from 'react';
+import { Printer, Settings, Calendar, AlertCircle, Activity, Moon, Syringe, CheckCircle2, RotateCcw, FileDown } from 'lucide-react';
+
+// === 藥物資料庫擴充 ===
+const ACUTE_MEDS_DB = [
+  { id: 'cataflam', name: 'Cataflam (克他服寧 25mg)', color: 'bg-red-400', shape: 'rounded-full', desc: '圓凸形/淡紅色', warning: '注意腸胃道副作用' },
+  { id: 'celebrex', name: 'Celebrex (希樂葆 200mg)', color: 'bg-white border-2 border-yellow-500', shape: 'rounded-md', desc: '長圓柱形/白色與金色', warning: '注意腸胃道副作用' },
+  { id: 'ecoxia', name: 'Ecoxia (易克適 60mg)', color: 'bg-teal-100', shape: 'rounded-md', desc: '鈍三角形/淺灰綠色', warning: '注意腸胃道副作用' },
+  { id: 'naton', name: 'Naton SR (拿痛長效 750mg)', color: 'bg-orange-400', shape: 'rounded-md', desc: '長圓柱形/橘色', warning: '注意腸胃道副作用' },
+  { id: 'voren', name: 'Voren (非炎 50mg)', color: 'bg-gradient-to-r from-red-500 to-white border border-red-200', shape: 'rounded-md', desc: '長圓柱形/紅白色', warning: '注意腸胃道副作用' },
+  { id: 'acetal', name: 'Acetal (愛舒疼 500mg)', color: 'bg-yellow-300', shape: 'rounded-md', desc: '長圓柱形/黃色' },
+  { id: 'imigran', name: 'Imigran FDT (英明格 50mg)', color: 'bg-pink-300', shape: 'rounded-md', desc: '三角形/粉紅色' },
+  { id: 'lesiton', name: 'Lesiton (樂息痛 5mg)', color: 'bg-orange-200 opacity-80', shape: 'rounded-md', desc: '長圓柱形/透明橘色' },
+  { id: 'indomesa', name: 'Indomesa (抑僂寧 25mg)', color: 'bg-gradient-to-r from-green-500 to-white border border-green-200', shape: 'rounded-md', desc: '長圓柱形/綠白色', warning: '注意腸胃道副作用，若有胃部疼痛，則搭配胃藥，注意大便是否有變黑變紅的情形' },
+  { id: 'self_prep', name: '自備止痛藥', color: 'bg-gray-100 border border-dashed border-gray-500', shape: 'rounded-full', desc: '自行備用' },
+];
+
+const PREVENTIVE_MEDS_DB = [
+  { id: 'topamax', name: 'TOPAmax (妥泰 25mg)', color: 'bg-white border-2 border-gray-300', shape: 'rounded-full', desc: '圓扁形/白色/刻痕', allowTitration: true, warning: '注意肢端麻木、認知障礙與體重減輕等副作用。若有肢端麻木腎功能好者可以多吃香蕉補充鉀離子。' },
+  { id: 'topaless', name: 'Topaless (癲除 100mg)', color: 'bg-yellow-100', shape: 'rounded-full', desc: '圓形/淡黃色', allowTitration: true, warning: '注意肢端麻木、認知障礙與體重減輕等副作用。若有肢端麻木腎功能好者可以多吃香蕉補充鉀離子。' },
+  { id: 'depakine200', name: 'Depakine GR (帝拔癲腸溶 200mg)', color: 'bg-white border-2 border-gray-300', shape: 'rounded-full', desc: '圓扁形/白色', allowTitration: false, warning: '注意肝功能，水腫、肥胖、掉髮等副作用' },
+  { id: 'depakine500', name: 'Depakine Chrono (帝拔癲長效 500mg)', color: 'bg-white border-2 border-gray-300', shape: 'rounded-full', desc: '橢圓形/白色', allowTitration: false, warning: '注意肝功能，水腫、肥胖、掉髮等副作用' },
+  { id: 'blopress', name: 'Blopress (博脈舒 8mg)', color: 'bg-pink-100', shape: 'rounded-full', desc: '圓形/淺粉紅色', allowTitration: false, warning: '注意血壓低的副作用' },
+  { id: 'cardolol', name: 'CARdolol (心康樂 40mg)', color: 'bg-pink-300', shape: 'rounded-full', desc: '圓形/粉紅色', allowTitration: false, warning: '注意若心跳 < 60 或出現氣喘則停用並就醫' },
+  { id: 'propranolol', name: 'Propranolol (心律錠 10mg)', color: 'bg-red-400', shape: 'rounded-full', desc: '圓扁形/紅色', allowTitration: false, warning: '注意若心跳 < 60 或出現氣喘則停用並就醫' },
+  { id: 'concor5', name: 'Concor-5 (康肯 5mg)', color: 'bg-yellow-100', shape: 'rounded-md', desc: '心形/淡黃色', allowTitration: false, warning: '注意若心跳 < 60 或出現氣喘則停用並就醫' },
+  { id: 'concor1', name: 'Concor (康肯 1.25mg)', color: 'bg-white border border-gray-300', shape: 'rounded-full', desc: '圓凸形/白色', allowTitration: false, warning: '注意若心跳 < 60 或出現氣喘則停用並就醫' },
+  { id: 'fluzine', name: 'Fluzine (服腦清 5mg)', color: 'bg-yellow-100', shape: 'rounded-full', desc: '圓扁形/淡黃色', allowTitration: true },
+  { id: 'effexor', name: 'Effexor XR (速悅 37.5mg)', color: 'bg-gradient-to-r from-gray-400 to-pink-300', shape: 'rounded-md', desc: '圓柱形/灰粉紅色', allowTitration: false },
+  { id: 'trynol', name: 'Trynol (德利能 25mg)', color: 'bg-blue-200', shape: 'rounded-full', desc: '扁圓形/淡藍色', allowTitration: false, warning: '若有眼睛疼痛疑似青光眼或排尿困難、嗜睡、無力，則停用並回診。' },
+  { id: 'fronil', name: 'FROnil (福樂你 25mg)', color: 'bg-pink-200', shape: 'rounded-full', desc: '圓凸形/淺粉紅色', allowTitration: false },
+  { id: 'cypromin', name: 'Cypromin (希普利敏液)', color: 'bg-blue-50 border border-blue-200', shape: 'rounded-sm', desc: '透明無色液體', allowTitration: false },
+  { id: 'isoptin', name: 'Isoptin SR (心舒平 240mg)', color: 'bg-teal-200', shape: 'rounded-md', desc: '長圓柱形/淡青色', allowTitration: false, warning: '需注意房室阻斷或心跳過慢等副作用' },
+  { id: 'lidin', name: 'Lidin (立定 300mg)', color: 'bg-white border border-gray-300', shape: 'rounded-full', desc: '圓形/白色', allowTitration: false, warning: '注意無力、噁心顫抖、視力模糊、白血球增加、神智不清、步態不穩、眼震、外椎體路徑症狀、癲癇等' },
+  { id: 'prednisolone', name: 'Prednisolone (普列道寧 5mg)', color: 'bg-pink-100', shape: 'rounded-full', desc: '圓扁形/淡粉紅色', allowTitration: false, warning: '注意腸胃道副作用' },
+];
+
+const OTHER_MEDS_DB = [
+  { id: 'emgality', name: 'Emgality (恩疼停 120mg)', color: 'bg-gray-100 border border-gray-400', shape: 'rounded-sm', desc: '預先充填注射筆' },
+  { id: 'botox', name: 'Botox (保妥適 100U)', color: 'bg-purple-100 border border-purple-400', shape: 'rounded-sm', desc: '乾粉注射劑' },
+  { id: 'oxygen', name: '純氧 (非再吸式面罩)', color: 'bg-blue-100 border border-blue-400', shape: 'rounded-sm', desc: '氣體面罩' },
+];
+
+const HeadacheDiarySheet = () => {
+  // 設定狀態
+  const [daysCount, setDaysCount] = useState(14);
+  const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedAcuteMeds, setSelectedAcuteMeds] = useState(['cataflam']);
+  const [selectedPreventiveMeds, setSelectedPreventiveMeds] = useState(['topamax']);
+  const [selectedOtherMeds, setSelectedOtherMeds] = useState([]);
+  const [enableTitration, setEnableTitration] = useState(true);
+  const [isConfigOpen, setIsConfigOpen] = useState(true);
+
+  // 產生日期陣列並以 28 天為一頁進行分塊 (Chunking)
+  const generateChunkedDates = () => {
+    const dates = [];
+    const start = new Date(startDate);
+    for (let i = 0; i < daysCount; i++) {
+      const d = new Date(start);
+      d.setDate(start.getDate() + i);
+      dates.push({
+        dayNum: i + 1,
+        dateStr: `${d.getMonth() + 1}/${d.getDate()}`,
+        obj: d
+      });
+    }
+
+    // 分塊邏輯：每 28 天切成一個陣列
+    const chunks = [];
+    for (let i = 0; i < dates.length; i += 28) {
+      chunks.push(dates.slice(i, i + 28));
+    }
+    return chunks;
+  };
+
+  const chunkedDates = generateChunkedDates();
+
+  // 處理藥物選擇
+  const toggleMed = (id, setter) => {
+    setter(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+
+  // 重設設定
+  const handleReset = () => {
+    setDaysCount(14);
+    setStartDate(new Date().toISOString().split('T')[0]);
+    setSelectedAcuteMeds([]);
+    setSelectedPreventiveMeds([]);
+    setSelectedOtherMeds([]);
+    setEnableTitration(true);
+  };
+
+  // 觸發列印 / 存為 PDF
+  const handlePrint = () => {
+    setIsConfigOpen(false);
+    setTimeout(() => { window.print(); }, 150);
+  };
+
+  // 取得選中的藥物詳細資訊
+  const activeAcuteMeds = ACUTE_MEDS_DB.filter(m => selectedAcuteMeds.includes(m.id));
+  const activePreventiveMeds = PREVENTIVE_MEDS_DB.filter(m => selectedPreventiveMeds.includes(m.id));
+  const activeOtherMeds = OTHER_MEDS_DB.filter(m => selectedOtherMeds.includes(m.id));
+
+  // 計算總列印頁數 (日曆頁數 + 1張獨立衛教單)
+  const totalPages = chunkedDates.length + 1;
+
+  // 藥物卡片渲染元件
+  const MedCard = ({ med, selected, onClick, type }) => {
+    const typeStyles = {
+      acute: selected ? 'border-green-500 bg-green-50 text-green-900 ring-1 ring-green-500' : 'border-gray-200 hover:border-green-300',
+      preventive: selected ? 'border-purple-500 bg-purple-50 text-purple-900 ring-1 ring-purple-500' : 'border-gray-200 hover:border-purple-300',
+      other: selected ? 'border-blue-500 bg-blue-50 text-blue-900 ring-1 ring-blue-500' : 'border-gray-200 hover:border-blue-300',
+    };
+
+    return (
+      <div 
+        onClick={onClick}
+        className={`relative flex items-center p-2 rounded-lg border cursor-pointer transition-all duration-200 ${typeStyles[type]}`}
+      >
+        <div className="flex-1 flex flex-col">
+          <span className="text-xs font-bold leading-tight">{med.name}</span>
+          <span className="text-[10px] text-gray-500 mt-0.5 truncate">{med.desc}</span>
+        </div>
+        {selected && <CheckCircle2 className={`w-4 h-4 ml-2 flex-shrink-0 ${type === 'acute' ? 'text-green-600' : type === 'preventive' ? 'text-purple-600' : 'text-blue-600'}`} />}
+      </div>
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-100 p-4 font-sans print:p-0 print:bg-white">
+      
+      {/* ================= 設定面板 ================= */}
+      {isConfigOpen && (
+        <div className="max-w-6xl mx-auto bg-white rounded-xl shadow-xl p-6 mb-8 print:hidden border border-blue-100">
+          <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
+            <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+              <Settings className="w-6 h-6 text-blue-600" />
+              頭痛衛教單張設定
+            </h2>
+            <div className="flex gap-4">
+              <button onClick={handleReset} className="text-gray-500 hover:text-red-600 flex items-center gap-1 text-sm font-medium transition-colors">
+                <RotateCcw className="w-4 h-4" /> 重設
+              </button>
+              <button onClick={() => setIsConfigOpen(false)} className="text-blue-600 hover:text-blue-800 underline text-sm font-medium">
+                隱藏設定預覽
+              </button>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* 左側：基本設定 */}
+            <div className="lg:col-span-3 space-y-6">
+              <div className="bg-gray-50/50 p-5 rounded-xl border border-gray-200 shadow-sm">
+                <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-gray-500" /> 基本選項
+                </h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">起始日期</label>
+                    <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full border-gray-300 border rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">總天數</label>
+                    <select value={daysCount} onChange={(e) => setDaysCount(Number(e.target.value))} className="w-full border-gray-300 border rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all bg-white">
+                      <option value={7}>7 天</option>
+                      <option value={14}>14 天 (半個月)</option>
+                      <option value={21}>21 天</option>
+                      <option value={28}>28 天 (一頁滿載)</option>
+                      <option value={60}>兩個月 (約60天)</option>
+                      <option value={90}>三個月 (約90天)</option>
+                    </select>
+                    <p className="text-[10px] text-gray-500 mt-1">*超過28天將自動分多頁列印</p>
+                  </div>
+                  <div className="bg-purple-50 p-3 rounded-lg border border-purple-100 mt-4">
+                    <label className="flex items-start gap-2 cursor-pointer">
+                      <input type="checkbox" checked={enableTitration} onChange={(e) => setEnableTitration(e.target.checked)} className="w-4 h-4 text-purple-600 rounded mt-0.5" />
+                      <div className="flex-1">
+                        <span className="text-sm font-bold text-purple-900 block leading-none mb-1">啟用「適應期」標記</span>
+                        <span className="text-[10px] text-purple-700 leading-tight block">特定藥物前三天標示夜用</span>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 右側：藥物選擇區 */}
+            <div className="lg:col-span-9 space-y-6">
+              {/* 急性用藥 */}
+              <div>
+                <label className="flex items-center gap-2 text-sm font-bold text-green-800 mb-3 bg-green-50 px-3 py-1.5 rounded-md w-fit">
+                  <Activity className="w-4 h-4" /> 急性止痛藥物 (需要時服用)
+                </label>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                  {ACUTE_MEDS_DB.map(med => (
+                    <MedCard key={med.id} med={med} type="acute" selected={selectedAcuteMeds.includes(med.id)} onClick={() => toggleMed(med.id, setSelectedAcuteMeds)} />
+                  ))}
+                </div>
+              </div>
+
+              {/* 預防性用藥 */}
+              <div>
+                <label className="flex items-center gap-2 text-sm font-bold text-purple-800 mb-3 bg-purple-50 px-3 py-1.5 rounded-md w-fit">
+                  <Moon className="w-4 h-4" /> 預防性用藥 (每日規律服用)
+                </label>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                  {PREVENTIVE_MEDS_DB.map(med => (
+                    <MedCard key={med.id} med={med} type="preventive" selected={selectedPreventiveMeds.includes(med.id)} onClick={() => toggleMed(med.id, setSelectedPreventiveMeds)} />
+                  ))}
+                </div>
+              </div>
+
+              {/* 其他治療 */}
+              <div>
+                <label className="flex items-center gap-2 text-sm font-bold text-blue-800 mb-3 bg-blue-50 px-3 py-1.5 rounded-md w-fit">
+                  <Syringe className="w-4 h-4" /> 其他治療 (注射 / 非口服)
+                </label>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                  {OTHER_MEDS_DB.map(med => (
+                    <MedCard key={med.id} med={med} type="other" selected={selectedOtherMeds.includes(med.id)} onClick={() => toggleMed(med.id, setSelectedOtherMeds)} />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-8 flex justify-end border-t border-gray-100 pt-6">
+            <button onClick={handlePrint} className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2.5 rounded-lg flex items-center gap-2 shadow-md hover:shadow-lg transition-all font-bold text-lg">
+              <FileDown className="w-5 h-5" /> 輸出 PDF / 列印
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 列印確認浮動列 (預覽模式顯示) */}
+      {!isConfigOpen && (
+         <div className="print:hidden fixed top-4 right-4 bg-white shadow-xl border border-gray-200 rounded-lg p-3 flex gap-3 z-50">
+             <button onClick={() => setIsConfigOpen(true)} className="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-md text-gray-700 font-medium transition-colors">返回設定</button>
+             <button onClick={handlePrint} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium shadow-sm transition-colors flex items-center gap-2">
+               <Printer className="w-4 h-4" /> 確認列印
+             </button>
+         </div>
+      )}
+
+      {/* ================= 列印區域 ================= */}
+      {/* 根據天數分頁，遍歷 chunkedDates */}
+      <div className="print-container">
+        {chunkedDates.map((chunk, pageIndex) => (
+          <div key={`page-${pageIndex}`} className="page-wrapper mx-auto bg-white max-w-[297mm] overflow-hidden flex flex-col pt-2 pb-2">
+            
+            {/* Header */}
+            <div className="border-b-2 border-gray-800 pb-1 mb-1.5 flex justify-between items-end px-1">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 tracking-wide">頭痛日記 & 藥物使用紀錄表 <span className="text-sm font-normal text-gray-500 ml-2">(第 {pageIndex + 1} 頁 / 共 {totalPages} 頁)</span></h1>
+                <p className="text-sm text-gray-700 mt-1 font-medium">
+                  姓名: __________________ &nbsp;&nbsp; 病歷號: __________________ &nbsp;&nbsp; 醫師: __________________
+                </p>
+              </div>
+              <div className="text-right text-xs text-gray-600 font-medium bg-gray-50 px-2 py-1 rounded border border-gray-200">
+                請每日睡前記錄，就診時請務必攜帶此表。
+              </div>
+            </div>
+
+            <div className="flex flex-grow mt-1 px-1">
+              
+              {/* 左側：主表格區 (現在佔滿全寬) */}
+              <div className="flex-grow">
+                <table className="w-full border-collapse border border-gray-800 text-sm table-fixed">
+                  <thead>
+                    {/* 天數 */}
+                    <tr>
+                      <th className="border border-gray-800 bg-gray-100 w-[180px] p-1 text-left text-xs">項次 / 天數</th>
+                      {chunk.map(d => (
+                        <th key={d.dayNum} className="border border-gray-600 text-center bg-gray-50 text-xs w-[25px]">{d.dayNum}</th>
+                      ))}
+                    </tr>
+                    {/* 日期 */}
+                    <tr>
+                      <th className="border border-gray-800 bg-gray-100 p-1 text-left text-[11px]">日期</th>
+                      {chunk.map(d => (
+                        <th key={d.dayNum} className="border border-gray-600 text-center text-[10px] font-normal tracking-tighter">{d.dateStr}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {/* 疼痛程度 */}
+                    <tr>
+                      <td className="border border-gray-800 p-1 font-bold bg-red-50 text-[11px]" colSpan={chunk.length + 1}>
+                        疼痛程度 <span className="font-normal text-gray-600 ml-1 text-[10px]">(1:輕微不影響 / 2:中度影響專注 / 3:嚴重需臥床)</span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="border border-gray-600 p-1 text-[11px] text-center font-bold">早上</td>
+                      {chunk.map(d => <td key={`m-${d.dayNum}`} className="border border-gray-400"></td>)}
+                    </tr>
+                    <tr>
+                      <td className="border border-gray-600 p-1 text-[11px] text-center font-bold">中午</td>
+                      {chunk.map(d => <td key={`a-${d.dayNum}`} className="border border-gray-400"></td>)}
+                    </tr>
+                    <tr>
+                      <td className="border border-gray-600 p-1 text-[11px] text-center font-bold">晚上</td>
+                      {chunk.map(d => <td key={`e-${d.dayNum}`} className="border border-gray-400"></td>)}
+                    </tr>
+
+                    {/* 伴隨症狀 */}
+                    <tr>
+                      <td className="border border-gray-800 p-1 font-bold bg-yellow-50 text-[11px]" colSpan={chunk.length + 1}>伴隨症狀 (有則打勾)</td>
+                    </tr>
+                    <tr>
+                      <td className="border border-gray-600 p-1 text-[11px]">噁心 / 嘔吐</td>
+                      {chunk.map(d => <td key={`sym1-${d.dayNum}`} className="border border-gray-400"></td>)}
+                    </tr>
+                    <tr>
+                      <td className="border border-gray-600 p-1 text-[11px]">怕光 / 怕吵</td>
+                      {chunk.map(d => <td key={`sym2-${d.dayNum}`} className="border border-gray-400"></td>)}
+                    </tr>
+                    <tr>
+                      <td className="border border-gray-600 p-1 text-[11px]">視覺預兆 <span className="text-[9px] text-gray-500 tracking-tighter">(閃光/鋸齒)</span></td>
+                      {chunk.map(d => <td key={`sym3-${d.dayNum}`} className="border border-gray-400"></td>)}
+                    </tr>
+
+                    {/* 持續時間 */}
+                    <tr>
+                      <td className="border border-gray-800 p-1 font-bold bg-blue-50 text-[11px]" colSpan={chunk.length + 1}>持續時間</td>
+                    </tr>
+                    <tr>
+                      <td className="border border-gray-600 p-1 text-[11px]">超過 4 小時</td>
+                      {chunk.map(d => <td key={`dur1-${d.dayNum}`} className="border border-gray-400"></td>)}
+                    </tr>
+                    <tr>
+                      <td className="border border-gray-600 p-1 text-[11px]">小於 4 小時</td>
+                      {chunk.map(d => <td key={`dur2-${d.dayNum}`} className="border border-gray-400"></td>)}
+                    </tr>
+
+                    {/* 急性用藥 */}
+                    <tr>
+                      <td className="border border-gray-800 p-1 font-bold bg-green-50 text-[11px]" colSpan={chunk.length + 1}>急性用藥 (紀錄顆數)</td>
+                    </tr>
+                    {activeAcuteMeds.length > 0 ? activeAcuteMeds.map((med) => (
+                      <tr key={`acute-${med.id}`}>
+                        <td className="border border-gray-600 p-1 text-[10px] leading-tight whitespace-normal break-words">{med.name}</td>
+                        {chunk.map(d => <td key={d.dayNum} className="border border-gray-400"></td>)}
+                      </tr>
+                    )) : (
+                      <tr>
+                        <td className="border border-gray-600 p-1 text-[10px] text-gray-400">未選用</td>
+                        {chunk.map(d => <td key={d.dayNum} className="border border-gray-400"></td>)}
+                      </tr>
+                    )}
+
+                    {/* 預防性用藥 */}
+                    <tr>
+                      <td className="border border-gray-800 p-1 font-bold bg-purple-50 text-[11px]" colSpan={chunk.length + 1}>預防用藥 (有吃打勾)</td>
+                    </tr>
+                    {activePreventiveMeds.length > 0 ? activePreventiveMeds.map((med) => (
+                      <tr key={`prev-${med.id}`}>
+                        <td className="border border-gray-600 p-1 text-[10px] leading-tight whitespace-normal break-words relative pr-8">
+                          {med.name}
+                        </td>
+                        {chunk.map((d, index) => {
+                          const globalIndex = d.dayNum - 1;
+                          const isTitrationCell = enableTitration && med.allowTitration && globalIndex < 3;
+                          return (
+                            <td key={d.dayNum} className="border border-gray-400 text-center relative h-[24px]">
+                              {isTitrationCell && (
+                                <span className="text-[9px] text-gray-400 font-bold block leading-none transform scale-[0.85]">夜用</span>
+                              )}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    )) : (
+                      <tr>
+                        <td className="border border-gray-600 p-1 text-[10px] text-gray-400">未選用</td>
+                        {chunk.map(d => <td key={d.dayNum} className="border border-gray-400"></td>)}
+                      </tr>
+                    )}
+
+                    {/* 其他治療 */}
+                    {activeOtherMeds.length > 0 && (
+                      <>
+                        <tr>
+                          <td className="border border-gray-800 p-1 font-bold bg-blue-50 text-[11px]" colSpan={chunk.length + 1}>其他治療 (紀錄或打勾)</td>
+                        </tr>
+                        {activeOtherMeds.map((med) => (
+                          <tr key={`other-${med.id}`}>
+                            <td className="border border-gray-600 p-1 text-[10px] leading-tight whitespace-normal break-words">{med.name}</td>
+                            {chunk.map(d => <td key={d.dayNum} className="border border-gray-400"></td>)}
+                          </tr>
+                        ))}
+                      </>
+                    )}
+
+                    {/* 運動狀況 */}
+                    <tr>
+                      <td className="border border-gray-800 p-1 font-bold text-[11px] bg-gray-50">運動狀況 (分鐘)</td>
+                      {chunk.map(d => <td key={`ex-${d.dayNum}`} className="border border-gray-400"></td>)}
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {/* ================= 獨立衛教專頁 ================= */}
+        <div className="page-wrapper mx-auto bg-white max-w-[297mm] overflow-hidden flex flex-col pt-6 pb-6 px-4">
+          
+          <div className="border-b-2 border-gray-800 pb-2 mb-4 flex justify-between items-end">
+            <h1 className="text-3xl font-bold text-gray-900 tracking-wider">藥物辨識與注意事項</h1>
+            <span className="text-sm font-normal text-gray-500">(第 {totalPages} 頁 / 共 {totalPages} 頁)</span>
+          </div>
+
+          <div className="flex-grow grid grid-cols-1 md:grid-cols-3 gap-8">
+            
+            {/* 左欄：急性用藥與其他治療 */}
+            <div className="space-y-6">
+              {activeAcuteMeds.length > 0 && (
+                <div className="bg-green-50/30 p-4 rounded-xl border border-green-100 h-fit">
+                  <h3 className="text-sm font-bold border-b-2 border-green-300 mb-3 text-green-800 inline-block w-full pb-1 flex items-center gap-2">
+                    <Activity className="w-4 h-4" /> ▍ 急性止痛藥 (發作時使用)
+                  </h3>
+                  <div className="space-y-4">
+                    {activeAcuteMeds.map(med => (
+                      <div key={`info-${med.id}`} className="bg-white p-3 rounded shadow-sm border border-gray-100">
+                        <div className="flex items-start gap-3">
+                          <div className={`w-5 h-5 shadow-sm flex-shrink-0 mt-1 ${med.shape} ${med.color}`}></div>
+                          <div className="text-sm leading-tight flex-1">
+                            <div className="font-bold text-gray-800">{med.name}</div>
+                            <div className="text-gray-500 text-xs mt-1">{med.desc}</div>
+                          </div>
+                        </div>
+                        {med.warning && (
+                          <div className="mt-2 text-xs text-red-700 bg-red-50 p-2 rounded-md border border-red-200 font-medium leading-relaxed">
+                            <AlertCircle className="w-3.5 h-3.5 inline mr-1 -mt-0.5"/>
+                            {med.warning}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {activeOtherMeds.length > 0 && (
+                <div className="bg-blue-50/30 p-4 rounded-xl border border-blue-100 h-fit">
+                  <h3 className="text-sm font-bold border-b-2 border-blue-300 mb-3 text-blue-800 inline-block w-full pb-1 flex items-center gap-2">
+                    <Syringe className="w-4 h-4" /> ▍ 其他治療
+                  </h3>
+                  <div className="space-y-4">
+                    {activeOtherMeds.map(med => (
+                      <div key={`info-${med.id}`} className="flex items-start gap-3 bg-white p-2 rounded shadow-sm border border-gray-100">
+                        <div className={`w-6 h-6 flex items-center justify-center text-blue-500 bg-blue-100 rounded-md flex-shrink-0 mt-0.5`}>
+                          <Syringe className="w-4 h-4" />
+                        </div>
+                        <div className="text-sm leading-tight">
+                          <div className="font-bold text-gray-800">{med.name}</div>
+                          <div className="text-gray-500 text-xs mt-1">{med.desc}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 中欄：預防性用藥 */}
+            <div className="space-y-6">
+              {activePreventiveMeds.length > 0 && (
+                <div className="bg-purple-50/30 p-4 rounded-xl border border-purple-100 h-full">
+                  <h3 className="text-sm font-bold border-b-2 border-purple-300 mb-3 text-purple-800 inline-block w-full pb-1 flex items-center gap-2">
+                    <Moon className="w-4 h-4" /> ▍ 預防性用藥 (每日規律使用)
+                  </h3>
+                  
+                  <div className="space-y-4">
+                    {activePreventiveMeds.map(med => (
+                      <div key={`info-${med.id}`} className="bg-white p-3 rounded shadow-sm border border-gray-100">
+                        <div className="flex items-start gap-3">
+                          <div className={`w-5 h-5 shadow flex-shrink-0 mt-1 ${med.shape} ${med.color}`}></div>
+                          <div className="text-sm leading-tight flex-1">
+                            <div className="font-bold text-gray-800">{med.name}</div>
+                            <div className="text-gray-500 text-xs mt-1">{med.desc}</div>
+                          </div>
+                        </div>
+                        
+                        {/* 特定藥物警語跟隨在藥物下方，版面加大 */}
+                        {med.warning && (
+                          <div className="mt-2 text-xs text-red-700 bg-red-50 p-2 rounded-md border border-red-200 font-medium leading-relaxed">
+                            <AlertCircle className="w-3.5 h-3.5 inline mr-1 -mt-0.5"/>
+                            {med.warning}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 右欄：通用衛教與預約 */}
+            <div className="flex flex-col space-y-6">
+              <div className="bg-gray-50 p-5 rounded-xl border border-gray-200 shadow-sm flex-grow">
+                <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2 text-lg border-b border-gray-300 pb-2">
+                  <Activity className="w-5 h-5 text-blue-600" /> 日常照護注意事項
+                </h3>
+                
+                <ul className="list-disc pl-5 space-y-3 text-sm text-gray-700 leading-relaxed">
+                  <li><strong className="text-gray-900">勿過度依賴止痛藥：</strong>若一週需使用急性止痛藥<span className="text-red-600 font-bold underline">超過2天</span>，請與醫師討論，避免造成「藥物過度使用頭痛」。</li>
+                  <li><strong className="text-gray-900">建立運動習慣：</strong>規律有氧運動 (每週3次，每次30分鐘) 有助於顯著改善偏頭痛頻率與嚴重度。</li>
+                  <li><strong className="text-gray-900">規律作息：</strong>保持充足的睡眠與水分補充，避免飢餓或過度勞累。</li>
+                </ul>
+
+                {enableTitration && activePreventiveMeds.some(m => m.allowTitration) && (
+                  <div className="mt-6 p-3 bg-purple-100 rounded-lg border border-purple-200">
+                    <h4 className="font-bold text-purple-900 mb-1 flex items-center gap-1 text-sm">
+                      <Moon className="w-4 h-4" /> 適應期用藥提醒
+                    </h4>
+                    <p className="text-xs text-purple-800 leading-relaxed">
+                      紀錄表上有標示「<span className="font-bold text-gray-600 bg-white px-1 rounded">夜用</span>」的預防性藥物，前三天請於<span className="font-bold text-red-600">睡前服用</span>，以減少初期可能產生的頭暈、嗜睡或疲倦感。適應後可遵照一般醫囑服用。
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* 下次預約區塊放大 */}
+              <div className="border-2 border-gray-400 p-5 rounded-xl bg-blue-50/50">
+                <p className="font-bold text-gray-800 text-base mb-3 flex items-center justify-between">
+                  <span>下次預約時間：</span>
+                  <span className="border-b-2 border-gray-500 inline-block w-40"></span>
+                </p>
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  回診時，請務必<strong className="text-gray-900">攜帶此份紀錄表</strong>，以協助醫師評估用藥成效與後續治療計畫。
+                </p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+      
+      <style>{`
+        /* 列印相關的全局 CSS */
+        @media print {
+          @page {
+            size: A4 landscape;
+            margin: 4mm;
+          }
+          body {
+            background: white !important;
+            padding: 0;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .print\\:hidden { display: none !important; }
+          
+          /* 確保每頁都強制分頁，但最後一頁不加空白頁 */
+          .page-wrapper {
+            page-break-after: always;
+            break-after: page;
+            height: 100vh;
+            max-height: 202mm; /* A4 width 210mm - margin */
+          }
+          .print-container > .page-wrapper:last-child {
+            page-break-after: auto;
+            break-after: auto;
+          }
+        }
+      `}</style>
+    </div>
+  );
+};
+
+export default HeadacheDiarySheet;
