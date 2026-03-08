@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>神經科 ICD-10 快速查詢工具 (離線版)</title>
+    <style>
+        /* 基礎樣式與變數 */
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --success: #16a34a;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.5;
+        }
+
+        /* 佈局 */
+        .app-container { display: flex; min-height: 100vh; flex-direction: row; }
+
+        /* 側邊欄 */
+        aside {
+            width: 280px;
+            background: white;
+            border-right: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .aside-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .brand-icon {
+            background: var(--primary);
+            color: white;
+            padding: 0.5rem;
+            border-radius: 0.75rem;
+            display: flex;
+            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+        }
+
+        .brand-title { font-weight: 700; font-size: 1.25rem; }
+
+        nav { padding: 1rem; overflow-y: auto; flex: 1; }
+        .nav-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 0.5rem 0.75rem;
+        }
+
+        .cat-btn {
+            width: 100%;
+            text-align: left;
+            padding: 0.65rem 0.75rem;
+            margin-bottom: 0.25rem;
+            border-radius: 0.75rem;
+            border: 1px solid transparent;
+            background: none;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .cat-btn:hover { background: #f1f5f9; color: var(--text-main); }
+        .cat-btn.active {
+            background: #eff6ff;
+            color: var(--primary);
+            border-color: #dbeafe;
+        }
+
+        /* 主要內容 */
+        main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+        header {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.5rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .search-container {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+            width: 100%;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.85rem 1rem 0.85rem 3rem;
+            border-radius: 1rem;
+            border: 2px solid transparent;
+            background: #f1f5f9;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .search-input:focus {
+            background: white;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        /* 內容區 */
+        .content-body { padding: 2rem; max-width: 1000px; margin: 0 auto; width: 100%; }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        /* 卡片 */
+        .card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 1.25rem;
+            padding: 1.25rem;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            border-color: var(--primary);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+        }
+
+        .card:active { transform: scale(0.98); }
+
+        .card-tag {
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.5rem;
+            display: inline-block;
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+        }
+
+        .tag-cvd { background: #fee2e2; color: #b91c1c; }
+        .tag-headache { background: #ffedd5; color: #c2410c; }
+        .tag-degenerative { background: #f3e8ff; color: #7e22ce; }
+        .tag-neuromuscular { background: #d1fae5; color: #047857; }
+        .tag-other { background: #eff6ff; color: #1d4ed8; }
+
+        .card-name { font-weight: 700; font-size: 1.125rem; color: var(--text-main); margin-bottom: 1rem; }
+        
+        .card-code {
+            background: #1e293b;
+            color: white;
+            padding: 0.35rem 0.75rem;
+            border-radius: 0.75rem;
+            font-family: monospace;
+            font-weight: 700;
+            font-size: 0.875rem;
+            display: inline-block;
+        }
+
+        /* 複製成功提示 */
+        .copy-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(22, 163, 74, 0.1);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+        }
+
+        .copy-badge {
+            background: var(--success);
+            color: white;
+            padding: 0.4rem 0.8rem;
+            border-radius: 2rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+
+        /* RWD */
+        @media (max-width: 768px) {
+            .app-container { flex-direction: column; }
+            aside { width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border-color); }
+            nav { display: flex; overflow-x: auto; padding: 0.75rem; gap: 0.5rem; }
+            .nav-label { display: none; }
+            .cat-btn { width: auto; white-space: nowrap; margin-bottom: 0; }
+            header { padding: 1rem; }
+            .content-body { padding: 1rem; }
+        }
+
+        [hidden] { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <!-- 側邊欄 -->
+    <aside>
+        <div class="aside-header">
+            <div class="brand-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-2.54Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-2.54Z"/></svg>
+            </div>
+            <span class="brand-title">神經科 ICD-10</span>
+        </div>
+        
+        <nav id="categoryNav">
+            <p class="nav-label">診斷類別</p>
+            <!-- 分類按鈕將由 JS 生成 -->
+        </nav>
+        
+        <div style="padding: 1rem; border-top: 1px solid #f1f5f9; text-align: center;">
+            <p style="font-size: 10px; color: #94a3b8; letter-spacing: 1px;">OFFLINE VERSION v1.6</p>
+        </div>
+    </aside>
+
+    <!-- 主內容區 -->
+    <main>
+        <header>
+            <div class="search-container">
+                <div class="search-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                </div>
+                <input type="text" id="searchInput" class="search-input" placeholder="搜尋名稱或 ICD 代碼 (如: Stroke, G43...)">
+            </div>
+        </header>
+
+        <div class="content-body">
+            <div class="section-header">
+                <h2 class="section-title" id="currentCategoryTitle">全部結果</h2>
+                <span id="resultCount" style="font-size: 12px; color: #94a3b8;">(0)</span>
+            </div>
+
+            <div class="grid" id="icdGrid">
+                <!-- 診斷卡片將由 JS 生成 -->
+            </div>
+
+            <!-- 空狀態 -->
+            <div id="noResults" class="hidden" style="text-align: center; padding: 5rem 0; color: #94a3b8;">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="margin-bottom: 1rem; opacity: 0.2;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                <p>找不到相符的診斷代碼</p>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    // --- 資料定義 ---
+    const ICD_DATA = [
+        { category: 'CVD', name: 'Ischemic stroke', code: 'I63.9' },
+        { category: 'CVD', name: 'ICH (Intracerebral Hemorrhage)', code: 'I61.9' },
+        { category: 'CVD', name: 'SAH (Subarachnoid Hemorrhage)', code: 'I60.9' },
+        { category: 'CVD', name: 'Carotid artery stenosis', code: 'I65.2' },
+        { category: 'CVD', name: 'Vertebral artery stenosis', code: 'I65.0' },
+        { category: 'CVD', name: 'TIA (Transient Ischemic Attack)', code: 'G45.9' },
+        { category: 'Headache', name: 'Migraine without aura', code: 'G43.00' },
+        { category: 'Headache', name: 'Migraine with Aura', code: 'G43.10' },
+        { category: 'Headache', name: 'Tension type headache', code: 'G44.2' },
+        { category: 'Headache', name: 'Cluster headache', code: 'G44.009' },
+        { category: 'Headache', name: 'SUNCT', code: 'G44.059' },
+        { category: 'Headache', name: 'Primary stabbing HA', code: 'G44.85' },
+        { category: 'Degenerative Dz', name: "Parkinson's disease", code: 'G20' },
+        { category: 'Degenerative Dz', name: 'Vascular parkinsonism', code: 'G21.4' },
+        { category: 'Degenerative Dz', name: 'Drug induced parkinsonism', code: 'G21.19' },
+        { category: 'Degenerative Dz', name: 'DLB (Dementia with Lewy Bodies)', code: 'G31.83' },
+        { category: 'Degenerative Dz', name: 'FTD (Frontotemporal Dementia)', code: 'G31.0' },
+        { category: 'Degenerative Dz', name: "Alzheimer's disease", code: 'G30.9' },
+        { category: 'Degenerative Dz', name: 'Dementia', code: 'F03.90' },
+        { category: 'Neuromuscular', name: 'Polyneuropathy', code: 'G62.9' },
+        { category: 'Neuromuscular', name: 'DM poly (Diabetic)', code: 'E11.42' },
+        { category: 'Neuromuscular', name: 'C radiculopathy (Cervical)', code: 'M54.12' },
+        { category: 'Neuromuscular', name: 'L radiculopathy (Lumbar)', code: 'M54.16' },
+        { category: 'Neuromuscular', name: 'Carpal tunnel syndrome', code: 'G56.0' },
+        { category: 'Neuromuscular', name: 'Ulnar nerve lesion', code: 'G56.2' },
+        { category: 'Neuromuscular', name: 'Peroneal nerve lesion', code: 'S84.10' },
+        { category: 'Neuromuscular', name: 'Tibial nerve lesion', code: 'S84.0' },
+        { category: 'Neuromuscular', name: 'GBS Syndrome', code: 'G61.0' },
+        { category: 'Neuromuscular', name: 'C myelopathy', code: 'M50.00' },
+        { category: 'Neuromuscular', name: 'T myelopathy', code: 'M47.14' },
+        { category: 'Neuromuscular', name: 'Myalgia', code: 'M79.10' },
+        { category: 'Neuromuscular', name: 'Inflammatory myopathy', code: 'G72.4' },
+        { category: 'Dizziness', name: 'BPPV (耳石症)', code: 'H81.10' },
+        { category: 'Dizziness', name: 'PPPD', code: 'H81.90' },
+        { category: 'Dizziness', name: 'Vestibular neuritis', code: 'H81.2' },
+        { category: 'Dizziness', name: 'Vestibular syndrome', code: 'H81.90' },
+        { category: 'Movement disorders', name: 'Essential tremor', code: 'G25.0' },
+        { category: 'Movement disorders', name: 'Other tremor', code: 'G25.2' },
+        { category: 'Movement disorders', name: 'Myoclonus', code: 'G25.3' },
+        { category: 'Movement disorders', name: 'Chorea', code: 'G25.5' },
+        { category: 'Movement disorders', name: 'Dystonia', code: 'G24' },
+        { category: 'Movement disorders', name: 'Hemifacial spasm', code: 'G51.3' },
+        { category: 'Movement disorders', name: 'Blepharospasm', code: 'G24.5' },
+        { category: 'Movement disorders', name: 'Drug induced EPS', code: 'G25.70' },
+        { category: 'Movement disorders', name: 'Restless leg syndrome', code: 'G25.81' },
+        { category: 'Seizure', name: 'GTCS', code: 'G40.309' },
+        { category: 'Seizure', name: 'Focal seizure', code: 'G40.2' },
+        { category: 'Demyelinating Dz', name: 'NMOSD', code: 'G36.0' },
+        { category: 'Demyelinating Dz', name: 'MS (Multiple Sclerosis)', code: 'G35' },
+        { category: 'Demyelinating Dz', name: 'ADEM', code: 'G04.0' },
+        { category: 'Demyelinating Dz', name: 'Autoimmune encephalitis', code: 'G04.81' },
+        { category: 'Infections', name: 'Infective encephalitis', code: 'G04.90' },
+        { category: 'Infections', name: 'UTI (泌尿道感染)', code: 'N39.0' },
+        { category: 'Infections', name: 'Pneumonia (肺炎)', code: 'J18.9' },
+        { category: 'Infections', name: 'Cellulitis (蜂窩炎)', code: 'L03.90' },
+        { category: 'Others', name: 'Zoster pain (皮蛇痛)', code: 'B02.29' },
+        { category: 'Others', name: 'Zoster Trigeminal', code: 'B02.22' },
+        { category: 'Others', name: 'Fibromyalgia', code: 'M79.7' },
+        { category: 'Comorbidities', name: 'Hypertension', code: 'I10' },
+        { category: 'Comorbidities', name: 'Hyperlipidemia', code: 'E78.5' },
+        { category: 'Comorbidities', name: 'Diabetes', code: 'E11.9' },
+        { category: 'Comorbidities', name: 'Atrial fibrillation', code: 'I48.91' },
+        { category: 'Psychiatric', name: 'Schizophrenia', code: 'F20.9' },
+        { category: 'Psychiatric', name: 'Depression', code: 'F32.9' },
+        { category: 'Psychiatric', name: 'Anxiety', code: 'F41.1' }
+    ];
+
+    const CATEGORIES = [
+        { id: 'All', label: '全部診斷' },
+        { id: 'CVD', label: '腦血管疾病' },
+        { id: 'Headache', label: '頭痛分類' },
+        { id: 'Degenerative Dz', label: '退化性疾病' },
+        { id: 'Neuromuscular', label: '肌肉/脊髓/周邊' },
+        { id: 'Dizziness', label: '眩暈症狀' },
+        { id: 'Movement disorders', label: '運動障礙' },
+        { id: 'Seizure', label: '癲癇發作' },
+        { id: 'Demyelinating Dz', label: '發炎/免疫' },
+        { id: 'Infections', label: '感染症' },
+        { id: 'Psychiatric', label: '精神疾病' },
+        { id: 'Comorbidities', label: '常見共病' },
+        { id: 'Others', label: '其他診斷' }
+    ];
+
+    // --- 應用程式狀態 ---
+    let state = {
+        searchTerm: '',
+        selectedCategory: 'All'
+    };
+
+    // --- DOM 元素 ---
+    const searchInput = document.getElementById('searchInput');
+    const categoryNav = document.getElementById('categoryNav');
+    const icdGrid = document.getElementById('icdGrid');
+    const resultCount = document.getElementById('resultCount');
+    const currentCategoryTitle = document.getElementById('currentCategoryTitle');
+    const noResults = document.getElementById('noResults');
+
+    // --- 核心邏輯 ---
+
+    function getTagClass(cat) {
+        if (cat === 'CVD') return 'tag-cvd';
+        if (cat === 'Headache') return 'tag-headache';
+        if (cat === 'Degenerative Dz') return 'tag-degenerative';
+        if (cat === 'Neuromuscular') return 'tag-neuromuscular';
+        return 'tag-other';
+    }
+
+    function copyToClipboard(code, cardElement) {
+        // 使用現代 API 或 Fallback
+        const textArea = document.createElement("textarea");
+        textArea.value = code;
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            // 顯示反饋
+            const overlay = cardElement.querySelector('.copy-overlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 1200);
+        } catch (err) {
+            console.error('無法複製', err);
+        }
+        document.body.removeChild(textArea);
+    }
+
+    function renderCategories() {
+        CATEGORIES.forEach(cat => {
+            const btn = document.createElement('button');
+            btn.className = `cat-btn ${state.selectedCategory === cat.id ? 'active' : ''}`;
+            btn.innerHTML = `<span>${cat.label}</span>`;
+            btn.onclick = () => {
+                state.selectedCategory = cat.id;
+                document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                renderResults();
+            };
+            categoryNav.appendChild(btn);
+        });
+    }
+
+    function renderResults() {
+        const filtered = ICD_DATA.filter(item => {
+            const matchesSearch = item.name.toLowerCase().includes(state.searchTerm.toLowerCase()) || 
+                                item.code.toLowerCase().includes(state.searchTerm.toLowerCase());
+            const matchesCat = state.selectedCategory === 'All' || item.category === state.selectedCategory;
+            return matchesSearch && matchesCat;
+        });
+
+        // 更新標題與數量
+        const activeCat = CATEGORIES.find(c => c.id === state.selectedCategory);
+        currentCategoryTitle.textContent = activeCat ? activeCat.label : '搜尋結果';
+        resultCount.textContent = `(${filtered.length})`;
+
+        // 清空容器
+        icdGrid.innerHTML = '';
+        
+        if (filtered.length === 0) {
+            noResults.classList.remove('hidden');
+        } else {
+            noResults.classList.add('hidden');
+            filtered.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.onclick = () => copyToClipboard(item.code, card);
+                
+                card.innerHTML = `
+                    <div class="copy-overlay">
+                        <div class="copy-badge">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>
+                            代碼已複製
+                        </div>
+                    </div>
+                    <div>
+                        <span class="card-tag ${getTagClass(item.category)}">${item.category}</span>
+                        <h3 class="card-name">${item.name}</h3>
+                    </div>
+                    <div>
+                        <div class="card-code">${item.code}</div>
+                    </div>
+                `;
+                icdGrid.appendChild(card);
+            });
+        }
+    }
+
+    // --- 初始化 ---
+    searchInput.oninput = (e) => {
+        state.searchTerm = e.target.value;
+        renderResults();
+    };
+
+    renderCategories();
+    renderResults();
+
+</script>
+
+</body>
+</html>
