@@ -347,11 +347,11 @@
             const acuteRows = activeAcuteMeds.length > 0 
                 ? activeAcuteMeds.map(med => `
                     <tr>
-                        <td class="border border-gray-600 p-1 text-[10px] leading-tight whitespace-nowrap">${med.name}</td>
+                        <td class="border border-gray-600 p-1 text-[10px] leading-tight">${med.name}</td>
                         ${generateEmptyCells(chunkLen)}
                     </tr>
                 `).join('')
-                : `<tr><td class="border border-gray-600 p-1 text-[10px] text-gray-400 whitespace-nowrap">未選用</td>${generateEmptyCells(chunkLen)}</tr>`;
+                : `<tr><td class="border border-gray-600 p-1 text-[10px] text-gray-400">未選用</td>${generateEmptyCells(chunkLen)}</tr>`;
 
             const prevRows = activePreventiveMeds.length > 0 
                 ? activePreventiveMeds.map(med => {
@@ -365,19 +365,19 @@
                     
                     return `
                     <tr>
-                        <td class="border border-gray-600 p-1 text-[10px] leading-tight whitespace-nowrap relative pr-8">
+                        <td class="border border-gray-600 p-1 text-[10px] leading-tight relative pr-8">
                             ${med.name}
                         </td>
                         ${cells}
                     </tr>`;
                 }).join('')
-                : `<tr><td class="border border-gray-600 p-1 text-[10px] text-gray-400 whitespace-nowrap">未選用</td>${generateEmptyCells(chunkLen)}</tr>`;
+                : `<tr><td class="border border-gray-600 p-1 text-[10px] text-gray-400">未選用</td>${generateEmptyCells(chunkLen)}</tr>`;
 
             const otherRows = activeOtherMeds.length > 0 
                 ? `<tr><td class="border border-gray-800 p-1 font-bold bg-blue-50 text-[11px]" colspan="${chunkLen + 1}">其他治療 (紀錄或打勾)</td></tr>` +
                   activeOtherMeds.map(med => `
                     <tr>
-                        <td class="border border-gray-600 p-1 text-[10px] leading-tight whitespace-nowrap">${med.name}</td>
+                        <td class="border border-gray-600 p-1 text-[10px] leading-tight">${med.name}</td>
                         ${generateEmptyCells(chunkLen)}
                     </tr>
                 `).join('')
@@ -400,11 +400,11 @@
                         <table class="w-full border-collapse border border-gray-800 text-sm">
                             <thead>
                                 <tr>
-                                    <th class="border border-gray-800 bg-gray-100 w-auto whitespace-nowrap p-1 text-left text-xs">項次 / 天數</th>
+                                    <th class="border border-gray-800 bg-gray-100 w-[125px] p-1 text-left text-xs">項次 / 天數</th>
                                     ${dayNumHTML}
                                 </tr>
                                 <tr>
-                                    <th class="border border-gray-800 bg-gray-100 p-1 text-left text-[11px] whitespace-nowrap">日期</th>
+                                    <th class="border border-gray-800 bg-gray-100 p-1 text-left text-[11px]">日期</th>
                                     ${dateStrHTML}
                                 </tr>
                             </thead>
@@ -414,19 +414,19 @@
                                         疼痛程度 <span class="font-normal text-gray-600 ml-1 text-[10px]">(1:輕微不影響 / 2:中度影響專注 / 3:嚴重需臥床)</span>
                                     </td>
                                 </tr>
-                                <tr><td class="border border-gray-600 p-1 text-[11px] text-center font-bold whitespace-nowrap">早上</td>${generateEmptyCells(chunkLen)}</tr>
-                                <tr><td class="border border-gray-600 p-1 text-[11px] text-center font-bold whitespace-nowrap">中午</td>${generateEmptyCells(chunkLen)}</tr>
-                                <tr><td class="border border-gray-600 p-1 text-[11px] text-center font-bold whitespace-nowrap">晚上</td>${generateEmptyCells(chunkLen)}</tr>
+                                <tr><td class="border border-gray-600 p-1 text-[11px] text-center font-bold">早上</td>${generateEmptyCells(chunkLen)}</tr>
+                                <tr><td class="border border-gray-600 p-1 text-[11px] text-center font-bold">中午</td>${generateEmptyCells(chunkLen)}</tr>
+                                <tr><td class="border border-gray-600 p-1 text-[11px] text-center font-bold">晚上</td>${generateEmptyCells(chunkLen)}</tr>
 
                                 <tr><td class="border border-gray-800 p-1 font-bold bg-yellow-50 text-[11px]" colspan="${chunkLen + 1}">伴隨症狀 (有則打勾)</td></tr>
-                                <tr><td class="border border-gray-600 p-1 text-[11px] whitespace-nowrap">噁心 / 嘔吐</td>${generateEmptyCells(chunkLen)}</tr>
-                                <tr><td class="border border-gray-600 p-1 text-[11px] whitespace-nowrap">怕光 / 怕吵</td>${generateEmptyCells(chunkLen)}</tr>
-                                <tr><td class="border border-gray-600 p-1 text-[11px] whitespace-nowrap">視覺預兆 <span class="text-[9px] text-gray-500 tracking-tighter">(閃光/鋸齒)</span></td>${generateEmptyCells(chunkLen)}</tr>
-                                <tr><td class="border border-gray-600 p-1 text-[11px] whitespace-nowrap">頭側流眼淚 / 流鼻水</td>${generateEmptyCells(chunkLen)}</tr>
+                                <tr><td class="border border-gray-600 p-1 text-[11px]">噁心 / 嘔吐</td>${generateEmptyCells(chunkLen)}</tr>
+                                <tr><td class="border border-gray-600 p-1 text-[11px]">怕光 / 怕吵</td>${generateEmptyCells(chunkLen)}</tr>
+                                <tr><td class="border border-gray-600 p-1 text-[11px]">視覺預兆 <span class="text-[9px] text-gray-500 tracking-tighter">(閃光/鋸齒)</span></td>${generateEmptyCells(chunkLen)}</tr>
+                                <tr><td class="border border-gray-600 p-1 text-[11px]">頭側流眼淚 / 流鼻水</td>${generateEmptyCells(chunkLen)}</tr>
 
                                 <tr><td class="border border-gray-800 p-1 font-bold bg-blue-50 text-[11px]" colspan="${chunkLen + 1}">持續時間</td></tr>
-                                <tr><td class="border border-gray-600 p-1 text-[11px] whitespace-nowrap">超過 4 小時</td>${generateEmptyCells(chunkLen)}</tr>
-                                <tr><td class="border border-gray-600 p-1 text-[11px] whitespace-nowrap">小於 4 小時</td>${generateEmptyCells(chunkLen)}</tr>
+                                <tr><td class="border border-gray-600 p-1 text-[11px]">超過 4 小時</td>${generateEmptyCells(chunkLen)}</tr>
+                                <tr><td class="border border-gray-600 p-1 text-[11px]">小於 4 小時</td>${generateEmptyCells(chunkLen)}</tr>
 
                                 <tr><td class="border border-gray-800 p-1 font-bold bg-green-50 text-[11px]" colspan="${chunkLen + 1}">急性用藥 (紀錄顆數)</td></tr>
                                 ${acuteRows}
@@ -436,7 +436,6 @@
 
                                 ${otherRows}
 
-                                <tr><td class="border border-gray-800 p-1 font-bold text-[11px] bg-gray-50 whitespace-nowrap">運動狀況 (分鐘)</td>${generateEmptyCells(chunkLen)}</tr>
                             </tbody>
                         </table>
                     </div>
@@ -546,28 +545,54 @@
                 </div>
 
                 <!-- 右欄：通用衛教與預約 (佔 3/12) -->
-                <div class="col-span-3 flex flex-col gap-4 min-h-0">
-                    <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm shrink-0">
-                        <h3 class="font-bold text-gray-800 mb-3 flex items-center gap-1.5 text-[15px] border-b border-gray-300 pb-1.5">
+                <div class="col-span-3 flex flex-col gap-3 min-h-0">
+                    <div class="bg-gray-50 p-3.5 rounded-xl border border-gray-200 shadow-sm shrink-0">
+                        <h3 class="font-bold text-gray-800 mb-2 flex items-center gap-1.5 text-[13px] border-b border-gray-300 pb-1.5">
                             <i data-lucide="activity" class="w-4 h-4 text-blue-600"></i> 日常照護注意事項
                         </h3>
                         
-                        <ul class="list-disc pl-4 space-y-2 text-xs text-gray-700 leading-snug">
+                        <ul class="list-disc pl-4 space-y-1 text-[11px] text-gray-700 leading-snug">
                             <li><strong class="text-gray-900">勿過度依賴止痛藥：</strong>若一週需使用急性止痛藥<span class="text-red-600 font-bold underline">超過2天</span>，請與醫師討論。</li>
-                            <li><strong class="text-gray-900">建立運動習慣：</strong>規律有氧運動 (每週3次，每次30分鐘) 有助於顯著改善偏頭痛。</li>
                             <li><strong class="text-gray-900">規律作息：</strong>保持充足睡眠與水分補充，避免飢餓或過度勞累。</li>
                         </ul>
                         
                         ${titrationWarningHTML}
                     </div>
 
-                    <div class="border-2 border-gray-400 p-4 rounded-xl bg-blue-50/50 shrink-0">
-                        <p class="font-bold text-gray-800 text-sm mb-3 flex items-center justify-between">
-                            <span>下次預約時間：</span>
+                    <div class="bg-green-50 p-3.5 rounded-xl border border-green-200 shadow-sm shrink-0">
+                        <h3 class="font-bold text-gray-800 mb-2 flex items-center gap-1.5 text-[13px] border-b border-green-300 pb-1.5">
+                            <i data-lucide="check-square" class="w-4 h-4 text-green-600"></i> 每週運動紀錄
+                        </h3>
+                        <p class="text-[10px] text-gray-700 mb-2 leading-snug">
+                            建議每週 <strong class="text-gray-900">3 次</strong> 有氧運動，每次 30 分鐘，有助顯著改善偏頭痛。請打勾：
+                        </p>
+                        <div class="grid grid-cols-2 gap-2 text-[10px] text-gray-800">
+                            <div class="flex items-center justify-between bg-white p-1.5 rounded border border-gray-200">
+                                <span>第1週</span>
+                                <div class="flex gap-1"><div class="w-3 h-3 border border-gray-400 rounded-sm"></div><div class="w-3 h-3 border border-gray-400 rounded-sm"></div><div class="w-3 h-3 border border-gray-400 rounded-sm"></div></div>
+                            </div>
+                            <div class="flex items-center justify-between bg-white p-1.5 rounded border border-gray-200">
+                                <span>第2週</span>
+                                <div class="flex gap-1"><div class="w-3 h-3 border border-gray-400 rounded-sm"></div><div class="w-3 h-3 border border-gray-400 rounded-sm"></div><div class="w-3 h-3 border border-gray-400 rounded-sm"></div></div>
+                            </div>
+                            <div class="flex items-center justify-between bg-white p-1.5 rounded border border-gray-200">
+                                <span>第3週</span>
+                                <div class="flex gap-1"><div class="w-3 h-3 border border-gray-400 rounded-sm"></div><div class="w-3 h-3 border border-gray-400 rounded-sm"></div><div class="w-3 h-3 border border-gray-400 rounded-sm"></div></div>
+                            </div>
+                            <div class="flex items-center justify-between bg-white p-1.5 rounded border border-gray-200">
+                                <span>第4週</span>
+                                <div class="flex gap-1"><div class="w-3 h-3 border border-gray-400 rounded-sm"></div><div class="w-3 h-3 border border-gray-400 rounded-sm"></div><div class="w-3 h-3 border border-gray-400 rounded-sm"></div></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border-2 border-gray-400 p-3.5 rounded-xl bg-blue-50/50 shrink-0">
+                        <p class="font-bold text-gray-800 text-[13px] mb-2 flex items-center justify-between">
+                            <span>下次預約：</span>
                             <span class="border-b border-gray-500 inline-block w-24"></span>
                         </p>
-                        <p class="text-gray-600 text-xs leading-relaxed">
-                            回診時，請務必<strong class="text-gray-900">攜帶此份紀錄表</strong>，以協助醫師評估用藥成效與後續計畫。
+                        <p class="text-gray-600 text-[10px] leading-relaxed">
+                            回診時，請務必<strong class="text-gray-900">攜帶此份紀錄表</strong>。
                         </p>
                     </div>
                 </div>
