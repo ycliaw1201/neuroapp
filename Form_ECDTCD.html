@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Neck Ultrasound Report Generator</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- React & ReactDOM -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  
+  <!-- Babel for in-browser JSX compilation -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-gray-50">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useMemo, useEffect } = React;
+
+    // --- Icons ---
+    const RefreshCw = ({ size = 24, className = "" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+        <path d="M3 3v5h5"/>
+      </svg>
+    );
+
+    const ClipboardCopy = ({ size = 24, className = "" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <rect width="8" height="4" x="8" y="2" rx="1" ry="1"/>
+        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+        <path d="M9 14h6"/>
+        <path d="M9 10h6"/>
+      </svg>
+    );
+
+    // --- Constants ---
+    const VESSELS = {
+      ecd: [
+        { name: 'ECA', splits: ['p-ECA', 'd-ECA'] },
+        { name: 'ICA', splits: ['p-ICA', 'd-ICA'] },
+        { name: 'CB', splits: [] },
+        { name: 'CCA', splits: ['p-CCA', 'm-CCA', 'd-CCA'] },
+        { isGap: true },
+        { name: 'VA', splits: ['VA0', 'VA1'] },
+        { name: 'SA', splits: [] },
+      ],
+      tcd: [
+        { name: 'MCA', splits: ['p-M1', 'm-M1', 'M2'] },
+        { name: 'PCA', splits: ['p-PCA', 'm-PCA'] },
+        { name: 'CS', splits: [] },
+        { name: 'VA', splits: ['p-VA', 'd-VA'] },
+      ],
+      tcdMidline: [
+        { name: 'BA', splits: [] }
+      ]
+    };
+
+    const FLOW_OPTIONS = [
+      { value: 'no', label: 'No' },
+      { value: 'mild', label: 'Mild' },
+      { value: 'moderate', label: 'Mod (>50%)' },
+      { value: 'severe', label: 'Sev (>70%)' },
+    ];
+
+    const FLOW_DESC = {
+      mild: 'Mild stenotic flow (< 50%)',
+      moderate: 'Moderate stenotic flow (50-70%)',
+      severe: 'Severe stenotic flow (> 70%)'
+    };
+
+    const getFlowColor = (flowValue) => {
+      switch(flowValue) {
+        case 'no': return 'bg-green-100 text-green-800 border-green-300';
+        case 'mild': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+        case 'moderate': return 'bg-orange-100 text-orange-800 border-orange-300';
+        case 'severe': return 'bg-red-100 text-red-800 border-red-300';
+        default: return 'bg-white text-gray-800 border-gray-300';
+      }
+    };
+
+    const createInitialState = () => {
+      const state = {
+        ecd: { right: {}, left: {} },
+        tcd: { right: {}, left: {}, midline: {} },
+        imt: { right: false, left: false },
+        ptw: { right: false, left: false, bilateral: false },
+        arrhythmia: false,
+        suggestStenting: false
+      };
+
+      const initVessel = (v) => ({
+        isSplit: false,
+        noSignal: false,
+        segments: { [v.name]: { flow: 'no', rate: '' } }
+      });
+
+      VESSELS.ecd.forEach(v => {
+        if (v.isGap) return;
+        state.ecd.right[v.name] = initVessel(v);
+        state.ecd.left[v.name] = initVessel(v);
+      });
+
+      VESSELS.tcd.forEach(v => {
+        state.tcd.right[v.name] = initVessel(v);
+        state.tcd.left[v.name] = initVessel(v);
+      });
+
+      VESSELS.tcdMidline.forEach(v => {
+        state.tcd.midline[v.name] = initVessel(v);
+      });
+
+      return state;
+    };
+
+    // --- Components ---
+    const FlowRateControls = ({ region, side, vesselName, segmentName, segmentData, showRates, updateSegment, updateRate }) => (
+      <div className="flex items-center space-x-2 shrink-0">
+        <select
+          value={segmentData.flow}
+          onChange={(e) => updateSegment(region, side, vesselName, segmentName, 'flow', e.target.value)}
+          className={`border rounded-md px-2 py-1.5 text-sm font-semibold cursor-pointer outline-none transition-colors shadow-sm focus:ring-2 focus:ring-blue-500/50 ${getFlowColor(segmentData.flow)}`}
+        >
+          {FLOW_OPTIONS.map(opt => (
+            <option key={opt.value} value={opt.value} className="bg-white text-gray-800">{opt.label}</option>
+          ))}
+        </select>
+
+        {showRates && (
+          <div className="flex items-center space-x-1 shrink-0 bg-gray-50 px-2 py-1 rounded-md border border-gray-200">
+            <span className="text-xs text-gray-500 font-medium">狹窄率:</span>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              className="w-16 h-7 border-gray-300 rounded text-sm text-center focus:ring-blue-500 focus:border-blue-500"
+              placeholder="-"
+              value={segmentData.rate}
+              onChange={(e) => updateRate(region, side, vesselName, segmentName, e.target.value)}
+            />
+            <span className="text-xs text-gray-500">%</span>
+          </div>
+        )}
+      </div>
+    );
+
+    const VesselBlock = ({ region, side, vesselConfig, showRates, state, isTcdDisabledFlag, toggleNoSignal, toggleSplit, updateSegment, updateRate }) => {
+      const vesselData = state[region][side][vesselConfig.name];
+      const isDisabled = isTcdDisabledFlag || vesselData.noSignal;
+      
+      return (
+        <div className={`mb-3 border border-gray-200 rounded-lg shadow-sm bg-white overflow-hidden transition-all duration-200 ${isTcdDisabledFlag ? 'opacity-50 pointer-events-none' : ''}`}>
+          <div className={`flex flex-col sm:flex-row sm:items-center justify-between p-3 ${vesselData.isSplit ? 'bg-gray-100 border-b' : ''} ${vesselData.noSignal ? 'bg-red-50/50 opacity-70' : ''}`}>
+            
+            <div className="flex items-center space-x-4 mb-2 sm:mb-0">
+              <span className="font-bold text-gray-800 text-lg w-10">{vesselConfig.name}</span>
+              
+              <label className="flex items-center space-x-1.5 cursor-pointer bg-white px-2 py-1 rounded border shadow-sm hover:bg-red-50 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={vesselData.noSignal}
+                  onChange={() => toggleNoSignal(region, side, vesselConfig.name)}
+                  className="rounded text-red-600 focus:ring-red-500 w-4 h-4 cursor-pointer"
+                />
+                <span className={`text-sm font-bold ${vesselData.noSignal ? 'text-red-600' : 'text-gray-600'}`}>無訊號</span>
+              </label>
+
+              {vesselConfig.splits.length > 0 && !vesselData.noSignal && (
+                <button
+                  onClick={() => toggleSplit(region, side, vesselConfig)}
+                  className={`text-xs px-2.5 py-1 rounded-md font-medium transition-colors ${vesselData.isSplit ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : 'bg-white border text-gray-600 hover:bg-gray-50'}`}
+                >
+                  {vesselData.isSplit ? '取消分段' : '詳細分段'}
+                </button>
+              )}
+            </div>
+
+            {!vesselData.isSplit && !vesselData.noSignal && (
+              <div className="flex justify-start sm:justify-end">
+                <FlowRateControls
+                  region={region}
+                  side={side}
+                  vesselName={vesselConfig.name}
+                  segmentName={vesselConfig.name}
+                  segmentData={vesselData.segments[vesselConfig.name]}
+                  showRates={showRates}
+                  updateSegment={updateSegment}
+                  updateRate={updateRate}
+                />
+              </div>
+            )}
+          </div>
+
+          {vesselData.isSplit && !vesselData.noSignal && (
+            <div className="flex flex-col">
+              {Object.keys(vesselData.segments).map(segName => (
+                <div key={segName} className="flex flex-col sm:flex-row sm:items-center justify-between p-2 sm:px-4 border-t border-gray-100 bg-white hover:bg-gray-50 transition-colors">
+                  <div className="font-medium text-gray-700 mb-2 sm:mb-0 shrink-0 flex items-center pl-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mr-2"></div>
+                    {segName}
+                  </div>
+                  <FlowRateControls
+                    region={region}
+                    side={side}
+                    vesselName={vesselConfig.name}
+                    segmentName={segName}
+                    segmentData={vesselData.segments[segName]}
+                    showRates={showRates}
+                    updateSegment={updateSegment}
+                    updateRate={updateRate}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    // --- Main App ---
+    function App() {
+      const [state, setState] = useState(createInitialState());
+      const [activeTab, setActiveTab] = useState('ecd');
+      
+      // UI States
+      const [showConfirm, setShowConfirm] = useState(false);
+      const [showToast, setShowToast] = useState(false);
+
+      const handleReset = () => {
+        setShowConfirm(true);
+      };
+
+      const confirmReset = () => {
+        setState(createInitialState());
+        setShowConfirm(false);
+      };
+
+      const updateSegment = (region, side, vessel, segment, field, value) => {
+        setState(prev => {
+          const next = JSON.parse(JSON.stringify(prev)); 
+          next[region][side][vessel].segments[segment][field] = value;
+          return next;
+        });
+      };
+
+      const updateRate = (region, side, vessel, segment, value) => {
+        setState(prev => {
+          const next = JSON.parse(JSON.stringify(prev));
+          next[region][side][vessel].segments[segment].rate = value;
+          return next;
+        });
+      };
+
+      const toggleSplit = (region, side, vesselConfig) => {
+        setState(prev => {
+          const next = JSON.parse(JSON.stringify(prev));
+          const v = next[region][side][vesselConfig.name];
+          if (v.isSplit) {
+            v.isSplit = false;
+            v.segments = { [vesselConfig.name]: { flow: 'no', rate: '' } };
+          } else {
+            v.isSplit = true;
+            v.segments = {};
+            vesselConfig.splits.forEach(s => {
+              v.segments[s] = { flow: 'no', rate: '' };
+            });
+          }
+          return next;
+        });
+      };
+
+      const togglePtw = (type) => {
+        setState(prev => {
+          const next = JSON.parse(JSON.stringify(prev));
+          if (type === 'bilateral') {
+            const newVal = !next.ptw.bilateral;
+            next.ptw.bilateral = newVal;
+            next.ptw.right = newVal;
+            next.ptw.left = newVal;
+          } else {
+            next.ptw[type] = !next.ptw[type];
+            if (!next.ptw[type]) next.ptw.bilateral = false;
+            if (next.ptw.right && next.ptw.left) next.ptw.bilateral = true;
+          }
+          return next;
+        });
+      };
+
+      const toggleNoSignal = (region, side, vessel) => {
+        setState(prev => {
+          const next = JSON.parse(JSON.stringify(prev));
+          next[region][side][vessel].noSignal = !next[region][side][vessel].noSignal;
+          return next;
+        });
+      };
+
+      const isTcdDisabled = (side, vName) => {
+        if (side === 'right' && state.ptw.right && ['MCA', 'PCA', 'CS'].includes(vName)) return true;
+        if (side === 'left' && state.ptw.left && ['MCA', 'PCA', 'CS'].includes(vName)) return true;
+        return false;
+      };
+
+      const copyToClipboard = () => {
+        const text = document.getElementById('report-output').innerText;
+        
+        // Use standard clipboard API, fallback to execCommand if needed
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(() => {
+                showSuccessToast();
+            });
+        } else {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showSuccessToast();
+            } catch (err) {
+                console.error('Failed to copy text', err);
+            }
+            document.body.removeChild(textArea);
+        }
+      };
+
+      const showSuccessToast = () => {
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 2500);
+      };
+
+      const getPlural = (name) => {
+        if (name === 'BA') return 'BA';
+        if (name.endsWith('s')) return name;
+        return name + 's';
+      };
+
+      const getNoSignalsStr = (data, ptwRight, ptwLeft, isTcd) => {
+        const rightDisabled = isTcd && ptwRight ? ['MCA', 'PCA', 'CS'] : [];
+        const leftDisabled = isTcd && ptwLeft ? ['MCA', 'PCA', 'CS'] : [];
+
+        const right = Object.entries(data.right || {}).filter(([k, v]) => v.noSignal && !rightDisabled.includes(k)).map(x => x[0]);
+        const left = Object.entries(data.left || {}).filter(([k, v]) => v.noSignal && !leftDisabled.includes(k)).map(x => x[0]);
+        const midline = data.midline ? Object.entries(data.midline).filter(([k, v]) => v.noSignal).map(x => x[0]) : [];
+
+        const bilateral = right.filter(n => left.includes(n));
+        const rightOnly = right.filter(n => !bilateral.includes(n));
+        const leftOnly = left.filter(n => !bilateral.includes(n));
+
+        const strs = [
+          ...bilateral.map(n => 'Bilateral ' + getPlural(n)),
+          ...rightOnly.map(n => 'Right ' + n),
+          ...leftOnly.map(n => 'Left ' + n),
+          ...midline
+        ];
+        return strs.join(', ');
+      };
+
+      const aggregateNormals = (data, ptwRight, ptwLeft, isTcd) => {
+        const processSide = (sideData, disabledVessels) => {
+          let normals = [];
+          for (const [vName, vData] of Object.entries(sideData || {})) {
+            if (disabledVessels.includes(vName) || vData.noSignal) continue;
+            const segs = Object.keys(vData.segments);
+            const normalSegs = segs.filter(s => vData.segments[s].flow === 'no');
+            
+            if (normalSegs.length === segs.length) {
+              normals.push(vName); 
+            } else {
+              normals.push(...normalSegs); 
+            }
+          }
+          return normals;
+        };
+
+        const rightDisabled = isTcd && ptwRight ? ['MCA', 'PCA', 'CS'] : [];
+        const leftDisabled = isTcd && ptwLeft ? ['MCA', 'PCA', 'CS'] : [];
+
+        const rightNormals = processSide(data.right, rightDisabled);
+        const leftNormals = processSide(data.left, leftDisabled);
+
+        const bilateral = rightNormals.filter(n => leftNormals.includes(n));
+        const rightOnly = rightNormals.filter(n => !bilateral.includes(n));
+        const leftOnly = leftNormals.filter(n => !bilateral.includes(n));
+
+        const bilateralStrs = bilateral.map(n => 'Bilateral ' + getPlural(n));
+        const rightStrs = rightOnly.map(n => 'Right ' + n);
+        const leftStrs = leftOnly.map(n => 'Left ' + n);
+        
+        let midlineStrs = [];
+        if (data.midline) {
+          midlineStrs = processSide(data.midline, []);
+        }
+
+        const allStrs = [...bilateralStrs, ...rightStrs, ...leftStrs, ...midlineStrs];
+        return allStrs.join(', ');
+      };
+
+      const report = useMemo(() => {
+        const ecdDoppler = [];
+        const ecdEcho = [];
+        const tcdDoppler = [];
+
+        // --- ECD Doppler ---
+        const ecdNoSignals = getNoSignalsStr(state.ecd, false, false, false);
+        if (ecdNoSignals) ecdDoppler.push(`No signal - ${ecdNoSignals}`);
+
+        const ecdNormals = aggregateNormals(state.ecd, false, false, false);
+        if (ecdNormals) ecdDoppler.push(`No stenotic flow - ${ecdNormals}`);
+
+        const ecdAbnormals = { mild: [], moderate: [], severe: [] };
+
+        ['right', 'left'].forEach(side => {
+          Object.keys(state.ecd[side]).forEach(vName => {
+            const vData = state.ecd[side][vName];
+            if (vData.noSignal) return;
+
+            const segs = vData.segments;
+            Object.keys(segs).forEach(sName => {
+              const flow = segs[sName].flow;
+              if (flow !== 'no') {
+                const sideStr = side === 'right' ? 'Right' : 'Left';
+                ecdAbnormals[flow].push(`${sideStr} ${sName}`);
+              }
+            });
+          });
+        });
+
+        ['mild', 'moderate', 'severe'].forEach(flow => {
+          if (ecdAbnormals[flow].length > 0) {
+            ecdDoppler.push(`${FLOW_DESC[flow]} - ${ecdAbnormals[flow].join(', ')}`);
+          }
+        });
+
+        if (state.arrhythmia) ecdDoppler.push('Irregular waveforms, suspected arrhythmia');
+
+        // --- ECD 2D Echo ---
+        const plaques = { small: [], mild: [], mod: [], sev: [], total: [] };
+        let hasAnyNumber = false;
+        let validEcdVesselsCount = 0;
+
+        ['right', 'left'].forEach(side => {
+          Object.keys(state.ecd[side]).forEach(vName => {
+            const vData = state.ecd[side][vName];
+            if (vData.noSignal) return;
+            validEcdVesselsCount++;
+
+            const segs = vData.segments;
+            Object.keys(segs).forEach(sName => {
+              const rateStr = segs[sName].rate.toString().trim();
+              if (rateStr !== '') {
+                hasAnyNumber = true;
+                const rateNum = Number(rateStr);
+                const sideStr = side === 'right' ? 'Right' : 'Left';
+                
+                const itemStr = rateNum >= 100 ? `${sideStr} ${sName}` : `${sideStr} ${sName} (${rateStr}%)`;
+
+                if (rateNum < 30) plaques.small.push(itemStr);
+                else if (rateNum < 50) plaques.mild.push(itemStr);
+                else if (rateNum < 70) plaques.mod.push(itemStr);
+                else if (rateNum < 100) plaques.sev.push(itemStr);
+                else plaques.total.push(itemStr);
+              }
+            });
+          });
+        });
+
+        if (!hasAnyNumber && !state.imt.right && !state.imt.left && validEcdVesselsCount > 0) {
+          ecdEcho.push('Clear vessel walls');
+        } else {
+          if (plaques.small.length) ecdEcho.push(`Small plaques (< 30%) - ${plaques.small.join(', ')}`);
+          if (plaques.mild.length) ecdEcho.push(`Mild plaques (30-50%) - ${plaques.mild.join(', ')}`);
+          if (plaques.mod.length) ecdEcho.push(`Moderate plaques (50-70%) - ${plaques.mod.join(', ')}`);
+          if (plaques.sev.length) ecdEcho.push(`Severe plaques (70-99%) - ${plaques.sev.join(', ')}`);
+          if (plaques.total.length) ecdEcho.push(`Total occlusion (100%) - ${plaques.total.join(', ')}`);
+        }
+
+        if (state.imt.right && state.imt.left) {
+          ecdEcho.push('IMT thickening - Bilateral CCAs');
+        } else if (state.imt.right) {
+          ecdEcho.push('IMT thickening - Right CCA');
+        } else if (state.imt.left) {
+          ecdEcho.push('IMT thickening - Left CCA');
+        }
+
+        // --- TCD Doppler ---
+        if (state.ptw.right && state.ptw.left) {
+          tcdDoppler.push('Bilateral poor temporal windows');
+        } else if (state.ptw.right) {
+          tcdDoppler.push('Right poor temporal window');
+        } else if (state.ptw.left) {
+          tcdDoppler.push('Left poor temporal window');
+        }
+
+        const tcdNoSignals = getNoSignalsStr(state.tcd, state.ptw.right, state.ptw.left, true);
+        if (tcdNoSignals) tcdDoppler.push(`No signal - ${tcdNoSignals}`);
+
+        const tcdNormals = aggregateNormals(state.tcd, state.ptw.right, state.ptw.left, true);
+        if (tcdNormals) tcdDoppler.push(`No stenotic flow - ${tcdNormals}`);
+
+        const tcdAbnormals = { mild: [], moderate: [], severe: [] };
+
+        ['right', 'left', 'midline'].forEach(side => {
+          Object.keys(state.tcd[side] || {}).forEach(vName => {
+            if (isTcdDisabled(side, vName)) return;
+            const vData = state.tcd[side][vName];
+            if (vData.noSignal) return;
+
+            const segs = vData.segments;
+            Object.keys(segs).forEach(sName => {
+              const flow = segs[sName].flow;
+              if (flow !== 'no') {
+                let sideStr = '';
+                if (side === 'right') sideStr = 'Right ';
+                else if (side === 'left') sideStr = 'Left ';
+                tcdAbnormals[flow].push(`${sideStr}${sName}`);
+              }
+            });
+          });
+        });
+
+        ['mild', 'moderate', 'severe'].forEach(flow => {
+          if (tcdAbnormals[flow].length > 0) {
+            tcdDoppler.push(`${FLOW_DESC[flow]} - ${tcdAbnormals[flow].join(', ')}`);
+          }
+        });
+
+        if (state.arrhythmia) tcdDoppler.push('Irregular waveforms, suspected arrhythmia');
+
+        const formatNum = (lines) => lines.map((l, i) => `${i + 1}. ${l}`);
+
+        return {
+          ecdDoppler: formatNum(ecdDoppler),
+          ecdEcho: formatNum(ecdEcho),
+          tcdDoppler: formatNum(tcdDoppler)
+        };
+      }, [state]);
+
+      return (
+        <div className="min-h-screen bg-gray-50 py-6 px-4 font-sans text-gray-900">
+          
+          {/* Custom Confirm Modal */}
+          {showConfirm && (
+            <div className="fixed inset-0 bg-gray-900/50 flex items-center justify-center z-50 transition-opacity">
+              <div className="bg-white p-6 rounded-xl shadow-xl max-w-sm w-full mx-4 transform transition-all">
+                <h3 className="text-xl font-bold mb-3 text-gray-800">確認重設</h3>
+                <p className="text-gray-600 mb-6 font-medium">確定要清除所有資料並重設表單嗎？此動作無法復原。</p>
+                <div className="flex justify-end space-x-3">
+                  <button onClick={() => setShowConfirm(false)} className="px-5 py-2.5 text-gray-700 font-medium bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">取消</button>
+                  <button onClick={confirmReset} className="px-5 py-2.5 bg-red-600 font-medium text-white hover:bg-red-700 rounded-lg shadow-sm transition-colors">確定重設</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Copy Toast */}
+          <div className={`fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-6 py-3 rounded-full shadow-lg z-50 transition-all duration-300 ${showToast ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}>
+             📋 報告已成功複製到剪貼簿！
+          </div>
+
+          <div className="max-w-6xl mx-auto space-y-6">
+            
+            {/* Header */}
+            <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-800">頸部超音波報告系統</h1>
+                <p className="text-sm text-gray-500 mt-1">Neck Ultrasound Report Generator</p>
+              </div>
+              <button 
+                onClick={handleReset}
+                className="flex items-center px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors font-medium border border-red-100"
+              >
+                <RefreshCw size={18} className="mr-2" />
+                重設表單
+              </button>
+            </div>
+
+            {/* Tabs Navigation */}
+            <div className="flex space-x-2 bg-gray-200 p-1.5 rounded-xl shadow-inner overflow-x-auto">
+              <button 
+                onClick={() => setActiveTab('ecd')}
+                className={`flex-1 min-w-[120px] py-2.5 px-4 rounded-lg text-sm md:text-base font-bold transition-all duration-200 ${activeTab === 'ecd' ? 'bg-white shadow-sm text-blue-700' : 'text-gray-600 hover:bg-gray-300 hover:text-gray-800'}`}
+              >
+                ECD 顱外血管
+              </button>
+              <button 
+                onClick={() => setActiveTab('tcd')}
+                className={`flex-1 min-w-[120px] py-2.5 px-4 rounded-lg text-sm md:text-base font-bold transition-all duration-200 ${activeTab === 'tcd' ? 'bg-white shadow-sm text-indigo-700' : 'text-gray-600 hover:bg-gray-300 hover:text-gray-800'}`}
+              >
+                TCD 顱內血管
+              </button>
+              <button 
+                onClick={() => setActiveTab('report')}
+                className={`flex-1 min-w-[120px] py-2.5 px-4 rounded-lg text-sm md:text-base font-bold transition-all duration-200 ${activeTab === 'report' ? 'bg-white shadow-sm text-emerald-700' : 'text-gray-600 hover:bg-gray-300 hover:text-gray-800'}`}
+              >
+                報告預覽與其他
+              </button>
+            </div>
+
+            {/* Section 1: ECD Doppler and 2D Echo */}
+            <div className={activeTab === 'ecd' ? 'block' : 'hidden'}>
+              <section className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
+                <div className="bg-blue-600 text-white px-5 py-3 font-semibold text-lg flex justify-between items-center">
+                  <span>[ECD Doppler and 2D Echo] 顱外血管</span>
+                </div>
+                
+                <div className="p-5">
+                  <div className="flex items-center space-x-6 mb-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
+                    <span className="font-semibold text-blue-900">CCA IMT thickening:</span>
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={state.imt.right} 
+                        onChange={(e) => setState(prev => ({...prev, imt: {...prev.imt, right: e.target.checked}}))}
+                        className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4"
+                      />
+                      <span className="text-gray-700 font-medium">Right</span>
+                    </label>
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={state.imt.left} 
+                        onChange={(e) => setState(prev => ({...prev, imt: {...prev.imt, left: e.target.checked}}))}
+                        className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4"
+                      />
+                      <span className="text-gray-700 font-medium">Left</span>
+                    </label>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Right Side */}
+                    <div>
+                      <h3 className="text-xl font-bold text-center text-gray-700 mb-4 bg-gray-100 py-2 rounded-md">Right 側</h3>
+                      {VESSELS.ecd.map((v, idx) => v.isGap ? <div key={`ecd-r-gap-${idx}`} className="h-8"></div> : <VesselBlock key={`ecd-r-${v.name}`} region="ecd" side="right" vesselConfig={v} showRates={true} state={state} isTcdDisabledFlag={false} toggleNoSignal={toggleNoSignal} toggleSplit={toggleSplit} updateSegment={updateSegment} updateRate={updateRate} />)}
+                    </div>
+                    {/* Left Side */}
+                    <div>
+                      <h3 className="text-xl font-bold text-center text-gray-700 mb-4 bg-gray-100 py-2 rounded-md">Left 側</h3>
+                      {VESSELS.ecd.map((v, idx) => v.isGap ? <div key={`ecd-l-gap-${idx}`} className="h-8"></div> : <VesselBlock key={`ecd-l-${v.name}`} region="ecd" side="left" vesselConfig={v} showRates={true} state={state} isTcdDisabledFlag={false} toggleNoSignal={toggleNoSignal} toggleSplit={toggleSplit} updateSegment={updateSegment} updateRate={updateRate} />)}
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            {/* Section 2: TCD Doppler */}
+            <div className={activeTab === 'tcd' ? 'block' : 'hidden'}>
+              <section className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
+                <div className="bg-indigo-600 text-white px-5 py-3 font-semibold text-lg flex justify-between items-center">
+                  <span>[TCD Doppler] 顱內血管</span>
+                </div>
+                
+                <div className="p-5">
+                  <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-6 mb-6 p-4 bg-indigo-50 rounded-lg border border-indigo-100">
+                    <span className="font-semibold text-indigo-900">Poor temporal window:</span>
+                    <div className="flex space-x-4">
+                      <label className="flex items-center space-x-2 cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={state.ptw.right} 
+                          onChange={() => togglePtw('right')}
+                          className="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4"
+                        />
+                        <span className="text-gray-700 font-medium">Right</span>
+                      </label>
+                      <label className="flex items-center space-x-2 cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={state.ptw.left} 
+                          onChange={() => togglePtw('left')}
+                          className="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4"
+                        />
+                        <span className="text-gray-700 font-medium">Left</span>
+                      </label>
+                      <label className="flex items-center space-x-2 cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={state.ptw.bilateral} 
+                          onChange={() => togglePtw('bilateral')}
+                          className="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4"
+                        />
+                        <span className="text-gray-700 font-medium">Bilateral</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Right Side */}
+                    <div>
+                      <h3 className="text-xl font-bold text-center text-gray-700 mb-4 bg-gray-100 py-2 rounded-md">Right 側</h3>
+                      {VESSELS.tcd.map(v => <VesselBlock key={`tcd-r-${v.name}`} region="tcd" side="right" vesselConfig={v} showRates={false} state={state} isTcdDisabledFlag={isTcdDisabled('right', v.name)} toggleNoSignal={toggleNoSignal} toggleSplit={toggleSplit} updateSegment={updateSegment} updateRate={updateRate} />)}
+                    </div>
+                    {/* Left Side */}
+                    <div>
+                      <h3 className="text-xl font-bold text-center text-gray-700 mb-4 bg-gray-100 py-2 rounded-md">Left 側</h3>
+                      {VESSELS.tcd.map(v => <VesselBlock key={`tcd-l-${v.name}`} region="tcd" side="left" vesselConfig={v} showRates={false} state={state} isTcdDisabledFlag={isTcdDisabled('left', v.name)} toggleNoSignal={toggleNoSignal} toggleSplit={toggleSplit} updateSegment={updateSegment} updateRate={updateRate} />)}
+                    </div>
+                  </div>
+
+                  {/* Midline (BA) */}
+                  <div className="mt-6 border-t pt-6">
+                    <h3 className="text-xl font-bold text-center text-gray-700 mb-4 bg-gray-100 py-2 rounded-md w-full lg:w-1/2 mx-auto">Midline (中線)</h3>
+                    <div className="max-w-2xl mx-auto">
+                      {VESSELS.tcdMidline.map(v => <VesselBlock key={`tcd-m-${v.name}`} region="tcd" side="midline" vesselConfig={v} showRates={false} state={state} isTcdDisabledFlag={false} toggleNoSignal={toggleNoSignal} toggleSplit={toggleSplit} updateSegment={updateSegment} updateRate={updateRate} />)}
+                    </div>
+                  </div>
+
+                </div>
+              </section>
+            </div>
+
+            {/* Section 3 & 4: 其他 & 報告預覽 */}
+            <div className={activeTab === 'report' ? 'block' : 'hidden'}>
+              {/* Section 3: 其他 */}
+              <section className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
+                <div className="bg-emerald-600 text-white px-5 py-3 font-semibold text-lg flex justify-between items-center">
+                  <span>[其他] 其他發現</span>
+                </div>
+                <div className="p-5">
+                  <label className="flex items-center space-x-3 cursor-pointer p-4 bg-emerald-50 rounded-lg border border-emerald-100 w-full sm:w-1/2 mx-auto sm:mx-0">
+                    <input 
+                      type="checkbox" 
+                      checked={state.arrhythmia} 
+                      onChange={(e) => setState(prev => ({...prev, arrhythmia: e.target.checked}))}
+                      className="rounded text-emerald-600 focus:ring-emerald-500 w-5 h-5"
+                    />
+                    <span className="text-gray-800 font-semibold text-lg">Arrhythmia (心律不整)</span>
+                  </label>
+
+                  <label className="flex items-center space-x-3 cursor-pointer p-4 bg-red-50 rounded-lg border border-red-100 w-full sm:w-1/2 mx-auto sm:mx-0 mt-4">
+                    <input 
+                      type="checkbox" 
+                      checked={state.suggestStenting} 
+                      onChange={(e) => setState(prev => ({...prev, suggestStenting: e.target.checked}))}
+                      className="rounded text-red-600 focus:ring-red-500 w-5 h-5"
+                    />
+                    <span className="text-gray-800 font-semibold text-lg">Suggest stenting evaluation</span>
+                  </label>
+                </div>
+              </section>
+
+              {/* Section 4: 報告預覽 */}
+              <section className="bg-white rounded-xl shadow-lg border border-gray-300 overflow-hidden mb-12">
+                <div className="bg-gray-800 text-white px-5 py-3 font-semibold text-lg flex justify-between items-center">
+                  <span className="flex items-center"><ClipboardCopy size={20} className="mr-2"/> 診斷報告預覽</span>
+                  <button 
+                    onClick={copyToClipboard}
+                    className="text-sm bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded transition-colors"
+                  >
+                    複製文字
+                  </button>
+                </div>
+                <div className="p-6 bg-gray-50">
+                  <div id="report-output" className="font-mono text-[15px] leading-relaxed text-gray-800 whitespace-pre-wrap bg-white p-6 rounded border shadow-sm">
+                    <div className="font-bold text-lg mb-2 text-blue-800">[ECD Doppler]</div>
+                    {report.ecdDoppler.length > 0 ? report.ecdDoppler.map((line, idx) => (
+                      <div key={'ed'+idx} className="ml-2">{line}</div>
+                    )) : <div className="ml-2 italic text-gray-400">尚無資料</div>}
+
+                    <div className="font-bold text-lg mb-2 mt-6 text-blue-800">[ECD 2D-Echo]</div>
+                    {report.ecdEcho.length > 0 ? report.ecdEcho.map((line, idx) => (
+                      <div key={'ee'+idx} className="ml-2">{line}</div>
+                    )) : <div className="ml-2 italic text-gray-400">尚無資料</div>}
+
+                    <div className="font-bold text-lg mb-2 mt-6 text-indigo-800">[TCD Doppler]</div>
+                    {report.tcdDoppler.length > 0 ? report.tcdDoppler.map((line, idx) => (
+                      <div key={'td'+idx} className="ml-2">{line}</div>
+                    )) : <div className="ml-2 italic text-gray-400">尚無資料</div>}
+
+                    {state.suggestStenting && (
+                      <>
+                        <div className="font-bold text-lg mb-2 mt-6 text-red-800">[Recommendation]</div>
+                        <div className="ml-2 font-medium text-red-700">Suggest stenting evaluation</div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </section>
+            </div>
+
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
