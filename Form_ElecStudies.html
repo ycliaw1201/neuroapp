@@ -254,22 +254,28 @@
             </div>
 
             <!-- Preview / Output Area -->
-            <div class="flex-1 lg:max-w-md w-full bg-gray-900 rounded-xl shadow-xl border border-gray-800 flex flex-col overflow-hidden">
-                <div class="px-4 py-3 bg-gray-800 border-b border-gray-700 flex justify-between items-center">
-                    <span class="text-gray-200 font-medium text-sm">報告預覽 (Report Preview)</span>
-                    <button id="copy-btn" onclick="copyReport()" class="flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 bg-blue-600 hover:bg-blue-500 text-white">
-                        <span id="copy-icon-default" class="flex items-center">
-                            <svg class="w-4 h-4 mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                            複製報告
-                        </span>
-                        <span id="copy-icon-success" class="hidden items-center">
-                            <svg class="w-4 h-4 mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                            已複製
-                        </span>
-                    </button>
+            <div class="flex-1 lg:max-w-md w-full bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col overflow-hidden">
+                <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+                    <span class="text-gray-700 font-bold text-sm">報告預覽 (Report Preview)</span>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="resetAll()" class="flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 shadow-sm">
+                            <svg class="w-4 h-4 mr-1.5 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+                            重設
+                        </button>
+                        <button id="copy-btn" onclick="copyReport()" class="flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 bg-blue-600 hover:bg-blue-500 text-white shadow-sm">
+                            <span id="copy-icon-default" class="flex items-center">
+                                <svg class="w-4 h-4 mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                複製
+                            </span>
+                            <span id="copy-icon-success" class="hidden items-center">
+                                <svg class="w-4 h-4 mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                                已複製
+                            </span>
+                        </button>
+                    </div>
                 </div>
                 <div class="p-4 flex-1">
-                    <textarea id="report-output" readonly class="w-full h-full min-h-[400px] bg-transparent text-gray-300 font-mono text-sm resize-none focus:outline-none leading-relaxed" placeholder="報告將在此自動生成..."></textarea>
+                    <textarea id="report-output" readonly class="w-full h-full min-h-[400px] bg-transparent text-gray-800 font-mono text-sm resize-none focus:outline-none leading-relaxed" placeholder="報告將在此自動生成..."></textarea>
                 </div>
             </div>
 
@@ -338,6 +344,39 @@
                 getEl('rst-stat-norm').checked = true;
                 getEl('rst-side-l').checked = true;
             }
+        }
+
+        // Global Reset Function
+        function resetAll() {
+            // Facial
+            getEl('fac-stat-norm').checked = true;
+            getEl('fac-r-cmap').value = '';
+            getEl('fac-l-cmap').value = '';
+
+            // Hemi
+            getEl('hemi-side-l').checked = true;
+            getEl('hemi-stat-norm').checked = true;
+            getEl('hemi-r-cmap').value = '';
+            getEl('hemi-l-cmap').value = '';
+
+            // RST
+            getEl('rst-side-l').checked = true;
+            getEl('rst-stat-norm').checked = true;
+
+            // VEP
+            getEl('vep-meth-pat').checked = true;
+            getEl('vep-meth-oth-val').value = '';
+            
+            getEl('vep-f1').checked = false; getEl('vep-f1-eye').value = '';
+            getEl('vep-f2').checked = false; getEl('vep-f2-l').value = ''; getEl('vep-f2-r').value = '';
+            getEl('vep-f3').checked = false; getEl('vep-f3-eye').value = '';
+            getEl('vep-f4').checked = false; getEl('vep-f4-eye').value = '';
+            
+            getEl('vep-i1').checked = true;
+            getEl('vep-i2').checked = false; getEl('vep-i2-side').value = 'Left';
+            getEl('vep-i3').checked = false;
+
+            updateLogic();
         }
 
         // Attach event listeners to all inputs
