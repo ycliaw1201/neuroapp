@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>住院頭痛日記生成系統</title>
+    <title>住院頭痛日記生成系統 </title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        /* 強制 A4 橫向列印設定 */
         @media print {
             @page {
                 size: A4 landscape;
@@ -23,37 +24,46 @@
                 box-shadow: none !important;
                 margin: 0 !important;
                 width: 100% !important;
-                max-width: none !important;
-                padding: 0.5cm !important;
+                max-width: 100% !important;
+                padding: 0.2cm !important;
             }
             table {
-                width: 100%;
+                width: 100% !important;
                 border-collapse: collapse;
-                table-layout: fixed;
+                table-layout: fixed; /* 固定佈局確保 14 天等寬 */
             }
             th, td {
-                border: 1px solid black !important;
+                border: 1.5px solid black !important; /* 加深列印線條 */
             }
         }
 
-        /* 調整表格字體與大小 */
+        /* 螢幕預覽樣式 - 模擬橫向 A4 比例 */
+        .print-container {
+            width: 29.7cm; /* A4 寬度 */
+            min-height: 21cm; /* A4 高度 */
+            background: white;
+            margin: 0 auto;
+            padding: 1cm;
+        }
+
+        /* 表格細節 */
         .diary-table th, .diary-table td {
             padding: 2px;
             text-align: center;
             font-size: 13px; 
-            border: 1px solid #9ca3af;
+            border: 1px solid #6b7280;
             word-break: break-all;
         }
         
-        /* 針對日期標題特別放大 */
+        /* 放大日期標題 */
         .date-header {
             font-size: 18px !important;
             font-weight: bold;
-            height: 45px;
+            height: 40px;
         }
 
         .hour-col {
-            width: 60px;
+            width: 55px;
             background-color: #f3f4f6;
             font-weight: bold;
             font-size: 12px;
@@ -68,78 +78,81 @@
         .sticker-box {
             border: 2px dashed #9ca3af;
             border-radius: 8px;
-            width: 250px;
-            height: 100px;
+            width: 260px;
+            height: 110px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #6b7280;
+            color: #4b5563;
             font-weight: bold;
             text-align: center;
+            font-size: 14px;
         }
 
-        /* 讓內容在網頁上可編輯時有視覺反饋 */
+        /* 網頁端輸入輔助 */
         [contenteditable="true"]:focus {
-            background-color: #fff9c4;
+            background-color: #fef9c3;
             outline: none;
         }
     </style>
 </head>
-<body class="bg-gray-100 p-4 font-sans">
+<body class="bg-gray-200 p-4 font-sans">
 
     <!-- 控制面板 (列印時隱藏) -->
-    <div class="max-w-6xl mx-auto bg-white p-6 rounded-lg shadow-md mb-8 no-print">
-        <h1 class="text-2xl font-bold mb-4 text-blue-800 flex items-center gap-2">
-            <span>🏥 住院頭痛日記生成系統</span>
-        </h1>
-        <div class="flex flex-wrap items-end gap-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">設定起始日期</label>
-                <input type="date" id="startDateInput" class="border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none">
-            </div>
-            <button onclick="updateDates()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded transition shadow-sm">
-                更新日期
-            </button>
-            <button onclick="handlePrint()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded transition flex items-center gap-2 shadow-sm">
-                <span>🖨️ 列印 A4 頁面</span>
+    <div class="max-w-[29.7cm] mx-auto bg-white p-6 rounded-lg shadow-md mb-8 no-print border-b-4 border-blue-600">
+        <div class="flex justify-between items-center mb-4">
+            <h1 class="text-2xl font-bold text-blue-800">🏥 住院頭痛日記生成系統</h1>
+            <button onclick="handlePrint()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg transition flex items-center gap-2 shadow-lg scale-110">
+                <span>🖨️ 立即列印 (A4 橫向)</span>
             </button>
         </div>
-        <div class="mt-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 text-sm text-yellow-800">
-            <strong>列印提醒：</strong> 請確保印表機設定為<strong>「橫向」</strong>。若瀏覽器攔截彈窗，請使用 Ctrl+P 手動列印。
+        
+        <div class="flex items-end gap-6 bg-gray-50 p-4 rounded-md">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">📅 設定起始日期</label>
+                <input type="date" id="startDateInput" class="border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none w-48">
+            </div>
+            <button onclick="updateDates()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded transition shadow-sm">
+                更新表格日期
+            </button>
+            <div class="text-sm text-gray-500 italic">
+                * 表格內的空格可以直接在瀏覽器點擊輸入，完成後再列印。
+            </div>
         </div>
     </div>
 
     <!-- 日記主體 (列印區域) -->
-    <div class="print-container max-w-[29.7cm] mx-auto bg-white p-8 shadow-lg min-h-screen">
+    <div class="print-container shadow-2xl">
         <header class="mb-4">
-            <h2 class="text-3xl font-bold text-center mb-6">住院頭痛日記 (14 天)</h2>
+            <h2 class="text-3xl font-bold text-center mb-6 tracking-widest text-gray-800">住院頭痛日記 (14 天)</h2>
             
             <div class="flex gap-4 items-stretch mb-4">
                 <!-- 填寫提示 -->
-                <div class="instruction-box p-4 bg-blue-50 text-blue-900">
-                    <p class="font-bold mb-1">💡 填寫提示：</p>
-                    <ol class="list-decimal ml-5 text-sm space-y-1">
-                        <li>請依您的<strong>主觀疼痛程度</strong>，填寫各時段的頭痛嚴重度 (0-10 分，0 代表不痛，10 代表最痛)。</li>
+                <div class="instruction-box p-4 bg-blue-50 text-blue-900 border-blue-200">
+                    <p class="font-bold mb-1 text-base">💡 填寫提示：</p>
+                    <ul class="list-disc ml-5 text-sm space-y-1">
+                        <li>請依您的<strong>主觀疼痛程度</strong>，填寫各時段的嚴重度 (<strong>0-10分</strong>，0不痛，10最痛)。</li>
                         <li>睡眠時段可直接空白或加註 "<strong>Z</strong>"。</li>
-                        <li>有向護理師要求非常規（<strong>PRN使用</strong>）之止痛針／口服止痛藥時請註明 (例如：藥名/時間)。</li>
-                    </ol>
+                        <li>若有向護理師要求非常規（<strong>PRN使用</strong>）之藥物，請註明（如：止痛針、口服藥）。</li>
+                    </ul>
                 </div>
 
                 <!-- 病歷貼紙框 -->
-                <div class="sticker-box">
-                    在此貼病歷貼紙<br>(Patient ID Sticker)
+                <div class="sticker-box bg-gray-50">
+                    在此黏貼病歷貼紙<br>
+                    <span class="text-xs font-normal mt-1 text-gray-400">(Affix Patient ID Sticker Here)</span>
                 </div>
             </div>
         </header>
 
-        <table class="diary-table w-full border-collapse">
+        <table class="diary-table w-full">
             <thead>
-                <tr id="header-dates">
+                <tr id="header-dates" class="bg-gray-100">
                     <th class="hour-col">日期</th>
                     <!-- JS 動態插入日期 -->
                 </tr>
                 <tr id="header-days" class="bg-gray-50">
-                    <th class="hour-col">星期</th>
+                    <th class="hour-col text-xs text-gray-500 font-normal">星期</th>
                     <!-- JS 動態插入星期 -->
                 </tr>
             </thead>
@@ -148,13 +161,17 @@
             </tbody>
         </table>
 
-        <footer class="mt-6 text-xs text-gray-400 text-right">
-            系統生成時間：<span id="gen-time"></span>
-        </footer>
+        <div class="flex justify-between mt-4 px-2">
+            <div class="text-xs text-gray-500">
+                註：若一天內有多次發作，可在同一格內以斜線分隔記錄。
+            </div>
+            <div class="text-xs text-gray-400">
+                製表日期：<span id="gen-time"></span>
+            </div>
+        </div>
     </div>
 
     <script>
-        // 初始化日期設定
         const startDateInput = document.getElementById('startDateInput');
         const today = new Date();
         const year = today.getFullYear();
@@ -201,14 +218,14 @@
                 const tr = document.createElement('tr');
                 
                 const tdHour = document.createElement('td');
-                tdHour.className = 'hour-col';
+                tdHour.className = 'hour-col text-gray-700';
                 tdHour.innerHTML = `${hour}:00`;
                 tr.appendChild(tdHour);
 
                 for (let day = 0; day < 14; day++) {
                     const td = document.createElement('td');
                     td.contentEditable = "true"; 
-                    td.className = 'h-7'; 
+                    td.className = 'h-[28px]'; // 微調高度確保一頁 A4 塞得下
                     tr.appendChild(td);
                 }
                 tbody.appendChild(tr);
@@ -219,8 +236,7 @@
             try {
                 window.print();
             } catch (e) {
-                console.error("Print failed: ", e);
-                window.alert("無法開啟列印視窗，請嘗試按下 Ctrl + P 手動列印。");
+                alert("列印失敗，請嘗試按 Ctrl+P (或 Cmd+P) 手動列印。");
             }
         }
 
