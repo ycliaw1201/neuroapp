@@ -44,24 +44,67 @@
             width: 100%;
             height: 100%;
         }
+
+        /* 彈出視窗動畫 */
+        .popup-hidden {
+            opacity: 0;
+            transform: scale(0.95);
+            pointer-events: none;
+        }
+        .popup-visible {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: auto;
+        }
     </style>
 </head>
 <body class="bg-gray-50 h-screen overflow-hidden flex flex-col">
 
     <!-- 頂部標題列 -->
-    <header class="bg-white border-b border-gray-200 h-14 flex items-center justify-between px-6 z-10">
+    <header class="bg-white border-b border-gray-200 h-14 flex items-center justify-between px-6 z-20 shadow-sm">
         <div class="flex items-center space-x-3">
             <div class="bg-slate-800 p-1.5 rounded-lg">
                 <i data-lucide="activity" class="text-white w-5 h-5"></i>
             </div>
             <h1 class="text-lg font-bold text-gray-800 tracking-tight">神經醫學工作平台 <span class="text-xs font-normal text-gray-400 ml-2">NeuroApp Hub</span></h1>
         </div>
-        <div class="flex items-center space-x-4 text-sm text-gray-500">
-            <span id="current-page-title" class="font-medium text-slate-600 transition-colors duration-300">初診問卷</span>
+        
+        <div class="flex items-center space-x-4">
+            <!-- 新增：看診進度按鈕 -->
+            <button onclick="togglePopup()" class="flex items-center space-x-2 bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-full transition-all text-sm font-medium border border-slate-200">
+                <i data-lucide="users" class="w-4 h-4 text-slate-500"></i>
+                <span>看診進度</span>
+            </button>
+
             <div class="h-4 w-px bg-gray-300"></div>
-            <span id="clock"></span>
+            
+            <div class="flex items-center space-x-3 text-sm text-gray-500">
+                <span id="current-page-title" class="font-medium text-slate-600 transition-colors duration-300">初診問卷</span>
+                <div class="h-4 w-px bg-gray-300"></div>
+                <div class="flex items-center space-x-2">
+                    <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                    <span id="clock" class="font-mono"></span>
+                </div>
+            </div>
         </div>
     </header>
+
+    <!-- 看診進度 Popup 視窗 -->
+    <div id="popup-overlay" class="fixed inset-0 z-40 bg-black/20 backdrop-blur-[1px] hidden" onclick="togglePopup()"></div>
+    <div id="regist-popup" class="fixed top-16 right-6 w-[450px] h-[600px] z-50 bg-white rounded-xl shadow-2xl border border-gray-200 transition-all duration-200 popup-hidden flex flex-col overflow-hidden">
+        <div class="p-3 bg-slate-50 border-b border-gray-100 flex items-center justify-between">
+            <div class="flex items-center space-x-2 text-slate-700 font-bold">
+                <i data-lucide="external-link" class="w-4 h-4 text-blue-500"></i>
+                <span class="text-sm">即時看診進度查詢</span>
+            </div>
+            <button onclick="togglePopup()" class="text-gray-400 hover:text-gray-600">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+        <div class="flex-1 bg-white">
+            <iframe id="popup-frame" src="about:blank" class="w-full h-full"></iframe>
+        </div>
+    </div>
 
     <div class="flex flex-1 overflow-hidden">
         <!-- 左側導覽列 -->
@@ -250,6 +293,30 @@
             // 套用新狀態
             element.classList.add(activeClass);
             element.classList.remove('text-gray-600');
+        }
+
+        // 彈出視窗切換
+        function togglePopup() {
+            const popup = document.getElementById('regist-popup');
+            const overlay = document.getElementById('popup-overlay');
+            const frame = document.getElementById('popup-frame');
+            const targetUrl = "https://www.hosp.nycu.edu.tw/component/regist/?component=regist&view=realtime";
+
+            if (popup.classList.contains('popup-hidden')) {
+                // 開啟
+                popup.classList.remove('popup-hidden', 'hidden');
+                popup.classList.add('popup-visible');
+                overlay.classList.remove('hidden');
+                // 延遲加載 Iframe 內容以節省資源
+                if (frame.src === "about:blank") {
+                    frame.src = targetUrl;
+                }
+            } else {
+                // 關閉
+                popup.classList.add('popup-hidden');
+                popup.classList.remove('popup-visible');
+                overlay.classList.add('hidden');
+            }
         }
 
         // 隱藏載入動畫
