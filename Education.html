@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>衛教資訊快捷列表</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #fcfcfc;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6">
+    <div class="w-full max-w-md">
+        <!-- 簡約標題 -->
+        <header class="text-center mb-10">
+            <h1 class="text-2xl font-medium text-gray-800 tracking-tight">衛教資訊列表</h1>
+            <div class="h-1 w-12 bg-blue-500 mx-auto mt-3 rounded-full"></div>
+        </header>
+
+        <!-- 簡約按鈕列表 -->
+        <div class="space-y-4" id="link-container">
+            <!-- 由 JS 動態生成按鈕 -->
+        </div>
+
+        <footer class="mt-12 text-center">
+            <p class="text-gray-400 text-xs">點擊按鈕即可直接開啟對應的衛教單張</p>
+        </footer>
+    </div>
+
+    <script>
+        const links = [
+            { name: "衛教_顏面神經麻痺", url: "https://drive.google.com/file/d/10Q2J3Nc9ZlHxwatiG0MV0C38eu5RePrp/view?usp=sharing" },
+            { name: "衛教_退化性脊椎病變", url: "https://drive.google.com/file/d/1FSI4sa5dqXF67eHGIIBVEH6ZRYdJW7Ay/view?usp=sharing" },
+            { name: "衛教_旋轉肌袖傷害", url: "https://drive.google.com/file/d/1QEntSXIVeOv3UP4zr-Y-MPhFG5kHP3jV/view?usp=sharing" },
+            { name: "衛教_半翻筋斗復位法", url: "https://drive.google.com/file/d/1ekTsypL9L1NP1VaRd3WzStt2ULMX18Tw/view?usp=sharing" },
+            { name: "衛教_腕隧道症候群", url: "https://drive.google.com/file/d/1qGVuAKyw7oibGZRFlO2-E1RU_BOCSM_m/view?usp=sharing" },
+            { name: "衛教_血管支架介入治療", url: "https://drive.google.com/file/d/1SNYrVMztkzFwatMzMIM6SBjjiShcG4nI/view?usp=sharing" },
+            { name: "衛教_抗凝血劑更換決策", url: "https://drive.google.com/file/d/1YcHz64ir3jU-3bq6AD68KKV5vPoPLGDh/view?usp=sharing" }
+            
+        ];
+
+        const container = document.getElementById('link-container');
+
+        links.forEach((item, index) => {
+            const btn = document.createElement('a');
+            btn.href = item.url;
+            btn.target = "_blank";
+            btn.className = "flex items-center justify-between w-full bg-white border border-gray-200 p-4 rounded-xl hover:bg-gray-50 hover:border-blue-300 transition-all duration-200 group shadow-sm";
+            
+            btn.innerHTML = `
+                <div class="flex items-center">
+                    <span class="flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 text-blue-600 text-sm font-bold mr-4 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                        ${index + 1}
+                    </span>
+                    <span class="text-gray-700 font-medium">${item.name}</span>
+                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-300 group-hover:text-blue-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+            `;
+            container.appendChild(btn);
+        });
+    </script>
+</body>
+</html>
