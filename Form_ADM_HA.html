@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>住院頭痛日記生成系統 (極簡單頁版)</title>
+    <title>住院頭痛日記生成系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* 強制 A4 橫向列印設定 */
@@ -70,21 +70,7 @@
         .instruction-box {
             border: 1px solid #3b82f6;
             border-radius: 4px;
-            flex: 1;
-        }
-
-        .sticker-box {
-            border: 1.5px dashed #9ca3af;
-            border-radius: 4px;
-            width: 220px;
-            height: 75px; /* 縮小高度 */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #4b5563;
-            font-weight: bold;
-            text-align: center;
-            font-size: 13px;
+            width: 100%; /* 寬度設為 100% */
         }
 
         /* 網頁端輸入輔助 */
@@ -118,24 +104,19 @@
     <!-- 日記主體 (列印區域) -->
     <div class="print-container shadow-xl">
         <header>
-            <h2 class="text-2xl font-bold text-center mb-3 tracking-tighter text-gray-800">住院頭痛日記 (14 天)</h2>
+            <h2 class="text-2xl font-bold text-center mb-3 tracking-tighter text-gray-800">住院頭痛日記</h2>
             
-            <div class="flex gap-3 items-stretch mb-2">
-                <!-- 縮小後的填寫提示 -->
+            <div class="flex mb-2">
+                <!-- 填寫提示 (佔滿寬度) -->
                 <div class="instruction-box p-2 bg-blue-50 text-blue-900 border-blue-200">
                     <div class="flex gap-4 text-xs leading-tight">
                         <div class="font-bold shrink-0">💡 提示:</div>
-                        <ul class="flex flex-wrap gap-x-4 gap-y-1 list-none p-0 m-0">
+                        <ul class="flex flex-wrap gap-x-6 gap-y-1 list-none p-0 m-0">
                             <li>1. 請填寫主觀嚴重度 (<strong>0-10分</strong>，0不痛，10最痛)</li>
                             <li>2. 睡眠可空白或標註 "<strong>Z</strong>"</li>
                             <li>3. 有使用非常規（<strong>PRN</strong>）藥物請註明（如止痛針/藥）</li>
                         </ul>
                     </div>
-                </div>
-
-                <!-- 縮小後的貼紙框 -->
-                <div class="sticker-box bg-gray-50 shrink-0">
-                    在此黏貼病歷貼紙
                 </div>
             </div>
         </header>
