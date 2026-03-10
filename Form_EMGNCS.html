@@ -7,212 +7,260 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono&family=Noto+Serif+TC:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Noto+Sans+TC:wght@400;700;900&family=Noto+Serif+TC:wght@400;700&display=swap');
         
-        body {
-            font-family: 'Inter', sans-serif;
+        :root {
+            --medical-blue: #1e40af;
+            --medical-dark: #1e3a8a;
+            --abnormal-red: #e11d48;
+            --normal-green: #10b981;
+            --nr-orange: #ea580c;
         }
+
+        body {
+            font-family: 'Inter', 'Noto Sans TC', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        button, input, textarea {
+            font-family: 'Inter', 'Noto Sans TC', sans-serif;
+        }
+
         .font-report {
             font-family: 'Noto Serif TC', serif;
-            line-height: 1.5;
+            line-height: 1.6;
         }
+
+        .btn-toggle {
+            min-width: 90px;
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+        }
+
         .btn-toggle-active-abnormal {
-            background-color: #e11d48;
+            background-color: var(--abnormal-red);
             border-color: #be123c;
             color: white;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-            transform: scale(1.02);
         }
+
         .btn-toggle-active-normal {
             background-color: #f8fafc;
-            border-color: #10b981;
-            color: #059669;
+            border-color: var(--normal-green);
+            color: #047857;
         }
+
         .btn-nr-active {
-            background-color: #ea580c;
+            background-color: var(--nr-orange);
             border-color: #c2410c;
             color: white;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
         }
-        .disabled-row {
-            opacity: 0.5;
-            background-color: #fff7ed;
-        }
+
         .disabled-btn {
             cursor: not-allowed;
             background-color: #f1f5f9;
             color: #cbd5e1;
-            border-color: #f1f5f9;
+            border-color: #e2e8f0;
+            opacity: 0.5;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* 加大 Checkbox 樣式 */
+        .large-checkbox {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
         }
     </style>
 </head>
-<body class="bg-[#f1f5f9] p-4 md:p-8 text-slate-800">
+<body class="bg-[#f1f5f9] p-2 md:p-4 text-slate-800 font-sans">
 
-    <div class="max-w-6xl mx-auto space-y-6">
+    <div class="max-w-[1600px] mx-auto space-y-3">
         <!-- Header -->
-        <header class="bg-white border border-slate-200 rounded-xl shadow-sm px-8 py-5 flex flex-col md:flex-row items-center justify-between gap-6">
-            <div class="flex items-center gap-4">
-                <div class="bg-[#1e40af] p-3 rounded-lg text-white shadow-md">
-                    <i data-lucide="activity" class="w-8 h-8"></i>
+        <header class="bg-white border border-slate-200 rounded-lg shadow-sm px-5 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-[#1e40af] p-2 rounded text-white shadow-sm">
+                    <i data-lucide="stethoscope" class="w-6 h-6"></i>
                 </div>
                 <div>
-                    <h1 class="text-2xl font-black tracking-tight text-[#1e3a8a]">EMG/NCS Clinical Reporting System</h1>
-                    <div class="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-widest">
-                        <i data-lucide="settings" class="w-3.5 h-3.5"></i> Diagnostic Module v5.7 (HTML)
-                    </div>
+                    <h1 class="text-lg font-black tracking-tight text-[#1e3a8a]">EMG/NCS Clinical Reporting System</h1>
                 </div>
             </div>
             
-            <div class="flex items-center gap-4">
-                <button onclick="handleReset()" class="flex items-center gap-2 px-4 py-2 text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-100 rounded-lg text-sm font-black transition-all">
-                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i> 重設所有數據
+            <div class="flex items-center gap-3">
+                <button onclick="handleReset()" class="flex items-center gap-1 px-3 py-1.5 text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-100 rounded text-xs font-bold transition-all">
+                    <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> 重設
                 </button>
-                <div id="scope-selector" class="flex gap-1.5 bg-slate-100 p-1.5 rounded-lg border border-slate-200">
-                    <button onclick="setScope('UL')" class="scope-btn px-8 py-2.5 rounded-md text-sm font-black transition-all bg-white text-[#1e40af] shadow-md border border-slate-200" data-scope="UL">Upper</button>
-                    <button onclick="setScope('LL')" class="scope-btn px-8 py-2.5 rounded-md text-sm font-black transition-all text-slate-500 hover:text-slate-700" data-scope="LL">Lower</button>
-                    <button onclick="setScope('BOTH')" class="scope-btn px-8 py-2.5 rounded-md text-sm font-black transition-all text-slate-500 hover:text-slate-700" data-scope="BOTH">Full Body</button>
+                <div id="scope-selector" class="flex gap-1 bg-slate-100 p-1 rounded border border-slate-200">
+                    <button onclick="setScope('UL')" class="scope-btn px-5 py-1.5 rounded text-xs font-black transition-all bg-white text-[#1e40af] shadow-sm border border-slate-200" data-scope="UL">Upper</button>
+                    <button onclick="setScope('LL')" class="scope-btn px-5 py-1.5 rounded text-xs font-black transition-all text-slate-500 hover:text-slate-700" data-scope="LL">Lower</button>
+                    <button onclick="setScope('BOTH')" class="scope-btn px-5 py-1.5 rounded text-xs font-black transition-all text-slate-500 hover:text-slate-700" data-scope="BOTH">Full</button>
                 </div>
             </div>
         </header>
 
-        <!-- Main Content -->
-        <div class="grid grid-cols-1 gap-6">
+        <!-- Main Content Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 items-start">
             
-            <!-- 1. Motor Table -->
-            <section class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-                <div class="bg-slate-50 px-6 py-3 border-b border-slate-200">
-                    <h2 class="text-sm font-black text-slate-600 uppercase tracking-widest flex items-center gap-2">
-                        <div class="w-1.5 h-4 bg-blue-500 rounded-full"></div> 1. Motor Conduction Studies
-                    </h2>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-base">
-                        <thead class="bg-slate-50/50 border-b border-slate-200 text-slate-600">
-                            <tr class="font-black uppercase tracking-wider text-sm">
-                                <th class="px-6 py-5 text-left w-48">Nerve</th>
-                                <th class="px-2 py-5 text-center w-28">Signal</th>
-                                <th class="px-2 py-5 text-center">Distal Latency</th>
-                                <th class="px-2 py-5 text-center">CMAP Amp.</th>
-                                <th class="px-2 py-5 text-center">MNCV</th>
-                                <th class="px-2 py-5 text-center">F Latency</th>
-                            </tr>
-                        </thead>
-                        <tbody id="motor-tbody" class="divide-y divide-slate-100"></tbody>
-                    </table>
-                </div>
-            </section>
-
-            <!-- 2. Sensory Table -->
-            <section class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-                <div class="bg-slate-50 px-6 py-3 border-b border-slate-200">
-                    <h2 class="text-sm font-black text-slate-600 uppercase tracking-widest flex items-center gap-2">
-                        <div class="w-1.5 h-4 bg-purple-500 rounded-full"></div> 2. Sensory Conduction Studies
-                    </h2>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-base">
-                        <thead class="bg-slate-50/50 border-b border-slate-200 text-slate-600">
-                            <tr class="font-black uppercase tracking-wider text-sm">
-                                <th class="px-6 py-5 text-left w-48">Nerve</th>
-                                <th class="px-2 py-5 text-center w-28">Signal</th>
-                                <th class="px-2 py-5 text-center">Distal Latency</th>
-                                <th class="px-2 py-5 text-center">SNAP Amp.</th>
-                            </tr>
-                        </thead>
-                        <tbody id="sensory-tbody" class="divide-y divide-slate-100"></tbody>
-                    </table>
-                </div>
-            </section>
-
-            <!-- 3. Mixed & 4. H-Reflex -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <section id="mixed-section" class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden h-fit hidden">
-                    <div class="bg-slate-50 px-6 py-3 border-b border-slate-200">
-                        <h2 class="text-sm font-black text-slate-600 uppercase tracking-widest flex items-center gap-2">
-                            <div class="w-1.5 h-4 bg-cyan-500 rounded-full"></div> 3. Mixed Nerve (Wrist-Palm)
+            <!-- Left Column (NCS Tables) -->
+            <div class="lg:col-span-7 space-y-3">
+                <!-- 1. Motor Table -->
+                <section class="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+                    <div class="bg-blue-600 px-4 py-2 border-b border-blue-700 flex items-center justify-between text-white">
+                        <h2 class="text-xs font-black uppercase tracking-widest flex items-center gap-2">
+                            <i data-lucide="zap" class="w-3.5 h-3.5"></i> 1. Motor Conduction Studies
                         </h2>
                     </div>
-                    <table class="w-full text-base">
-                        <tbody id="mixed-tbody" class="divide-y divide-slate-100"></tbody>
-                    </table>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-xs">
+                            <thead class="bg-slate-50 border-b border-slate-200 text-slate-500">
+                                <tr class="font-black uppercase text-[10px]">
+                                    <th class="px-4 py-2 text-left">Nerve Identifier</th>
+                                    <th class="px-1 py-2 text-center w-24">Signal</th>
+                                    <th class="px-1 py-2 text-center">DL</th>
+                                    <th class="px-1 py-2 text-center">CMAP Amp</th>
+                                    <th class="px-1 py-2 text-center">MNCV</th>
+                                    <th class="px-1 py-2 text-center">F Lat</th>
+                                </tr>
+                            </thead>
+                            <tbody id="motor-tbody" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
                 </section>
 
-                <section class="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
-                    <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
-                        <h3 class="text-sm font-black text-slate-600 uppercase tracking-widest flex items-center gap-2">
-                            <div class="w-1.5 h-4 bg-orange-500 rounded-full"></div> 4. H-Reflex Status
-                        </h3>
-                        <div class="flex gap-2">
-                            <button onclick="updateHReflex(false)" id="h-absent" class="px-6 py-2.5 text-xs font-black rounded-lg border-2 transition-all bg-slate-800 text-white border-slate-800 shadow-md">Absent</button>
-                            <button onclick="updateHReflex(true)" id="h-present" class="px-6 py-2.5 text-xs font-black rounded-lg border-2 transition-all bg-white text-slate-400 border-slate-100 hover:border-slate-200">Present</button>
-                        </div>
+                <!-- 2. Sensory Table -->
+                <section class="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+                    <div class="bg-purple-600 px-4 py-2 border-b border-purple-700 flex items-center justify-between text-white">
+                        <h2 class="text-xs font-black uppercase tracking-widest flex items-center gap-2">
+                            <i data-lucide="waves" class="w-3.5 h-3.5"></i> 2. Sensory Conduction Studies
+                        </h2>
                     </div>
-                    <div id="h-content-area" class="hidden">
-                        <textarea id="h-content" class="w-full p-4 text-lg border border-slate-200 rounded-lg bg-slate-50 focus:bg-white outline-none ring-2 ring-transparent focus:ring-blue-100 transition-all font-medium" placeholder="Describe findings (e.g. 30.5ms bilaterally)..." rows="2"></textarea>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-xs">
+                            <thead class="bg-slate-50 border-b border-slate-200 text-slate-500">
+                                <tr class="font-black uppercase text-[10px]">
+                                    <th class="px-4 py-2 text-left">Nerve Identifier</th>
+                                    <th class="px-1 py-2 text-center w-24">Signal</th>
+                                    <th class="px-1 py-2 text-center">DL</th>
+                                    <th class="px-1 py-2 text-center">SNAP Amp</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sensory-tbody" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- 3. Mixed Table -->
+                <section id="mixed-section" class="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden hidden">
+                    <div class="bg-cyan-600 px-4 py-2 border-b border-cyan-700 flex items-center justify-between text-white">
+                        <h2 class="text-xs font-black uppercase tracking-widest flex items-center gap-2">
+                            <i data-lucide="layers" class="w-3.5 h-3.5"></i> 3. Mixed (Wrist-Palm)
+                        </h2>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-xs">
+                            <thead class="bg-slate-50 border-b border-slate-200 text-slate-500">
+                                <tr class="font-black uppercase text-[10px]">
+                                    <th class="px-4 py-2 text-left">Nerve Identifier</th>
+                                    <th class="px-1 py-2 text-center w-24">Signal</th>
+                                    <th class="px-1 py-2 text-center">Interval</th>
+                                    <th class="px-1 py-2 text-center">MNAP Amp</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mixed-tbody" class="divide-y divide-slate-100"></tbody>
+                        </table>
                     </div>
                 </section>
             </div>
 
-            <!-- 5. Needle EMG Section -->
-            <section class="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
-                <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
-                    <h3 class="text-sm font-black text-slate-600 uppercase tracking-widest flex items-center gap-2">
-                        <div class="w-1.5 h-4 bg-rose-500 rounded-full"></div> 5. Needle EMG Examination
-                    </h3>
-                    <div class="flex items-center gap-3">
-                        <span class="text-xs font-black text-slate-400 uppercase">Performed</span>
-                        <input type="checkbox" id="emg-done" onchange="updateEMG()" class="w-6 h-6 rounded-md border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer shadow-sm">
+            <!-- Right Column -->
+            <div class="lg:col-span-5 space-y-3">
+                
+                <!-- 4. H-Reflex -->
+                <section class="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+                    <div class="bg-orange-500 px-4 py-2 border-b border-orange-600 flex items-center justify-between text-white">
+                        <h3 class="text-xs font-black uppercase tracking-widest flex items-center gap-2">
+                            <i data-lucide="activity" class="w-3.5 h-3.5"></i> 4. H-Reflex Status
+                        </h3>
+                        <div class="flex gap-1">
+                            <button onclick="updateHReflex(false)" id="h-absent" class="px-3 py-1 rounded bg-white/20 text-white text-[10px] font-black transition-all">Absent</button>
+                            <button onclick="updateHReflex(true)" id="h-present" class="px-3 py-1 rounded bg-white/20 text-white text-[10px] font-black transition-all">Present</button>
+                        </div>
                     </div>
-                </div>
-                <div id="emg-options" class="hidden space-y-4">
-                    <div class="flex gap-2">
-                        <button onclick="setEMGAbnormal(false)" id="emg-normal-btn" class="flex-1 py-4 text-base font-black rounded-lg border-2 transition-all bg-emerald-600 text-white border-emerald-600 shadow-md">Normal Patterns</button>
-                        <button onclick="setEMGAbnormal(true)" id="emg-abnormal-btn" class="flex-1 py-4 text-base font-black rounded-lg border-2 transition-all bg-white text-slate-400 border-slate-100 hover:border-emerald-200">Abnormal Findings</button>
+                    <div class="p-3">
+                        <textarea id="h-content" class="w-full p-3 text-sm border border-slate-200 rounded bg-slate-50 outline-none hidden h-20 shadow-inner" placeholder="Enter findings (e.g. 30.5ms bilaterally)..."></textarea>
+                        <div id="h-placeholder" class="text-xs text-slate-400 italic py-2">H-reflex no responses by default.</div>
                     </div>
-                    <div id="emg-content-area" class="hidden">
-                        <textarea id="emg-content" class="w-full p-4 text-lg border border-rose-100 rounded-lg bg-rose-50/30 focus:bg-white outline-none ring-2 ring-transparent focus:ring-rose-200 transition-all font-medium" placeholder="Detail the abnormal muscle activities..." rows="3"></textarea>
-                    </div>
-                </div>
-            </section>
+                </section>
 
-            <!-- Impression -->
-            <section class="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
-                <h2 class="text-sm font-black text-slate-600 uppercase tracking-widest mb-5 border-b border-slate-100 pb-3">Clinical Impression Diagnosis</h2>
-                <div id="impression-btns" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-5"></div>
-                <textarea id="custom-impression" class="w-full p-4 text-lg border border-slate-200 rounded-lg bg-white outline-none focus:ring-4 focus:ring-blue-50 transition-all font-medium" placeholder="Enter custom diagnosis summary..." rows="3"></textarea>
-            </section>
-
-            <!-- Final Output -->
-            <section class="bg-slate-800 rounded-xl shadow-2xl overflow-hidden flex flex-col border border-slate-700">
-                <div class="px-8 py-5 border-b border-slate-700 flex items-center justify-between bg-slate-900/60 backdrop-blur-md">
-                    <div class="flex items-center gap-3">
-                        <i data-lucide="clipboard-check" class="w-6 h-6 text-blue-400"></i>
-                        <span class="text-white font-black text-lg tracking-tight uppercase">Diagnostic Report Output</span>
+                <!-- 5. EMG -->
+                <section class="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+                    <div class="bg-rose-500 px-4 py-2 border-b border-rose-600 flex items-center justify-between text-white">
+                        <h3 class="text-xs font-black uppercase tracking-widest flex items-center gap-2">
+                            <i data-lucide="database" class="w-3.5 h-3.5"></i> 5. Needle EMG
+                        </h3>
+                        <label class="flex items-center gap-2 cursor-pointer select-none">
+                            <span class="text-[10px] font-black uppercase">Performed</span>
+                            <input type="checkbox" id="emg-done" onchange="updateEMG()" class="large-checkbox rounded border-none focus:ring-0">
+                        </label>
                     </div>
-                    <button onclick="copyToClipboard()" class="flex items-center gap-2.5 bg-[#1e40af] hover:bg-[#2563eb] active:scale-95 text-white text-base px-10 py-3.5 rounded-lg font-black transition-all shadow-lg border-b-4 border-blue-800 hover:border-blue-700">
-                        <i data-lucide="copy" class="w-4 h-4"></i> COPY TO CLIPBOARD
-                    </button>
-                </div>
-                <div class="p-8 bg-slate-100 overflow-y-auto max-h-[700px]">
-                    <div class="bg-white p-12 shadow-inner border border-slate-200 min-h-[500px] text-slate-800 font-report text-base md:text-lg lg:text-xl selection:bg-blue-100">
-                        <pre id="final-report" class="whitespace-pre-wrap font-report"></pre>
+                    <div class="p-3">
+                        <div id="emg-options" class="hidden space-y-3">
+                            <div class="flex gap-2">
+                                <button onclick="setEMGAbnormal(false)" id="emg-normal-btn" class="flex-1 py-2 text-xs font-black rounded border transition-all">Normal Findings</button>
+                                <button onclick="setEMGAbnormal(true)" id="emg-abnormal-btn" class="flex-1 py-2 text-xs font-black rounded border transition-all">Abnormal Findings</button>
+                            </div>
+                            <textarea id="emg-content" class="w-full p-3 text-sm border border-rose-100 rounded bg-rose-50/20 outline-none hidden h-24" placeholder="Detail muscle activities..."></textarea>
+                        </div>
+                        <div id="emg-placeholder" class="text-xs text-slate-400 italic py-2">EMG study not performed.</div>
                     </div>
-                </div>
-            </section>
+                </section>
 
+                <!-- Impression -->
+                <section class="bg-white border border-slate-200 rounded-lg shadow-sm p-4">
+                    <h2 class="text-xs font-black text-slate-600 uppercase tracking-widest mb-3 border-b border-slate-100 pb-2 flex items-center gap-2">
+                        <i data-lucide="file-text" class="w-4 h-4 text-slate-400"></i> Impression Diagnosis
+                    </h2>
+                    <div id="impression-btns" class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3"></div>
+                    <textarea id="custom-impression" class="w-full p-3 text-sm border border-slate-200 rounded bg-slate-50 outline-none h-20 shadow-inner" placeholder="Custom diagnosis summary..."></textarea>
+                </section>
+
+                <!-- Lighter Output Pane -->
+                <section class="bg-white border border-slate-300 rounded-lg shadow-sm overflow-hidden flex flex-col">
+                    <div class="px-5 py-3 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="clipboard-check" class="w-5 h-5 text-blue-600"></i>
+                            <span class="text-slate-800 font-black text-sm uppercase tracking-wider">Report Output Preview</span>
+                        </div>
+                        <button onclick="copyToClipboard()" class="flex items-center gap-2 bg-[#1e40af] hover:bg-[#2563eb] text-white text-xs px-6 py-2.5 rounded-lg font-black transition-all shadow-sm active:scale-95">
+                            <i data-lucide="copy" class="w-4 h-4"></i> COPY REPORT
+                        </button>
+                    </div>
+                    <div class="p-6 bg-white overflow-y-auto max-h-[450px]">
+                        <div class="bg-slate-50 p-8 rounded border border-slate-200 min-h-[300px] text-slate-800 font-report text-sm md:text-base selection:bg-blue-100">
+                            <pre id="final-report" class="whitespace-pre-wrap font-report"></pre>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
         </div>
     </div>
     
-    <footer class="mt-12 text-center text-slate-400 text-[11px] pb-16 font-black uppercase tracking-[0.2em] flex items-center justify-center gap-6">
-        <span>Clinical Automation Suite</span>
-        <div class="w-1.5 h-1.5 bg-slate-300 rounded-full"></div>
-        <span>Version 5.7 (HTML/JS)</span>
-        <div className="w-1.5 h-1.5 bg-slate-300 rounded-full"></div>
-        <span>Certified Workflow</span>
+    <footer class="mt-6 text-center text-slate-400 text-[10px] pb-8 font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-4">
+        <span>© Clinical Assistant Suite</span>
+        <div class="w-1 h-1 bg-slate-300 rounded-full"></div>
+        <span>Version 6.3 (LGE Optimized)</span>
     </footer>
 
     <script>
-        // --- Data Configuration ---
         const NERVE_CONFIG = {
             motor: {
                 UL: ['Right Median', 'Left Median', 'Right Ulnar', 'Left Ulnar'],
@@ -230,29 +278,25 @@
 
         const IMPRESSIONS = [
             { id: 'normal_ul', label: 'Normal UL' }, 
-            { id: 'normal_ll', label: 'Normal LL' },
+            { id: 'normal_ll', label: 'Normal LL' }, 
             { id: 'normal_four_limbs', label: 'Normal (UL+LL)' },
             { id: 'sm_a', label: 'SM poly -A' }, 
-            { id: 'sm_m', label: 'SM poly -M' },
+            { id: 'sm_m', label: 'SM poly -M' }, 
             { id: 'bil_cts', label: 'Bil. CTS' }, 
-            { id: 'rt_cts', label: 'Rt. CTS' },
+            { id: 'rt_cts', label: 'Rt. CTS' }, 
             { id: 'lt_cts', label: 'Lt. CTS' }, 
             { id: 'roots', label: 'Roots' },
         ];
 
-        // --- State Management ---
         let state = {
             scope: 'UL',
-            motor: {},
-            sensory: {},
-            mixed: {},
+            motor: {}, sensory: {}, mixed: {},
             hReflex: { active: false, content: '' },
             emg: { done: false, active: false, content: '' },
             selectedImpressions: [],
             customImpression: ''
         };
 
-        // --- Initialization ---
         function initData() {
             const categories = ['motor', 'sensory', 'mixed'];
             categories.forEach(cat => {
@@ -271,47 +315,33 @@
             render();
         }
 
-        function setScope(s) {
-            state.scope = s;
-            initData();
-        }
+        function setScope(s) { state.scope = s; initData(); }
 
         function handleReset() {
             state.selectedImpressions = [];
             state.customImpression = '';
             state.hReflex = { active: false, content: '' };
             state.emg = { done: false, active: false, content: '' };
+            document.getElementById('emg-done').checked = false;
+            document.getElementById('h-content').value = '';
+            document.getElementById('emg-content').value = '';
+            document.getElementById('custom-impression').value = '';
             initData();
         }
 
-        // --- Event Handlers ---
         function toggleNerve(category, nerve, field) {
             const data = state[category][nerve];
-            if (field === 'nr') {
-                data.nr = !data.nr;
-            } else if (!data.nr) {
+            if (field === 'nr') data.nr = !data.nr;
+            else if (!data.nr) {
                 const isProlonged = ['dl', 'fLat', 'interval'].includes(field);
-                const abnormalVal = isProlonged ? 'prolonged' : 'decreased';
-                data[field] = data[field] === 'normal' ? abnormalVal : 'normal';
+                data[field] = data[field] === 'normal' ? (isProlonged ? 'prolonged' : 'decreased') : 'normal';
             }
             render();
         }
 
-        function updateHReflex(active) {
-            state.hReflex.active = active;
-            render();
-        }
-
-        function updateEMG() {
-            state.emg.done = document.getElementById('emg-done').checked;
-            render();
-        }
-
-        function setEMGAbnormal(active) {
-            state.emg.active = active;
-            render();
-        }
-
+        function updateHReflex(active) { state.hReflex.active = active; render(); }
+        function updateEMG() { state.emg.done = document.getElementById('emg-done').checked; render(); }
+        function setEMGAbnormal(active) { state.emg.active = active; render(); }
         function toggleImpression(id) {
             const idx = state.selectedImpressions.indexOf(id);
             if (idx === -1) state.selectedImpressions.push(id);
@@ -319,7 +349,6 @@
             render();
         }
 
-        // --- Report Generation ---
         function formatNerveNames(nerves) {
             if (nerves.length === 0) return "";
             const map = {};
@@ -339,94 +368,54 @@
         }
 
         function generateReport() {
-            let finalSections = [];
-            let counter = 1;
+            let final = [];
+            let c = 1;
+            const cats = [
+                { key: 'motor', title: 'motor conduction stud', fields: ['dl', 'cmap', 'mncv', 'fLat'] },
+                { key: 'sensory', title: 'sensory conduction stud', fields: ['dl', 'snap'] },
+                { key: 'mixed', title: 'mixed nerve conduction stud', prefix: 'wrist-palm segment on ', fields: ['interval', 'mnap'] }
+            ];
 
-            // Motor
-            const mKeys = Object.keys(state.motor);
-            if (mKeys.length > 0) {
-                let mSentences = [];
-                const nr = mKeys.filter(n => state.motor[n].nr);
-                const active = mKeys.filter(n => !state.motor[n].nr);
-                if (nr.length > 0) mSentences.push(`The motor conduction study of ${formatNerveNames(nr)} nerve${nr.length > 1 ? 's' : ''} showed unrecordable signals.`);
-                
-                const groups = {};
-                active.forEach(n => {
-                    const s = state.motor[n];
-                    const k = `${s.dl}-${s.cmap}-${s.mncv}-${s.fLat}`;
-                    if (!groups[k]) groups[k] = [];
-                    groups[k].push(n);
-                });
-                Object.entries(groups).forEach(([k, nerves]) => {
-                    const [dl, cmap, mncv, fLat] = k.split('-');
-                    const formatted = formatNerveNames(nerves);
-                    const isP = nerves.length > 1;
-                    const sS = isP ? 's' : '';
-                    mSentences.push(`The motor conduction studies of ${formatted} nerve${isP ? 's' : ''} showed ${dl === 'normal' ? 'normal DL' + sS : 'prolonged DL' + sS}, ${cmap === 'normal' ? 'normal CMAP amplitude' + sS : 'decreased CMAP amplitude' + sS}, ${mncv === 'normal' ? 'normal MNCV' : 'decreased MNCV'} and ${fLat === 'normal' ? 'normal F latenc' + (isP ? 'ies' : 'y') : 'prolonged F latenc' + (isP ? 'ies' : 'y')}.`);
-                });
-                if (mSentences.length > 0) finalSections.push(`${counter++}. ${mSentences.join(' ')}`);
-            }
+            cats.forEach(cat => {
+                const keys = Object.keys(state[cat.key]);
+                if (keys.length > 0) {
+                    let sentences = [];
+                    const nr = keys.filter(n => state[cat.key][n].nr);
+                    const act = keys.filter(n => !state[cat.key][n].nr);
+                    if (nr.length > 0) sentences.push(`The ${cat.title}${nr.length > 1 ? 'ies' : 'y'} of ${cat.prefix || ''}${formatNerveNames(nr)} nerve${nr.length > 1 ? 's' : ''} showed unrecordable signals.`);
+                    
+                    const groups = {};
+                    act.forEach(n => {
+                        const s = state[cat.key][n];
+                        const k = cat.fields.map(f => s[f]).join('-');
+                        if (!groups[k]) groups[k] = [];
+                        groups[k].push(n);
+                    });
+                    Object.entries(groups).forEach(([k, nerves]) => {
+                        const stats = k.split('-');
+                        const formatted = formatNerveNames(nerves);
+                        const isP = nerves.length > 1;
+                        const sS = isP ? 's' : '';
+                        const iesS = isP ? 'ies' : 'y';
+                        if (cat.key === 'motor') {
+                            sentences.push(`The motor conduction studies of ${formatted} nerve${sS} showed ${stats[0] === 'normal' ? 'normal DL' + sS : 'prolonged DL' + sS}, ${stats[1] === 'normal' ? 'normal CMAP amplitude' + sS : 'decreased CMAP amplitude' + sS}, ${stats[2] === 'normal' ? 'normal MNCV' : 'decreased MNCV'} and ${stats[3] === 'normal' ? 'normal F latenc' + iesS : 'prolonged F latenc' + iesS}.`);
+                        } else if (cat.key === 'sensory') {
+                            sentences.push(`The sensory conduction studies of ${formatted} nerve${sS} demonstrated ${stats[0] === 'normal' ? 'normal DL' + sS : 'prolonged DL' + sS} and ${stats[1] === 'normal' ? 'normal SNAP amplitude' + sS : 'decreased SNAP amplitude' + sS}.`);
+                        } else {
+                            sentences.push(`The mixed nerve conduction studies of wrist-palm segment on ${formatted} nerve${sS} showed ${stats[0] === 'normal' ? 'normal conduction intervals' : 'prolonged conduction intervals'} and ${stats[1] === 'normal' ? 'normal MNAP amplitude' + sS : 'decreased MNAP amplitude' + sS} bilaterally.`);
+                        }
+                    });
+                    if (sentences.length > 0) final.push(`${c++}. ${sentences.join(' ')}`);
+                }
+            });
 
-            // Sensory
-            const sKeys = Object.keys(state.sensory);
-            if (sKeys.length > 0) {
-                let sSentences = [];
-                const nr = sKeys.filter(n => state.sensory[n].nr);
-                const active = sKeys.filter(n => !state.sensory[n].nr);
-                if (nr.length > 0) sSentences.push(`The sensory conduction study of ${formatNerveNames(nr)} nerve${nr.length > 1 ? 's' : ''} showed unrecordable signals.`);
-                
-                const groups = {};
-                active.forEach(n => {
-                    const s = state.sensory[n];
-                    const k = `${s.dl}-${s.snap}`;
-                    if (!groups[k]) groups[k] = [];
-                    groups[k].push(n);
-                });
-                Object.entries(groups).forEach(([k, nerves]) => {
-                    const [dl, snap] = k.split('-');
-                    const formatted = formatNerveNames(nerves);
-                    const isP = nerves.length > 1;
-                    const sS = isP ? 's' : '';
-                    sSentences.push(`The sensory conduction studies of ${formatted} nerve${isP ? 's' : ''} demonstrated ${dl === 'normal' ? 'normal DL' + sS : 'prolonged DL' + sS} and ${snap === 'normal' ? 'normal SNAP amplitude' + sS : 'decreased SNAP amplitude' + sS}.`);
-                });
-                if (sSentences.length > 0) finalSections.push(`${counter++}. ${sSentences.join(' ')}`);
-            }
-
-            // Mixed
-            const mixKeys = Object.keys(state.mixed);
-            if (mixKeys.length > 0) {
-                let sentences = [];
-                const nr = mixKeys.filter(n => state.mixed[n].nr);
-                const active = mixKeys.filter(n => !state.mixed[n].nr);
-                if (nr.length > 0) sentences.push(`The mixed nerve conduction study of wrist-palm segment on ${formatNerveNames(nr)} nerve${nr.length > 1 ? 's' : ''} showed unrecordable signals.`);
-                
-                const groups = {};
-                active.forEach(n => {
-                    const s = state.mixed[n];
-                    const k = `${s.interval}-${s.mnap}`;
-                    if (!groups[k]) groups[k] = [];
-                    groups[k].push(n);
-                });
-                Object.entries(groups).forEach(([k, nerves]) => {
-                    const [interval, mnap] = k.split('-');
-                    const formatted = formatNerveNames(nerves);
-                    const isP = nerves.length > 1;
-                    sentences.push(`The mixed nerve conduction studies of wrist-palm segment on ${formatted} nerve${isP ? 's' : ''} showed ${interval === 'normal' ? 'normal conduction intervals' : 'prolonged conduction intervals'} and ${mnap === 'normal' ? 'normal MNAP amplitude' + (isP ? 's' : '') : 'decreased MNAP amplitude' + (isP ? 's' : '')} bilaterally.`);
-                });
-                if (sentences.length > 0) finalSections.push(`${counter++}. ${sentences.join(' ')}`);
-            }
-
-            // H-Reflex
             let hT = state.scope === 'LL' || state.scope === 'BOTH' ? "bilateral tibial/medial gastrocnemius" : "bilateral flexor carpi radialis (FCR)";
-            finalSections.push(`${counter++}. The H-reflex of ${hT} showed ${state.hReflex.active ? (state.hReflex.content || 'recorded findings') : 'no responses bilaterally'}.`);
+            final.push(`${c++}. The H-reflex of ${hT} showed ${state.hReflex.active ? (state.hReflex.content || 'recorded findings') : 'no responses bilaterally'}.`);
 
-            // EMG
             if (state.emg.done) {
-                const emgVal = document.getElementById('emg-content').value;
-                finalSections.push(`${counter++}. The needle EMG studies ${state.emg.active ? 'showed ' + emgVal : 'of all sampling muscles showed normal patterns.'}`);
+                final.push(`${c++}. The needle EMG studies ${state.emg.active ? 'showed ' + document.getElementById('emg-content').value : 'of all sampling muscles showed normal patterns.'}`);
             }
 
-            // Impression
             const studyT = state.emg.done ? 'NCS/EMG' : 'NCS';
             const impMap = {
                 'normal_ul': `This is a normal ${studyT} study of bilateral upper limbs.`,
@@ -441,132 +430,87 @@
             };
 
             let impOut = "\n\nImpression:\n";
-            state.selectedImpressions.forEach((id, idx) => {
-                impOut += `${idx + 1}. ${impMap[id]}\n`;
-            });
+            state.selectedImpressions.forEach((id, idx) => { impOut += `${idx + 1}. ${impMap[id]}\n`; });
             const custom = document.getElementById('custom-impression').value;
             if (custom) impOut += `${state.selectedImpressions.length + 1}. ${custom}\n`;
 
-            return finalSections.join('\n') + (state.selectedImpressions.length > 0 || custom ? impOut : "");
+            return final.join('\n') + (state.selectedImpressions.length > 0 || custom ? impOut : "");
         }
 
-        // --- UI Rendering ---
         function render() {
-            // Scope Buttons
             document.querySelectorAll('.scope-btn').forEach(btn => {
                 const active = btn.dataset.scope === state.scope;
-                btn.className = `scope-btn px-8 py-2.5 rounded-md text-sm font-black transition-all ${active ? 'bg-white text-[#1e40af] shadow-md border border-slate-200' : 'text-slate-500 hover:text-slate-700'}`;
+                btn.className = `scope-btn px-5 py-1.5 rounded text-xs font-black transition-all ${active ? 'bg-white text-[#1e40af] shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700'}`;
             });
 
-            // Motor Table
-            const motorTbody = document.getElementById('motor-tbody');
-            motorTbody.innerHTML = '';
-            Object.keys(state.motor).forEach(name => {
-                const s = state.motor[name];
-                const row = document.createElement('tr');
-                row.className = `hover:bg-slate-50/30 transition-colors ${s.nr ? 'bg-orange-50/20' : ''}`;
-                row.innerHTML = `
-                    <td class="px-6 py-4">
-                        <div class="flex flex-col">
-                            <span class="text-[10px] font-black tracking-widest uppercase ${name.startsWith('Right') ? 'text-blue-500' : 'text-indigo-500'}">${name.split(' ')[0]}</span>
-                            <span class="font-bold text-slate-800 text-lg">${name.split(' ').slice(1).join(' ')}</span>
-                        </div>
-                    </td>
-                    <td class="px-2 py-2"><button onclick="toggleNerve('motor','${name}','nr')" class="w-full py-4 px-2 text-sm font-black border rounded-xl transition-all ${s.nr ? 'btn-nr-active' : 'bg-slate-50 text-slate-400'}">NR</button></td>
-                    ${['dl', 'cmap', 'mncv', 'fLat'].map(f => `
-                        <td class="px-2 py-2">
-                            <button onclick="toggleNerve('motor','${name}','${f}')" ${s.nr ? 'disabled' : ''} class="w-full py-4 px-2 text-sm font-black border rounded-xl transition-all ${s.nr ? 'disabled-btn' : (s[f] === 'normal' ? 'btn-toggle-active-normal' : 'btn-toggle-active-abnormal')}">
-                                ${s[f] === 'normal' ? 'Normal' : 'Abnormal'}
-                            </button>
-                        </td>
-                    `).join('')}
-                `;
-                motorTbody.appendChild(row);
-            });
-
-            // Sensory Table
-            const sensoryTbody = document.getElementById('sensory-tbody');
-            sensoryTbody.innerHTML = '';
-            Object.keys(state.sensory).forEach(name => {
-                const s = state.sensory[name];
-                const row = document.createElement('tr');
-                row.className = `hover:bg-slate-50/30 transition-colors ${s.nr ? 'bg-orange-50/20' : ''}`;
-                row.innerHTML = `
-                    <td class="px-6 py-4 font-bold text-slate-800 text-lg">
-                        <span class="text-[10px] font-black tracking-widest uppercase block ${name.startsWith('Right') ? 'text-blue-500' : 'text-indigo-500'}">${name.split(' ')[0]}</span>
-                        ${name.split(' ').slice(1).join(' ')}
-                    </td>
-                    <td class="px-2 py-2"><button onclick="toggleNerve('sensory','${name}','nr')" class="w-full py-4 px-2 text-sm font-black border rounded-xl transition-all ${s.nr ? 'btn-nr-active' : 'bg-slate-50 text-slate-400'}">NR</button></td>
-                    ${['dl', 'snap'].map(f => `
-                        <td class="px-2 py-2">
-                            <button onclick="toggleNerve('sensory','${name}','${f}')" ${s.nr ? 'disabled' : ''} class="w-full py-4 px-2 text-sm font-black border rounded-xl transition-all ${s.nr ? 'disabled-btn' : (s[f] === 'normal' ? 'btn-toggle-active-normal' : 'btn-toggle-active-abnormal')}">
-                                ${s[f] === 'normal' ? 'Normal' : 'Abnormal'}
-                            </button>
-                        </td>
-                    `).join('')}
-                `;
-                sensoryTbody.appendChild(row);
-            });
-
-            // Mixed Section
-            const mixedSection = document.getElementById('mixed-section');
-            const mixedTbody = document.getElementById('mixed-tbody');
-            if (state.scope === 'UL' || state.scope === 'BOTH') {
-                mixedSection.classList.remove('hidden');
-                mixedTbody.innerHTML = '';
-                Object.keys(state.mixed).forEach(name => {
-                    const s = state.mixed[name];
+            const renderRows = (cat, tbodyId, fields) => {
+                const tbody = document.getElementById(tbodyId);
+                tbody.innerHTML = '';
+                Object.keys(state[cat]).forEach(name => {
+                    const s = state[cat][name];
+                    const side = name.split(' ')[0];
+                    const sideInitial = side === 'Right' ? 'R' : 'L';
+                    // 調整為低對比柔和色調
+                    const sideClass = side === 'Right' ? 'bg-blue-50 text-blue-600 border border-blue-200' : 'bg-purple-50 text-purple-600 border border-purple-200';
                     const row = document.createElement('tr');
-                    row.className = `hover:bg-slate-50/30 transition-colors ${s.nr ? 'bg-orange-50/20' : ''}`;
+                    row.className = `hover:bg-slate-50/30 transition-colors ${s.nr ? 'bg-orange-50/10' : ''}`;
                     row.innerHTML = `
-                        <td class="px-6 py-4 font-bold text-slate-800 text-lg">
-                            <span class="text-[10px] font-black text-cyan-600 block uppercase tracking-widest">${name.split(' ')[0]}</span>
-                            ${name.split(' ').slice(1).join(' ')}
+                        <td class="px-4 py-2">
+                            <div class="flex items-center gap-3">
+                                <span class="text-[10px] font-black uppercase w-6 h-6 flex items-center justify-center rounded shadow-sm ${sideClass}">${sideInitial}</span>
+                                <span class="font-bold text-slate-700 text-sm">${name.split(' ').slice(1).join(' ')}</span>
+                            </div>
                         </td>
-                        <td class="px-2 py-2"><button onclick="toggleNerve('mixed','${name}','nr')" class="w-full py-4 px-2 text-sm font-black border rounded-xl transition-all ${s.nr ? 'btn-nr-active' : 'bg-slate-50 text-slate-400'}">NR</button></td>
-                        ${['interval', 'mnap'].map(f => `
-                            <td class="px-2 py-2">
-                                <button onclick="toggleNerve('mixed','${name}','${f}')" ${s.nr ? 'disabled' : ''} class="w-full py-4 px-2 text-sm font-black border rounded-xl transition-all ${s.nr ? 'disabled-btn' : (s[f] === 'normal' ? 'btn-toggle-active-normal' : 'btn-toggle-active-abnormal')}">
+                        <td class="px-1 py-1 text-center"><button onclick="toggleNerve('${cat}','${name}','nr')" class="btn-toggle py-2 px-1 rounded border transition-all ${s.nr ? 'btn-nr-active' : 'bg-slate-50 text-slate-400'}">NR</button></td>
+                        ${fields.map(f => `
+                            <td class="px-1 py-1 text-center">
+                                <button onclick="toggleNerve('${cat}','${name}','${f}')" ${s.nr ? 'disabled' : ''} class="btn-toggle py-2 px-1 rounded border transition-all ${s.nr ? 'disabled-btn' : (s[f] === 'normal' ? 'btn-toggle-active-normal' : 'btn-toggle-active-abnormal')}">
                                     ${s[f] === 'normal' ? 'Normal' : 'Abnormal'}
                                 </button>
                             </td>
                         `).join('')}
                     `;
-                    mixedTbody.appendChild(row);
+                    tbody.appendChild(row);
                 });
-            } else {
-                mixedSection.classList.add('hidden');
-            }
+            };
 
-            // H-Reflex
-            document.getElementById('h-absent').className = `px-6 py-2.5 text-xs font-black rounded-lg border-2 transition-all ${!state.hReflex.active ? 'bg-slate-800 text-white border-slate-800 shadow-md' : 'bg-white text-slate-400 border-slate-100 hover:border-slate-200'}`;
-            document.getElementById('h-present').className = `px-6 py-2.5 text-xs font-black rounded-lg border-2 transition-all ${state.hReflex.active ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-white text-slate-400 border-slate-100 hover:border-slate-200'}`;
-            document.getElementById('h-content-area').classList.toggle('hidden', !state.hReflex.active);
+            renderRows('motor', 'motor-tbody', ['dl', 'cmap', 'mncv', 'fLat']);
+            renderRows('sensory', 'sensory-tbody', ['dl', 'snap']);
+            
+            const mixSec = document.getElementById('mixed-section');
+            if (state.scope === 'UL' || state.scope === 'BOTH') {
+                mixSec.classList.remove('hidden');
+                renderRows('mixed', 'mixed-tbody', ['interval', 'mnap']);
+            } else mixSec.classList.add('hidden');
 
-            // EMG
+            // H-Reflex UI
+            document.getElementById('h-absent').className = `px-5 py-1.5 rounded-lg border text-xs font-black transition-all ${!state.hReflex.active ? 'bg-white text-orange-600 border-orange-200 shadow-sm' : 'bg-transparent text-white/50 border-white/20'}`;
+            document.getElementById('h-present').className = `px-5 py-1.5 rounded-lg border text-xs font-black transition-all ${state.hReflex.active ? 'bg-white text-orange-600 border-orange-200 shadow-sm' : 'bg-transparent text-white/50 border-white/20'}`;
+            document.getElementById('h-content').classList.toggle('hidden', !state.hReflex.active);
+            document.getElementById('h-placeholder').classList.toggle('hidden', state.hReflex.active);
+
+            // EMG UI
             document.getElementById('emg-options').classList.toggle('hidden', !state.emg.done);
-            document.getElementById('emg-normal-btn').className = `flex-1 py-4 text-base font-black rounded-lg border-2 transition-all ${!state.emg.active ? 'bg-emerald-600 text-white border-emerald-600 shadow-md' : 'bg-white text-slate-400 border-slate-100 hover:border-emerald-200'}`;
-            document.getElementById('emg-abnormal-btn').className = `flex-1 py-4 text-base font-black rounded-lg border-2 transition-all ${state.emg.active ? 'bg-rose-600 text-white border-rose-700 shadow-md' : 'bg-white text-slate-400 border-slate-100 hover:border-emerald-200'}`;
-            document.getElementById('emg-content-area').classList.toggle('hidden', !state.emg.active);
+            document.getElementById('emg-placeholder').classList.toggle('hidden', state.emg.done);
+            document.getElementById('emg-normal-btn').className = `flex-1 py-2 text-xs font-black rounded-lg border transition-all ${!state.emg.active ? 'bg-emerald-600 text-white border-emerald-700 shadow-sm' : 'bg-white text-slate-400 border-slate-200'}`;
+            document.getElementById('emg-abnormal-btn').className = `flex-1 py-2 text-xs font-black rounded-lg border transition-all ${state.emg.active ? 'bg-rose-600 text-white border-rose-700 shadow-sm' : 'bg-white text-slate-400 border-slate-200'}`;
+            document.getElementById('emg-content').classList.toggle('hidden', !state.emg.active);
 
-            // Impressions
             const impBtns = document.getElementById('impression-btns');
             impBtns.innerHTML = '';
             IMPRESSIONS.forEach(item => {
                 const active = state.selectedImpressions.includes(item.id);
                 const btn = document.createElement('button');
                 btn.onclick = () => toggleImpression(item.id);
-                btn.className = `px-4 py-4 text-sm font-black border-2 rounded-lg transition-all ${active ? 'bg-[#1e40af] border-[#1e3a8a] text-white shadow-md transform -translate-y-0.5' : 'bg-slate-50 border-slate-100 text-slate-500 hover:border-slate-300'}`;
+                btn.className = `px-4 py-3.5 text-xs font-black border-2 rounded-xl transition-all shadow-sm ${active ? 'bg-[#1e40af] border-[#1e3a8a] text-white transform -translate-y-0.5' : 'bg-slate-50 border-slate-100 text-slate-500 hover:border-slate-300'}`;
                 btn.textContent = item.label;
                 impBtns.appendChild(btn);
             });
 
-            // Update Report Preview
             document.getElementById('final-report').textContent = generateReport();
             lucide.createIcons();
         }
 
-        // --- Utils ---
         function copyToClipboard() {
             const text = generateReport();
             const textArea = document.createElement("textarea");
@@ -575,24 +519,22 @@
             textArea.select();
             document.execCommand('copy');
             document.body.removeChild(textArea);
-            
-            // Temporary feedback
             const btn = document.querySelector('button[onclick="copyToClipboard()"]');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i> COPIED!';
+            const original = btn.innerHTML;
+            btn.innerHTML = '<i data-lucide="check" class="w-3 h-3"></i> COPIED!';
             lucide.createIcons();
-            setTimeout(() => {
-                btn.innerHTML = originalText;
-                lucide.createIcons();
-            }, 2000);
+            setTimeout(() => { btn.innerHTML = original; lucide.createIcons(); }, 2000);
         }
 
-        // Textarea changes
-        document.getElementById('h-content').addEventListener('input', (e) => { state.hReflex.content = e.target.value; render(); });
-        document.getElementById('emg-content').addEventListener('input', (e) => { state.emg.content = e.target.value; render(); });
-        document.getElementById('custom-impression').addEventListener('input', (e) => { state.customImpression = e.target.value; render(); });
+        ['h-content', 'emg-content', 'custom-impression'].forEach(id => {
+            document.getElementById(id).addEventListener('input', (e) => {
+                if (id === 'h-content') state.hReflex.content = e.target.value;
+                else if (id === 'emg-content') state.emg.content = e.target.value;
+                else state.customImpression = e.target.value;
+                render();
+            });
+        });
 
-        // Initialize
         initData();
     </script>
 </body>
