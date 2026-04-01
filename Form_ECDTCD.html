@@ -90,7 +90,8 @@
         imt: { right: false, left: false },
         ptw: { right: false, left: false, bilateral: false },
         arrhythmia: false,
-        suggestStenting: false
+        suggestStenting: false,
+        showEca: false
       };
 
       const initVessel = (v) => ({
@@ -341,9 +342,11 @@
       const getNoSignalsStr = (data, ptwRight, ptwLeft, isTcd) => {
         const rightDisabled = isTcd && ptwRight ? ['MCA', 'PCA', 'CS'] : [];
         const leftDisabled = isTcd && ptwLeft ? ['MCA', 'PCA', 'CS'] : [];
+        
+        const filterEca = (k) => k !== 'ECA' || state.showEca;
 
-        const right = Object.entries(data.right || {}).filter(([k, v]) => v.noSignal && !rightDisabled.includes(k)).map(x => x[0]);
-        const left = Object.entries(data.left || {}).filter(([k, v]) => v.noSignal && !leftDisabled.includes(k)).map(x => x[0]);
+        const right = Object.entries(data.right || {}).filter(([k, v]) => v.noSignal && !rightDisabled.includes(k) && filterEca(k)).map(x => x[0]);
+        const left = Object.entries(data.left || {}).filter(([k, v]) => v.noSignal && !leftDisabled.includes(k) && filterEca(k)).map(x => x[0]);
         const midline = data.midline ? Object.entries(data.midline).filter(([k, v]) => v.noSignal).map(x => x[0]) : [];
 
         const bilateral = right.filter(n => left.includes(n));
@@ -363,6 +366,7 @@
         const processSide = (sideData, disabledVessels) => {
           let normals = [];
           for (const [vName, vData] of Object.entries(sideData || {})) {
+            if (vName === 'ECA' && !state.showEca) continue;
             if (disabledVessels.includes(vName) || vData.noSignal) continue;
             const segs = Object.keys(vData.segments);
             const normalSegs = segs.filter(s => vData.segments[s].flow === 'no');
@@ -415,6 +419,7 @@
 
         ['right', 'left'].forEach(side => {
           Object.keys(state.ecd[side]).forEach(vName => {
+            if (vName === 'ECA' && !state.showEca) return;
             const vData = state.ecd[side][vName];
             if (vData.noSignal) return;
 
@@ -444,6 +449,7 @@
 
         ['right', 'left'].forEach(side => {
           Object.keys(state.ecd[side]).forEach(vName => {
+            if (vName === 'ECA' && !state.showEca) return;
             const vData = state.ecd[side][vName];
             if (vData.noSignal) return;
             validEcdVesselsCount++;
@@ -608,38 +614,63 @@
                 </div>
                 
                 <div className="p-5">
-                  <div className="flex items-center space-x-6 mb-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
-                    <span className="font-semibold text-blue-900">CCA IMT thickening:</span>
-                    <label className="flex items-center space-x-2 cursor-pointer">
-                      <input 
-                        type="checkbox" 
-                        checked={state.imt.right} 
-                        onChange={(e) => setState(prev => ({...prev, imt: {...prev.imt, right: e.target.checked}}))}
-                        className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4"
-                      />
-                      <span className="text-gray-700 font-medium">Right</span>
-                    </label>
-                    <label className="flex items-center space-x-2 cursor-pointer">
-                      <input 
-                        type="checkbox" 
-                        checked={state.imt.left} 
-                        onChange={(e) => setState(prev => ({...prev, imt: {...prev.imt, left: e.target.checked}}))}
-                        className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4"
-                      />
-                      <span className="text-gray-700 font-medium">Left</span>
-                    </label>
+                  <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-8 mb-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
+                    <div className="flex items-center space-x-6">
+                      <span className="font-semibold text-blue-900">CCA IMT thickening:</span>
+                      <label className="flex items-center space-x-2 cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={state.imt.right} 
+                          onChange={(e) => setState(prev => ({...prev, imt: {...prev.imt, right: e.target.checked}}))}
+                          className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4"
+                        />
+                        <span className="text-gray-700 font-medium">Right</span>
+                      </label>
+                      <label className="flex items-center space-x-2 cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={state.imt.left} 
+                          onChange={(e) => setState(prev => ({...prev, imt: {...prev.imt, left: e.target.checked}}))}
+                          className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4"
+                        />
+                        <span className="text-gray-700 font-medium">Left</span>
+                      </label>
+                    </div>
+
+                    <div className="h-6 w-px bg-blue-200 hidden sm:block"></div>
+
+                    <div className="flex items-center space-x-3">
+                      <span className="font-semibold text-blue-900">顯示設定:</span>
+                      <label className="flex items-center space-x-2 cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={state.showEca} 
+                          onChange={(e) => setState(prev => ({...prev, showEca: e.target.checked}))}
+                          className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4"
+                        />
+                        <span className="text-gray-700 font-medium">顯示 ECA</span>
+                      </label>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Right Side */}
                     <div>
                       <h3 className="text-xl font-bold text-center text-gray-700 mb-4 bg-gray-100 py-2 rounded-md">Right 側</h3>
-                      {VESSELS.ecd.map((v, idx) => v.isGap ? <div key={`ecd-r-gap-${idx}`} className="h-8"></div> : <VesselBlock key={`ecd-r-${v.name}`} region="ecd" side="right" vesselConfig={v} showRates={true} state={state} isTcdDisabledFlag={false} toggleNoSignal={toggleNoSignal} toggleSplit={toggleSplit} updateSegment={updateSegment} updateRate={updateRate} />)}
+                      {VESSELS.ecd.map((v, idx) => {
+                        if (v.isGap) return <div key={`ecd-r-gap-${idx}`} className="h-8"></div>;
+                        if (v.name === 'ECA' && !state.showEca) return null;
+                        return <VesselBlock key={`ecd-r-${v.name}`} region="ecd" side="right" vesselConfig={v} showRates={true} state={state} isTcdDisabledFlag={false} toggleNoSignal={toggleNoSignal} toggleSplit={toggleSplit} updateSegment={updateSegment} updateRate={updateRate} />;
+                      })}
                     </div>
                     {/* Left Side */}
                     <div>
                       <h3 className="text-xl font-bold text-center text-gray-700 mb-4 bg-gray-100 py-2 rounded-md">Left 側</h3>
-                      {VESSELS.ecd.map((v, idx) => v.isGap ? <div key={`ecd-l-gap-${idx}`} className="h-8"></div> : <VesselBlock key={`ecd-l-${v.name}`} region="ecd" side="left" vesselConfig={v} showRates={true} state={state} isTcdDisabledFlag={false} toggleNoSignal={toggleNoSignal} toggleSplit={toggleSplit} updateSegment={updateSegment} updateRate={updateRate} />)}
+                      {VESSELS.ecd.map((v, idx) => {
+                        if (v.isGap) return <div key={`ecd-l-gap-${idx}`} className="h-8"></div>;
+                        if (v.name === 'ECA' && !state.showEca) return null;
+                        return <VesselBlock key={`ecd-l-${v.name}`} region="ecd" side="left" vesselConfig={v} showRates={true} state={state} isTcdDisabledFlag={false} toggleNoSignal={toggleNoSignal} toggleSplit={toggleSplit} updateSegment={updateSegment} updateRate={updateRate} />;
+                      })}
                     </div>
                   </div>
                 </div>
