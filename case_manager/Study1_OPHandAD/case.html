@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>個案管理系統 - GitHub 同步版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f8fafc;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-6xl mx-auto">
+        <header class="mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-slate-800">個案資料管理系統</h1>
+                <p class="text-slate-500">GitHub CSV 同步整合版</p>
+            </div>
+            <!-- GitHub 設定按鈕 -->
+            <button onclick="toggleConfig()" class="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                GitHub 設定
+            </button>
+        </header>
+
+        <!-- GitHub 設定面板 (預設隱藏) -->
+        <section id="configPanel" class="card p-6 mb-8 hidden border-2 border-indigo-100 bg-indigo-50">
+            <h2 class="text-lg font-bold mb-4 text-indigo-800">GitHub 同步設定</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-indigo-600 mb-1 uppercase">Personal Access Token (PAT)</label>
+                    <input type="password" id="ghToken" class="w-full p-2 border border-indigo-200 rounded text-sm" placeholder="ghp_xxxx">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-indigo-600 mb-1 uppercase">Repo (帳號/倉庫名)</label>
+                    <input type="text" id="ghRepo" class="w-full p-2 border border-indigo-200 rounded text-sm" placeholder="username/repo">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-indigo-600 mb-1 uppercase">分支 (Branch)</label>
+                    <input type="text" id="ghBranch" class="w-full p-2 border border-indigo-200 rounded text-sm" value="main">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-indigo-600 mb-1 uppercase">CSV 路徑</label>
+                    <input type="text" id="ghPath" class="w-full p-2 border border-indigo-200 rounded text-sm" value="case_manager/Study1_OPHandAD/cases.csv">
+                </div>
+            </div>
+            <div class="mt-4 flex gap-2">
+                <button onclick="saveConfig()" class="bg-indigo-600 text-white px-4 py-2 rounded text-sm font-bold hover:bg-indigo-700">儲存設定</button>
+                <p class="text-xs text-indigo-500 self-center">※ Token 僅存在您的瀏覽器，不會傳送給第三方。</p>
+            </div>
+        </section>
+
+        <!-- 輸入表單 -->
+        <section class="card p-6 mb-8 border-t-4 border-blue-500">
+            <h2 class="text-xl font-semibold mb-4 text-slate-700 flex items-center">
+                <svg class="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                新增個案
+            </h2>
+            <form id="caseForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">病歷號</label>
+                    <input type="text" id="mrn" required class="w-full p-2 border border-slate-300 rounded-md outline-none focus:ring-2 focus:ring-blue-500" placeholder="輸入病歷號">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">收案日期</label>
+                    <input type="date" id="enrollDate" required class="w-full p-2 border border-slate-300 rounded-md outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="flex items-end pb-2">
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox" id="imagingStatus" class="w-5 h-5 text-blue-600 border-slate-300 rounded">
+                        <span class="ml-2 text-sm font-medium text-slate-600">抽血影像已完成</span>
+                    </label>
+                </div>
+                <div class="md:col-span-2 lg:col-span-3">
+                    <label class="block text-sm font-medium text-slate-600 mb-1">摘要</label>
+                    <input type="text" id="summary" class="w-full p-2 border border-slate-300 rounded-md outline-none focus:ring-2 focus:ring-blue-500" placeholder="初步觀察...">
+                </div>
+                <div class="flex items-end">
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md shadow-sm transition">
+                        加入列表
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- 操作區 -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
+            <h2 class="text-xl font-semibold text-slate-700">個案列表</h2>
+            <div class="flex flex-wrap gap-2">
+                <button id="btnFetch" onclick="syncFromGitHub()" class="bg-white border border-slate-300 text-slate-700 text-sm font-medium py-2 px-4 rounded-md hover:bg-slate-50 transition flex items-center">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    從 GitHub 抓取最新
+                </button>
+                <button id="btnPush" onclick="syncToGitHub()" class="bg-indigo-600 text-white text-sm font-medium py-2 px-4 rounded-md hover:bg-indigo-700 transition flex items-center">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                    推送到 GitHub
+                </button>
+                <button onclick="exportToCSV()" class="bg-emerald-600 text-white text-sm font-medium py-2 px-4 rounded-md hover:bg-emerald-700 transition flex items-center">
+                    匯出本地 CSV
+                </button>
+            </div>
+        </div>
+
+        <!-- 列表 -->
+        <div class="card overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-slate-50 border-b">
+                        <tr>
+                            <th class="p-4 text-sm font-semibold text-slate-600">病歷號</th>
+                            <th class="p-4 text-sm font-semibold text-slate-600">日期</th>
+                            <th class="p-4 text-sm font-semibold text-slate-600 text-center">影像</th>
+                            <th class="p-4 text-sm font-semibold text-slate-600">摘要編輯</th>
+                            <th class="p-4 text-sm font-semibold text-slate-600 w-20"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="caseList" class="divide-y divide-slate-100"></tbody>
+                </table>
+            </div>
+            <div id="emptyState" class="p-12 text-center text-slate-400 hidden">尚未有資料</div>
+        </div>
+    </div>
+
+    <script>
+        let cases = JSON.parse(localStorage.getItem('medical_cases')) || [];
+        let ghConfig = JSON.parse(localStorage.getItem('gh_config')) || { token: '', repo: '', branch: 'main', path: '' };
+
+        // 初始化
+        window.onload = () => {
+            loadConfigUI();
+            renderCases();
+        };
+
+        function toggleConfig() {
+            document.getElementById('configPanel').classList.toggle('hidden');
+        }
+
+        function loadConfigUI() {
+            document.getElementById('ghToken').value = ghConfig.token;
+            document.getElementById('ghRepo').value = ghConfig.repo;
+            document.getElementById('ghBranch').value = ghConfig.branch;
+            document.getElementById('ghPath').value = ghConfig.path;
+        }
+
+        function saveConfig() {
+            ghConfig = {
+                token: document.getElementById('ghToken').value.trim(),
+                repo: document.getElementById('ghRepo').value.trim(),
+                branch: document.getElementById('ghBranch').value.trim(),
+                path: document.getElementById('ghPath').value.trim()
+            };
+            localStorage.setItem('gh_config', JSON.stringify(ghConfig));
+            alert('設定已儲存！');
+        }
+
+        // --- GitHub API 邏輯 ---
+
+        async function syncFromGitHub() {
+            if (!ghConfig.token || !ghConfig.repo) return alert('請先完成 GitHub 設定');
+            const btn = document.getElementById('btnFetch');
+            btn.disabled = true;
+            btn.innerText = '讀取中...';
+
+            try {
+                const url = `https://api.github.com/repos/${ghConfig.repo}/contents/${ghConfig.path}?ref=${ghConfig.branch}`;
+                const response = await fetch(url, {
+                    headers: { 'Authorization': `token ${ghConfig.token}` }
+                });
+
+                if (!response.ok) throw new Error('找不到檔案或權限錯誤');
+                const data = await response.json();
+                const content = decodeURIComponent(escape(atob(data.content))); // 處理 UTF-8 Base64
+                
+                parseCSVToCases(content);
+                alert('成功同步 GitHub 資料！');
+            } catch (error) {
+                alert('讀取失敗: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = '從 GitHub 抓取最新';
+            }
+        }
+
+        async function syncToGitHub() {
+            if (!ghConfig.token || !ghConfig.repo) return alert('請先完成 GitHub 設定');
+            if (cases.length === 0) return alert('目前沒有資料可同步');
+            
+            const btn = document.getElementById('btnPush');
+            btn.disabled = true;
+            btn.innerText = '推送中...';
+
+            try {
+                // 1. 先獲取目前的檔案 SHA (更新必須提供舊的 SHA)
+                const url = `https://api.github.com/repos/${ghConfig.repo}/contents/${ghConfig.path}`;
+                const getRes = await fetch(url, {
+                    headers: { 'Authorization': `token ${ghConfig.token}` }
+                });
+                
+                let sha = null;
+                if (getRes.ok) {
+                    const fileData = await getRes.json();
+                    sha = fileData.sha;
+                }
+
+                // 2. 準備 CSV 內容
+                const csvContent = generateCSVString();
+                const base64Content = btoa(unescape(encodeURIComponent(csvContent)));
+
+                // 3. 推送更新
+                const putRes = await fetch(url, {
+                    method: 'PUT',
+                    headers: { 
+                        'Authorization': `token ${ghConfig.token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: `Update cases.csv at ${new Date().toLocaleString()}`,
+                        content: base64Content,
+                        sha: sha,
+                        branch: ghConfig.branch
+                    })
+                });
+
+                if (!putRes.ok) throw new Error('推送失敗，請檢查 Token 權限或路徑');
+                alert('成功推送到 GitHub！');
+            } catch (error) {
+                alert('錯誤: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = '推送到 GitHub';
+            }
+        }
+
+        // --- 核心邏輯 ---
+
+        function parseCSVToCases(csvText) {
+            const lines = csvText.split('\n').filter(l => l.trim() !== '');
+            if (lines.length <= 1) return;
+
+            const newCases = lines.slice(1).map((line, idx) => {
+                const parts = line.match(/(".*?"|[^,]+)/g);
+                if (!parts || parts.length < 3) return null;
+                return {
+                    id: Date.now() + idx,
+                    mrn: parts[0].trim(),
+                    enrollDate: parts[1].trim(),
+                    imagingComplete: parts[2].trim() === '是',
+                    summary: parts[3] ? parts[3].replace(/^"|"$/g, '').replace(/""/g, '"') : ''
+                };
+            }).filter(i => i);
+
+            if (confirm(`從 GitHub 讀取到 ${newCases.length} 筆資料。是否覆蓋目前本地資料？`)) {
+                cases = newCases;
+                saveAndRender();
+            }
+        }
+
+        function generateCSVString() {
+            const headers = ['病歷號', '收案日期', '抽血影像完成', '摘要'];
+            const rows = cases.map(c => [
+                c.mrn,
+                c.enrollDate,
+                c.imagingComplete ? '是' : '否',
+                `"${c.summary.replace(/"/g, '""')}"`
+            ]);
+            return headers.join(",") + "\n" + rows.map(r => r.join(",")).join("\n");
+        }
+
+        document.getElementById('caseForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const newCase = {
+                id: Date.now(),
+                mrn: document.getElementById('mrn').value,
+                enrollDate: document.getElementById('enrollDate').value,
+                imagingComplete: document.getElementById('imagingStatus').checked,
+                summary: document.getElementById('summary').value
+            };
+            cases.unshift(newCase);
+            saveAndRender();
+            e.target.reset();
+        });
+
+        function renderCases() {
+            const list = document.getElementById('caseList');
+            const empty = document.getElementById('emptyState');
+            if (cases.length === 0) {
+                list.innerHTML = '';
+                empty.classList.remove('hidden');
+                return;
+            }
+            empty.classList.add('hidden');
+            list.innerHTML = cases.map(item => `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="p-4 font-bold text-slate-700">${item.mrn}</td>
+                    <td class="p-4 text-slate-500 text-sm">${item.enrollDate}</td>
+                    <td class="p-4 text-center">
+                        <input type="checkbox" ${item.imagingComplete ? 'checked' : ''} onchange="toggleImg(${item.id})" class="w-5 h-5 rounded border-slate-300 text-indigo-600">
+                    </td>
+                    <td class="p-4">
+                        <div class="flex gap-2">
+                            <textarea onblur="updateSum(${item.id}, this.value)" class="flex-grow p-2 text-sm border rounded h-12 focus:ring-1 focus:ring-blue-400 outline-none resize-none">${item.summary}</textarea>
+                            <button onclick="addTS(${item.id})" class="p-2 bg-slate-100 rounded hover:bg-slate-200 text-slate-500">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2"></path></svg>
+                            </button>
+                        </div>
+                    </td>
+                    <td class="p-4 text-right">
+                        <button onclick="deleteCase(${item.id})" class="text-rose-400 hover:text-rose-600">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2"></path></svg>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function toggleImg(id) { const i = cases.findIndex(c=>c.id===id); cases[i].imagingComplete=!cases[i].imagingComplete; saveData(); }
+        function updateSum(id, val) { const i = cases.findIndex(c=>c.id===id); cases[i].summary=val; saveData(); }
+        function addTS(id) { 
+            const i = cases.findIndex(c=>c.id===id); 
+            const d = new Date();
+            const ts = `[${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${d.getMinutes().toString().padStart(2,'0')}] `;
+            cases[i].summary = ts + cases[i].summary;
+            saveAndRender();
+        }
+        function deleteCase(id) { if(confirm('刪除？')){ cases=cases.filter(c=>c.id!==id); saveAndRender(); } }
+        function saveData() { localStorage.setItem('medical_cases', JSON.stringify(cases)); }
+        function saveAndRender() { saveData(); renderCases(); }
+
+        function exportToCSV() {
+            const csv = "\uFEFF" + generateCSVString();
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `cases_export_${new Date().toLocaleDateString()}.csv`;
+            link.click();
+        }
+
+        function clearAllData() { if(confirm('清空？')){ cases=[]; saveAndRender(); } }
+    </script>
+</body>
+</html>
