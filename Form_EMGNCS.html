@@ -402,14 +402,14 @@
                         } else if (cat.key === 'sensory') {
                             sentences.push(`The sensory conduction studies of ${formatted} nerve${sS} demonstrated ${stats[0] === 'normal' ? 'normal DL' + sS : 'prolonged DL' + sS} and ${stats[1] === 'normal' ? 'normal SNAP amplitude' + sS : 'decreased SNAP amplitude' + sS}.`);
                         } else {
-                            sentences.push(`The mixed nerve conduction studies of wrist-palm segment on ${formatted} nerve${sS} showed ${stats[0] === 'normal' ? 'normal conduction intervals' : 'prolonged conduction intervals'} and ${stats[1] === 'normal' ? 'normal MNAP amplitude' + sS : 'decreased MNAP amplitude' + sS} bilaterally.`);
+                            sentences.push(`The mixed nerve conduction studies of wrist-palm segment on ${formatted} nerve${sS} showed ${stats[0] === 'normal' ? 'normal conduction intervals' : 'prolonged conduction intervals'} and ${stats[1] === 'normal' ? 'normal MNAP amplitude' + sS : 'decreased MNAP amplitude' + sS} .`);
                         }
                     });
                     if (sentences.length > 0) final.push(`${c++}. ${sentences.join(' ')}`);
                 }
             });
 
-            let hT = state.scope === 'LL' || state.scope === 'BOTH' ? "bilateral tibial/medial gastrocnemius" : "bilateral flexor carpi radialis (FCR)";
+            let hT = state.scope === 'LL' || state.scope === 'BOTH' ? "bilateral tibial/soleus" : "bilateral flexor carpi radialis (FCR)";
             final.push(`${c++}. The H-reflex of ${hT} showed ${state.hReflex.active ? (state.hReflex.content || 'recorded findings') : 'no responses bilaterally'}.`);
 
             if (state.emg.done) {
