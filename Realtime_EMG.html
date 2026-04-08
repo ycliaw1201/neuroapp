@@ -1,0 +1,346 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { 
+  FileText, 
+  Search, 
+  ChevronRight, 
+  BookOpen, 
+  Upload, 
+  File, 
+  Loader2, 
+  FolderOpen, 
+  ExternalLink, 
+  RefreshCw,
+  LayoutList,
+  Maximize2,
+  Minimize2
+} from 'lucide-react';
+
+const App = () => {
+  // 狀態管理
+  const [folderPath, setFolderPath] = useState('未選取資料夾');
+  const [docs, setDocs] = useState([]);
+  const [selectedDocId, setSelectedDocId] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isReading, setIsReading] = useState(false);
+  const [iframeKey, setIframeKey] = useState(0); 
+  const [isListCollapsed, setIsListCollapsed] = useState(false); // 控制列表收合狀態
+  
+  const folderInputRef = useRef(null);
+  const previewContainerRef = useRef(null);
+
+  // 定義目前選取的文件
+  const selectedDoc = docs.find(d => d.id === selectedDocId);
+
+  // 定義過濾後的文件列表
+  const filteredDocs = docs.filter(doc => 
+    doc.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const TARGET_URL = "https://ycliaw1201.github.io/neuroapp/Form_EMGNCS.html";
+
+  // 動態載入渲染腳本 (JSZip & docx-preview)
+  useEffect(() => {
+    const loadScripts = async () => {
+      const loadScript = (src) => {
+        return new Promise((resolve) => {
+          const script = document.createElement('script');
+          script.src = src;
+          script.async = true;
+          script.onload = resolve;
+          document.body.appendChild(script);
+        });
+      };
+
+      try {
+        await loadScript("https://unpkg.com/jszip/dist/jszip.min.js");
+        await loadScript("https://unpkg.com/docx-preview/dist/docx-preview.js");
+      } catch (err) {
+        console.error("腳本載入失敗", err);
+      }
+    };
+    loadScripts();
+  }, []);
+
+  // 當選中文件改變或收合狀態改變時，重新渲染預覽
+  useEffect(() => {
+    renderDocPreview();
+  }, [selectedDocId, docs, isListCollapsed]);
+
+  const renderDocPreview = async () => {
+    if (!selectedDoc || !previewContainerRef.current) return;
+
+    previewContainerRef.current.innerHTML = "";
+
+    if (selectedDoc.type === 'docx' && selectedDoc.data) {
+      if (window.docx) {
+        try {
+          await window.docx.renderAsync(selectedDoc.data, previewContainerRef.current, null, {
+            className: "docx", 
+            inWrapper: false,
+          });
+        } catch (e) {
+          previewContainerRef.current.innerHTML = `<div class="p-10 text-slate-400 text-center font-serif italic">預覽失敗：格式不相容</div>`;
+        }
+      }
+    } else if (selectedDoc.type === 'text') {
+      const pre = document.createElement('pre');
+      pre.style.cssText = "font-family: inherit; white-space: pre-wrap; color: #475569; padding: 20px; font-size: 13px;";
+      pre.textContent = selectedDoc.content;
+      previewContainerRef.current.appendChild(pre);
+    }
+  };
+
+  // 處理資料夾選取
+  const handleFolderSelect = async (event) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsReading(true);
+    const newDocs = [];
+    
+    const firstFilePath = files[0].webkitRelativePath;
+    const folderName = firstFilePath.split('/')[0];
+    setFolderPath(`Local://${folderName}/`);
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const isDocx = file.name.endsWith('.docx');
+      const isTxt = file.name.endsWith('.txt');
+
+      if (isDocx || isTxt) {
+        const arrayBuffer = await file.arrayBuffer();
+        newDocs.push({
+          id: `${Date.now()}-${i}`,
+          title: file.name,
+          date: new Date(file.lastModified).toISOString().split('T')[0],
+          size: (file.size / 1024).toFixed(1) + " KB",
+          type: isDocx ? 'docx' : 'text',
+          data: arrayBuffer,
+          content: isDocx ? "" : await file.text()
+        });
+      }
+    }
+
+    setDocs(newDocs);
+    if (newDocs.length > 0) setSelectedDocId(newDocs[0].id);
+    setIsReading(false);
+    setIsListCollapsed(false); 
+  };
+
+  const refreshIframe = () => setIframeKey(prev => prev + 1);
+
+  return (
+    <div className="flex h-screen bg-slate-200 text-slate-800 font-sans overflow-hidden">
+      <input 
+        type="file" 
+        ref={folderInputRef} 
+        onChange={handleFolderSelect} 
+        className="hidden" 
+        webkitdirectory="true"
+        mozdirectory="true"
+        directory="true"
+      />
+      
+      {/* 左側：嵌入式外部網頁畫面 (Form_EMGNCS.html) */}
+      <div className="flex-1 flex flex-col bg-white shadow-2xl z-30 relative">
+        <div className="h-10 bg-slate-900 text-white flex items-center justify-between px-4 shrink-0">
+          <div className="flex items-center gap-2 overflow-hidden">
+            <ExternalLink size={14} className="text-blue-400" />
+            <span className="text-[11px] font-bold truncate opacity-70 uppercase tracking-widest">
+              Report System
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={refreshIframe}
+              className="p-1 hover:bg-white/10 rounded transition-colors text-slate-400"
+              title="重新整理嵌入畫面"
+            >
+              <RefreshCw size={14} />
+            </button>
+            <a 
+              href={TARGET_URL}
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-[10px] bg-indigo-600 hover:bg-indigo-500 px-3 py-1 rounded font-bold transition-all text-white"
+            >
+              NEW TAB
+            </a>
+          </div>
+        </div>
+        
+        <div className="flex-1 w-full h-full bg-slate-50 relative">
+          <iframe 
+            key={iframeKey}
+            src={TARGET_URL}
+            className="w-full h-full border-none"
+            title="NeuroApp Form"
+            allow="clipboard-read; clipboard-write"
+          />
+        </div>
+      </div>
+
+      {/* 右側：文獻瀏覽器 - 加寬至 550px */}
+      <div className="w-[550px] flex flex-col bg-slate-50 shrink-0 shadow-[-10px_0_40px_rgba(0,0,0,0.1)] z-20 transition-all duration-300 border-l border-slate-300">
+        <div className="p-4 h-full flex flex-col">
+          
+          {/* 標題與切換按鈕 */}
+          <div className="flex items-center justify-between mb-3 px-1">
+            <h2 className="text-base font-black text-slate-800 flex items-center gap-2">
+              <BookOpen size={18} className="text-indigo-600" />
+              本地文獻庫
+            </h2>
+            <button 
+              onClick={() => setIsListCollapsed(!isListCollapsed)}
+              className="flex items-center gap-2 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-xs font-bold text-white transition-all shadow-md shadow-indigo-200"
+            >
+              {isListCollapsed ? (
+                <><LayoutList size={14} /> 顯示清單</>
+              ) : (
+                <><Maximize2 size={14} /> 完整預覽模式</>
+              )}
+            </button>
+          </div>
+
+          {/* 路徑設定區 - 優化佈局避免遮擋 */}
+          <div className={`transition-all duration-300 overflow-hidden ${isListCollapsed ? 'max-h-0 opacity-0 mb-0' : 'max-h-[500px] opacity-100 mb-4'}`}>
+            <div className="bg-white border border-slate-300 rounded-xl p-4 shadow-sm">
+              <div className="text-[10px] font-black text-slate-400 uppercase mb-2 tracking-tighter">當前工作資料夾</div>
+              <div className="flex items-center gap-2 mb-3">
+                <div className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-[11px] text-slate-600 font-mono truncate">
+                  {folderPath}
+                </div>
+                <button 
+                  onClick={() => folderInputRef.current.click()}
+                  className="bg-slate-800 hover:bg-black text-white p-2.5 rounded-lg transition-all shadow-lg"
+                  title="更換資料夾"
+                >
+                  <FolderOpen size={18} />
+                </button>
+              </div>
+              <button 
+                onClick={() => folderInputRef.current.click()}
+                className="w-full py-2 bg-indigo-50 border border-indigo-100 text-indigo-700 text-[11px] font-black rounded-lg hover:bg-indigo-100 transition-all uppercase tracking-widest"
+              >
+                選取參考資料夾
+              </button>
+            </div>
+            
+            <div className="relative mt-4 px-1">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+              <input 
+                type="text" 
+                placeholder="快速過濾檔案名稱..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-white border border-slate-300 rounded-xl py-2.5 pl-10 pr-4 text-xs outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
+              />
+            </div>
+          </div>
+
+          {/* 檔案清單 */}
+          {!isListCollapsed && (
+            <div className="flex-1 overflow-y-auto space-y-1.5 mb-4 pr-1 custom-scrollbar min-h-[150px] px-1">
+              <div className="text-[10px] font-bold text-slate-500 uppercase mb-2 flex justify-between items-center bg-slate-100/50 py-1 px-2 rounded">
+                <span>檔案清單 ({filteredDocs.length})</span>
+                {isReading && <Loader2 size={12} className="animate-spin text-indigo-600" />}
+              </div>
+              {filteredDocs.length > 0 ? (
+                filteredDocs.map((doc) => (
+                  <div 
+                    key={doc.id}
+                    onClick={() => setSelectedDocId(doc.id)}
+                    className={`group flex items-center p-3 rounded-xl cursor-pointer transition-all border shadow-sm ${
+                      selectedDocId === doc.id 
+                      ? 'bg-indigo-50 border-indigo-300 ring-1 ring-indigo-200' 
+                      : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-600'
+                    }`}
+                  >
+                    <div className={`p-2 rounded-lg mr-3 transition-colors ${selectedDocId === doc.id ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
+                      {doc.type === 'docx' ? <FileText size={18} /> : <File size={18} />}
+                    </div>
+                    <div className="flex-1 overflow-hidden">
+                      <div className={`text-[13px] font-bold truncate ${selectedDocId === doc.id ? 'text-indigo-900' : 'text-slate-700'}`}>
+                        {doc.title}
+                      </div>
+                      <div className="text-[10px] text-slate-400 mt-0.5 flex items-center gap-2">
+                        <span className="font-mono">{doc.size}</span>
+                        <span>•</span>
+                        <span>{doc.date}</span>
+                      </div>
+                    </div>
+                    <ChevronRight size={14} className={selectedDocId === doc.id ? 'text-indigo-400' : 'text-slate-300'} />
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-12 opacity-30 bg-white rounded-2xl border border-dashed border-slate-300 mx-1">
+                  <FileText size={32} className="mx-auto mb-2 text-slate-400" />
+                  <p className="text-[11px] font-bold">尚未選取工作目錄</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 預覽窗格 - 在非收合模式下高度增加至 600px */}
+          <div className={`flex flex-col border-t border-slate-300 pt-4 transition-all duration-300 min-h-0 px-1 ${isListCollapsed ? 'flex-1' : 'h-[600px] shrink-0'}`}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex flex-col">
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                  {isListCollapsed ? '📖 完整閱讀模式' : '📄 文件預覽'}
+                </span>
+                {selectedDoc && (
+                  <span className="text-[12px] font-black text-indigo-900 truncate max-w-[400px] mt-0.5">
+                    {selectedDoc.title}
+                  </span>
+                )}
+              </div>
+              {selectedDoc && (
+                <div className="flex items-center gap-2 bg-white px-2 py-1 rounded-full border border-slate-200 shadow-sm">
+                   <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                   <span className="text-[10px] text-slate-600 font-bold uppercase">{selectedDoc.type}</span>
+                </div>
+              )}
+            </div>
+            
+            <div className="flex-1 bg-slate-800 rounded-2xl overflow-hidden flex flex-col border border-slate-400 shadow-2xl relative">
+              <div className="bg-white m-1 rounded-xl flex-1 overflow-y-auto custom-scrollbar p-1">
+                <div ref={previewContainerRef} className="docx-render-target"></div>
+                {!selectedDoc && (
+                   <div className="h-full flex flex-col items-center justify-center text-slate-400 italic text-xs gap-3">
+                     <BookOpen size={30} className="opacity-10" />
+                     請從上方清單選取文件
+                   </div>
+                )}
+              </div>
+              
+              {/* 收合狀態下的返回按鈕 */}
+              {isListCollapsed && (
+                <button 
+                  onClick={() => setIsListCollapsed(false)}
+                  className="absolute bottom-6 right-6 p-3.5 bg-indigo-600 text-white rounded-full shadow-2xl hover:bg-indigo-700 hover:scale-110 transition-all z-10 border-2 border-white"
+                  title="返回列表選檔案"
+                >
+                  <Minimize2 size={24} />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <style>{`
+        .docx-render-target { min-height: 100%; font-family: 'Times New Roman', serif; }
+        .docx-render-target table { border-collapse: collapse !important; width: 100% !important; margin-bottom: 0.8em !important; font-size: 11.5px !important; line-height: 1.4; }
+        .docx-render-target td, .docx-render-target th { border: 1.2px solid #555 !important; padding: 4px 6px !important; }
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; border: 2px solid #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .docx-wrapper { padding: 30px !important; background: white !important; }
+        .docx { box-shadow: none !important; margin: 0 auto !important; width: 100% !important; max-width: 800px; }
+      `}</style>
+    </div>
+  );
+};
+
+export default App;
