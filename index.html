@@ -33,6 +33,11 @@
             color: #16a34a;
             border-right: 4px solid #16a34a;
         }
+        .active-OPDtool {
+            background-color: #fff5f7;
+            color: #a3161f;
+            border-right: 4px solid #a3161f;
+        }
         .active-report {
             background-color: #faf5ff;
             color: #9333ea;
@@ -157,7 +162,7 @@
                             </button>
                         </li>
                         <li>
-                            <button onclick="loadPage('UPDRS', 'https://ycliaw1201.github.io/neuroapp/LEDD.html', this, 'tool')" 
+                            <button onclick="loadPage('LEDD Calc', 'https://ycliaw1201.github.io/neuroapp/LEDD.html', this, 'tool')" 
                                     class="sidebar-item w-full flex items-center px-6 py-2 text-sm font-medium transition-colors text-gray-600 hover:bg-green-50">
                                 LEDD 計算機
                             </button>
@@ -195,6 +200,59 @@
                     </ul>
                 </div>
 
+                <!-- 病歷工具 - 紅色系 -->
+                <div class="bg-red-50/30 pb-2">
+                    <h2 class="px-6 py-2 text-xs font-bold text-red-600 uppercase tracking-wider flex items-center border-b border-red-100 mb-1">
+                        <i data-lucide="wrench" class="w-3.5 h-3.5 mr-2"></i>工具類
+                    </h2>
+                    <ul class="space-y-0.5">
+                        <li>
+                            <button onclick="loadPage('UPDRS', 'https://ycliaw1201.github.io/neuroapp/OPD_UPDRS.html', this, 'OPDtool')" 
+                                    class="sidebar-item w-full flex items-center px-6 py-2 text-sm font-medium transition-colors text-gray-600 hover:bg-red-50">
+                                UPDRS
+                            </button>
+                        </li>
+                        <li>
+                            <button onclick="loadPage('LEDD Calc', 'https://ycliaw1201.github.io/neuroapp/LEDD.html', this, 'OPDtool')" 
+                                    class="sidebar-item w-full flex items-center px-6 py-2 text-sm font-medium transition-colors text-gray-600 hover:bg-red-50">
+                                LEDD 計算機
+                            </button>
+                        </li>
+                        <li>
+                            <button onclick="loadPage('整理數據', 'https://ycliaw1201.github.io/neuroapp/OPD_datacleaner.html', this, 'OPDtool')" 
+                                    class="sidebar-item w-full flex items-center px-6 py-2 text-sm font-medium transition-colors text-gray-600 hover:bg-red-50">
+                                整理數據
+                            </button>
+                        </li>
+                        <li>
+                            <button onclick="loadPage('頭痛日記', 'https://ycliaw1201.github.io/neuroapp/Form_HA_Rx.html', this, 'OPDtool')" 
+                                    class="sidebar-item w-full flex items-center px-6 py-2 text-sm font-medium transition-colors text-gray-600 hover:bg-red-50">
+                                頭痛日記（門診）
+                            </button>
+                        </li>
+                         <li>
+                            <button onclick="loadPage('住院頭痛紀錄', 'https://ycliaw1201.github.io/neuroapp/Form_ADM_HA.html', this, 'OPDtool')" 
+                                    class="sidebar-item w-full flex items-center px-6 py-2 text-sm font-medium transition-colors text-gray-600 hover:bg-red-50">
+                                頭痛紀錄（住院）
+                            </button>
+                        </li>
+                        <li>
+                            <button onclick="loadPage('門診加掛單', 'https://ycliaw1201.github.io/neuroapp/OPD_Add.html', this, 'OPDtool')" 
+                                    class="sidebar-item w-full flex items-center px-6 py-2 text-sm font-medium transition-colors text-gray-600 hover:bg-red-50">
+                                門診加掛單
+                            </button>
+                        </li>
+                        <li>
+                            <button onclick="loadPage('ICD-10查詢', 'https://ycliaw1201.github.io/neuroapp/OPD_ICD10.html', this, 'OPDtool')" 
+                                    class="sidebar-item w-full flex items-center px-6 py-2.5 text-sm font-medium transition-colors text-gray-600 hover:bg-red-50">
+                                ICD-10查詢
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+
+
+                
                 <!-- 報告類 - 紫色系 -->
                 <div class="bg-purple-50/30 pb-2">
                     <h2 class="px-6 py-2 text-xs font-bold text-purple-600 uppercase tracking-wider flex items-center border-b border-purple-100 mb-1">
@@ -272,6 +330,10 @@
                 activeClass = 'active-tool';
                 spinnerColor = 'border-green-600';
                 titleColor = 'text-green-600';
+            } else if (type === 'OPDtool') {
+                activeClass = 'active-OPDtool';
+                spinnerColor = 'border-red-600';
+                titleColor = 'text-red-600';
             } else if (type === 'report') {
                 activeClass = 'active-report';
                 spinnerColor = 'border-purple-600';
@@ -291,8 +353,8 @@
             
             // 清除所有側邊欄項目的狀態
             document.querySelectorAll('.sidebar-item').forEach(item => {
-                item.classList.remove('active-form', 'active-tool', 'active-report');
-                item.classList.remove('text-blue-600', 'text-green-600', 'text-purple-600');
+                item.classList.remove('active-form', 'active-tool',  'active-OPDtool', 'active-report');
+                item.classList.remove('text-blue-600', 'text-green-600',  'text-red-600', 'text-purple-600');
                 item.classList.add('text-gray-600');
             });
             
