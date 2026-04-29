@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神經內科初診單</title>
+    <title>神經內科初診單 - 數位填寫版</title>
     
     <!-- 引入 React 和 ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -16,23 +16,26 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
-        /* 螢幕顯示樣式 */
-        .section-title {
-            background-color: #f3f4f6;
-            padding: 0.75rem;
-            border-radius: 0.5rem;
-            font-weight: bold;
-            color: #1f2937;
-            margin-bottom: 1rem;
-            border-left: 6px solid #3b82f6;
-            font-size: 1.15rem;
+        /* 水平捲軸專用樣式 */
+        .hide-scrollbar::-webkit-scrollbar {
+            height: 4px;
         }
-
+        .hide-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .hide-scrollbar::-webkit-scrollbar-thumb {
+            background: #e5e7eb;
+            border-radius: 4px;
+        }
+        .hide-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #d1d5db;
+        }
         .summary-area::-webkit-scrollbar {
-            width: 8px;
+            width: 6px;
         }
         .summary-area::-webkit-scrollbar-track {
             background: #f1f1f1; 
+            border-radius: 4px;
         }
         .summary-area::-webkit-scrollbar-thumb {
             background: #888; 
@@ -41,22 +44,6 @@
         .summary-area::-webkit-scrollbar-thumb:hover {
             background: #555; 
         }
-
-        /* 水平捲軸專用樣式 */
-        .hide-scrollbar::-webkit-scrollbar {
-            height: 6px;
-        }
-        .hide-scrollbar::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
-        }
-        .hide-scrollbar::-webkit-scrollbar-thumb {
-            background: #ccc;
-            border-radius: 4px;
-        }
-        .hide-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #aaa;
-        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans">
@@ -64,61 +51,54 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useMemo, useRef } = React;
+        const { useState, useMemo, useRef } = React;
 
-        // 【修正 Bug】將 FormRow 移出 App，避免每次輸入時重新渲染導致焦點遺失
-        const FormRow = ({ title, children }) => (
-            <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 p-3 md:p-4 bg-white border border-gray-200 rounded-xl hover:shadow-md transition-shadow">
-                <div className="md:w-1/4 shrink-0">
-                    <label className="text-sm md:text-base font-bold text-gray-700 flex items-center">
+        // ★ Hover 再升級：FormRow 支援明顯的白底浮出與陰影
+        const FormRow = ({ title, children, labelClass="text-gray-700", hoverColor="group-hover:text-blue-600", className="" }) => (
+            <div className={`group flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3 p-2 -mx-2 print:mx-0 print:p-1 border-b border-gray-100 last:border-0 hover:bg-white hover:border-transparent hover:shadow-[0_5px_15px_-3px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 print:hover:shadow-none print:hover:bg-transparent print:hover:translate-y-0 rounded-xl transition-all duration-300 relative z-0 hover:z-10 ${className}`}>
+                <div className="sm:w-1/4 shrink-0">
+                    <label className={`text-[13px] sm:text-sm font-bold transition-colors duration-300 ${hoverColor} ${labelClass}`}>
                         {title}
                     </label>
                 </div>
-                <div className="md:w-3/4 flex-grow overflow-hidden">
+                <div className="w-full sm:w-3/4 flex-grow flex flex-col justify-center">
                     {children}
                 </div>
             </div>
         );
 
-        // 優化的大型 Radio 按鈕組件 (使用瀏覽器原生行為，不再手動設定 tabIndex)
+        // ★ Hover 再升級：RadioCard 跳躍感更明顯
         const RadioCard = ({ name, value, checked, onChange, label }) => {
             return (
                 <label 
-                    className={`radio-card relative flex items-center justify-center cursor-pointer border rounded-lg transition-all duration-200 p-2 sm:p-3 flex-1 text-center min-w-[60px] min-h-[48px] focus-within:ring-2 focus-within:ring-offset-1 focus-within:ring-blue-500
-                    ${checked ? 'bg-blue-600 border-blue-600 text-white shadow-md transform scale-[1.02]' : 'bg-gray-50 border-gray-200 hover:border-blue-400 hover:bg-white text-gray-700'}`}
+                    className={`cursor-pointer border rounded-lg transition-all duration-300 p-1 flex-1 text-center min-w-[48px] min-h-[30px] flex items-center justify-center focus-within:ring-2 focus-within:ring-blue-500
+                    ${checked 
+                        ? 'bg-blue-600 border-blue-600 text-white shadow-md transform scale-[1.02]' 
+                        : 'bg-white border-gray-200 hover:border-blue-500 hover:bg-blue-50 hover:text-blue-700 hover:shadow-md hover:-translate-y-1 text-gray-600'}`}
                 >
-                    <input 
-                        type="radio" 
-                        name={name} 
-                        value={value} 
-                        checked={checked} 
-                        onChange={onChange} 
-                        className="sr-only" // 使用 sr-only 隱藏原生外觀，但保留無障礙焦點與鍵盤操作能力
-                    />
-                    <span className="block font-bold text-base">{label}</span>
+                    <input type="radio" name={name} value={value} checked={checked} onChange={onChange} className="sr-only" />
+                    <span className="block font-medium text-[13px] sm:text-sm">{label}</span>
                 </label>
             );
         };
 
-        // 像按鈕一樣的 Checkbox
+        // ★ Hover 再升級：CheckboxButton 跳躍感更明顯
         const CheckboxButton = ({ name, value, checked, onChange, label, className = "" }) => {
             return (
                 <label 
-                    className={`checkbox-card flex items-center justify-center px-3 py-2 sm:py-3 rounded-lg border cursor-pointer transition-all duration-200 text-base font-bold select-none min-h-[48px] focus-within:ring-2 focus-within:ring-offset-1 focus-within:ring-blue-500
-                    ${checked ? 'bg-blue-600 border-blue-600 text-white shadow-md' : 'bg-gray-50 border-gray-200 hover:bg-white text-gray-700'} ${className}`}
+                    className={`cursor-pointer border rounded-lg transition-all duration-300 px-1.5 py-1 flex items-center justify-center text-[13px] sm:text-sm font-medium select-none min-h-[30px] focus-within:ring-2 focus-within:ring-blue-500
+                    ${checked 
+                        ? 'bg-blue-600 border-blue-600 text-white shadow-md transform scale-[1.02]' 
+                        : 'bg-white border-gray-200 hover:border-blue-500 hover:bg-blue-50 hover:text-blue-700 hover:shadow-md hover:-translate-y-1 text-gray-600'} ${className}`}
                 >
-                    <input 
-                        type="checkbox" 
-                        name={name} 
-                        value={value} 
-                        checked={checked} 
-                        onChange={onChange} 
-                        className="sr-only" 
-                    />
+                    <input type="checkbox" name={name} value={value} checked={checked} onChange={onChange} className="sr-only" />
                     <span className="text-center w-full">{label}</span>
                 </label>
             );
         };
+
+        // ★ Hover 再升級：輸入框加上淡藍色背景與微浮出
+        const inputClass = "w-full text-sm border-b border-gray-300 py-1 px-1 focus:border-blue-600 focus:bg-white focus:rounded-md hover:border-blue-500 hover:bg-blue-50/50 hover:rounded-md hover:shadow-sm hover:-translate-y-0.5 transition-all duration-300 outline-none bg-transparent";
 
         function App() {
             const today = new Date().toISOString().split('T')[0];
@@ -126,243 +106,124 @@
             const [confirmReset, setConfirmReset] = useState(false);
 
             const initialFormData = {
-                chartNumber: '',
-                visitDate: today,
-                visitOrder: '',
-                weight: '',
-                sbp: '',
-                dbp: '',
-                hr: '',
-                age: '',
-                hand: '右手',
-                gender: '男',
-                diet: '非全素',
-                residence: '',
-                residenceOther: '',
-                marriage: '',
-                childrenCount: '',
-                jobCategory: '',
-                job: '',
-                toxicExposure: '',
-                toxicExposureDetail: '',
-                education: '',
-                educationOther: '',
-                history: [],
-                historyOther: '',
-                medications: [],
-                medsOther: '',
-                medsAntiplateletDetail: '',
-                surgery: '無',
-                surgeryDetails: '',
-                spineSurgery: false,
-                cancerSurgery: false,
+                chartNumber: '', visitDate: today, visitOrder: '',
+                weight: '', sbp: '', dbp: '', hr: '', age: '',
+                hand: '右手', gender: '男', diet: '非全素',
+                residence: '', residenceOther: '',
+                marriage: '', childrenCount: '',
+                jobCategory: '', job: '',
+                toxicExposure: '', toxicExposureDetail: '',
+                education: '', educationOther: '',
+                history: [], historyOther: '',
+                medications: [], medsOther: '', medsAntiplateletDetail: '',
+                surgery: '無', surgeryDetails: '', brainSurgery: false, spineSurgery: false, cancerSurgery: false,
                 familyHistory: '',
-                animalsPlants: '無',
-                animalsPlantsDetail: '',
-                allergies: '無',
-                allergyDrug: '',
-                allergyFood: '',
-                alcohol: '',
-                alcoholDetail: '',
-                smoking: '',
-                smokingPacks: '',
-                smokingYears: '',
-                quitYears: '',
-                travelHistory: [],
-                travelHistoryOther: '',
-                menopause: '',
-                menopauseDate: '',
-                pregnancy: '',
-                hormoneDrug: ''
+                animalsPlants: '無', animalsPlantsDetail: '',
+                allergies: '無', allergyDrug: '', allergyFood: '',
+                alcohol: '', alcoholDetail: '',
+                smoking: '', smokingPacks: '', smokingYears: '', quitYears: '',
+                travelHistory: [], travelHistoryOther: '',
+                menopause: '', menopauseDate: '', pregnancy: '', hormoneDrug: ''
             };
 
             const [formData, setFormData] = useState(initialFormData);
 
+            // 精簡版病歷摘要邏輯
             const summaryText = useMemo(() => {
                 const {
-                    visitDate, chartNumber, age, gender, residence, residenceOther, hand, diet, 
+                    visitDate, chartNumber, visitOrder, age, gender, residence, residenceOther, hand, diet, 
                     marriage, childrenCount, job, jobCategory, education, educationOther, toxicExposure, toxicExposureDetail,
-                    history, historyOther, surgery, surgeryDetails, spineSurgery, cancerSurgery, familyHistory,
+                    history, historyOther, surgery, surgeryDetails, brainSurgery, spineSurgery, cancerSurgery, familyHistory,
                     travelHistory, travelHistoryOther, allergies, allergyDrug, allergyFood, alcohol, alcoholDetail, smoking, smokingYears, quitYears,
                     pregnancy, weight, sbp, dbp, hr, animalsPlants, animalsPlantsDetail,
-                    menopause, hormoneDrug,
-                    medications, medsAntiplateletDetail, medsOther
+                    menopause, hormoneDrug, medications, medsAntiplateletDetail, medsOther
                 } = formData;
 
-                const line1 = `${visitDate || 'yyyy-mm-dd'} First neuro visit. ${chartNumber ? `(Chart#: ${chartNumber})` : ''}`;
+                const line1 = `[${visitDate || 'yyyy-mm-dd'}] First neuro visit. Chart No: ${chartNumber || '___'} / Order: ${visitOrder || '___'}`;
 
                 const sex = gender === '男' ? 'M' : (gender === '女' ? 'F' : '?');
-                const loc = residence === '其他' ? (residenceOther || 'Other') : (residence || 'Unknown Loc');
-                const hnd = hand === '右手' ? 'RH' : (hand === '左手' ? 'LH' : 'Unknown Hand');
+                const loc = residence === '其他' ? (residenceOther || 'Other') : (residence || 'Unknown');
+                const hnd = hand === '右手' ? 'RH' : (hand === '左手' ? 'LH' : 'Unknown');
                 const veg = diet === '全素' ? 'Veg(+)' : 'Veg(-)';
                 
-                let marStatus = 'Unknown Marital';
-                if (marriage === '已婚') marStatus = 'Married';
-                else if (marriage === '未婚') marStatus = 'Single';
-                else if (marriage === '離婚') marStatus = 'Divorced';
+                let marStatus = marriage === '未婚' ? 'Single' : (marriage === '已婚' ? 'Married' : (marriage === '離婚' ? 'Divorced' : 'Unknown'));
+                if ((marriage === '已婚' || marriage === '離婚') && childrenCount) marStatus += `(${childrenCount})`;
 
-                let kids = '';
-                if ((marriage === '已婚' || marriage === '離婚') && childrenCount) {
-                    const parentTitle = gender === '女' ? 'Mother' : (gender === '男' ? 'Father' : 'Parent');
-                    kids = `, ${parentTitle} of ${childrenCount}`;
-                }
+                let jobDisplay = jobCategory === '無' ? '無' : (jobCategory === '其他' || !jobCategory ? (job || '無') : (job ? `${jobCategory}(${job})` : jobCategory));
+                let eduVal = education.match(/\d+/) ? education.match(/\d+/)[0] : (education === '未就學' ? '0' : '?');
 
-                let jobDisplay = '無';
-                if (jobCategory === '無') {
-                    jobDisplay = '無';
-                } else if (jobCategory === '其他' || !jobCategory) {
-                    jobDisplay = job || '無';
-                } else {
-                    jobDisplay = job ? `${jobCategory}(${job})` : jobCategory;
-                }
-                let jobStr = `Job=${jobDisplay}`;
-                
-                if (toxicExposure === '是') {
-                    jobStr += ` (Toxin+: ${toxicExposureDetail || 'specified'})`;
-                }
-                
-                let eduVal = '';
-                if (education) {
-                    if (education.includes('22')) eduVal = '22';
-                    else if (education.includes('18')) eduVal = '18';
-                    else if (education.includes('16')) eduVal = '16';
-                    else if (education.includes('12')) eduVal = '12';
-                    else if (education.includes('9')) eduVal = '9';
-                    else if (education.includes('6')) eduVal = '6';
-                    else if (education === '未就學') eduVal = '0';
-                    else if (education === '其他') eduVal = educationOther || '?';
-                    else eduVal = education;
-                } else {
-                    eduVal = '?';
-                }
+                const line2 = `${age || '?'}y ${sex}, ${hnd}, Edu:${eduVal}, ${loc}, ${marStatus}, Job:${jobDisplay}, ${veg}`;
 
-                const line2 = [
-                    age ? `${age} y/o` : 'Age?', 
-                    sex, 
-                    loc, 
-                    hnd, 
-                    veg, 
-                    marStatus + kids, 
-                    jobStr, 
-                    `EDU=${eduVal}`
-                ].filter(Boolean).join(', ');
-
-                const stdDiseases = { 
-                    '糖尿病': 'DM', 
-                    '高血壓': 'HTN', 
-                    '高血脂': 'D/L', 
-                    '中風': 'Stroke',
-                    '心肌梗塞': 'MI',
-                    '癌症': 'Cancer'
-                };
-                const positives = [];
-                const negatives = [];
-
-                Object.keys(stdDiseases).forEach(key => {
-                    if (history.includes(key)) {
-                        positives.push(`${stdDiseases[key]}(+)`);
-                    } else {
-                        negatives.push(`${stdDiseases[key]}(-)`);
-                    }
-                });
-
-                history.forEach(h => {
-                    if (!stdDiseases[h] && h !== '其他') positives.push(h);
-                });
+                // PHx
+                const stdDiseases = { '糖尿病': 'DM', '高血壓': 'HTN', '高血脂': 'D/L', '痛風': 'Gout', '中風': 'Stroke', '心肌梗塞': 'MI', '癌症': 'Cancer' };
+                const positives = [], negatives = [];
+                Object.keys(stdDiseases).forEach(k => history.includes(k) ? positives.push(`${stdDiseases[k]}(+)`) : negatives.push(`${stdDiseases[k]}(-)`));
+                history.forEach(h => { if (!stdDiseases[h] && h !== '其他') positives.push(h); });
                 if (historyOther) positives.push(historyOther);
+                const phxStr = `PHx: ${positives.length ? positives.join(', ') + ', ' : ''}${negatives.join(', ')}`;
 
-                const phxStr = `PHx=${positives.length > 0 ? positives.join(', ') + ', ' : ''}${negatives.join(', ')}`;
-                
+                // RHx
                 const medsList = [];
-                if (medications.includes('抗血小板/抗凝血藥物')) {
-                    medsList.push(`Antiplatelet(${medsAntiplateletDetail || '+'})`);
-                }
+                if (medications.includes('抗血小板/抗凝血藥物')) medsList.push(`Antiplatelet(${medsAntiplateletDetail || '+'})`);
                 if (medications.includes('心律不整藥物')) medsList.push('Anti-arrhythmic');
                 if (medications.includes('中藥')) medsList.push('TCM');
-                if (medications.includes('其他')) {
-                    medsList.push(medsOther || 'Other Meds');
-                }
-                const rhxStr = medsList.length > 0 ? `RHx=${medsList.join('/')}` : 'RHx=0';
+                if (medications.includes('其他') && medsOther) medsList.push(medsOther);
+                const rhxStr = medsList.length > 0 ? `RHx: ${medsList.join('/')}` : 'RHx: Nil';
 
+                // SHx & FHx
                 const surgs = [];
+                if (brainSurgery) surgs.push("Brain Sx");
                 if (spineSurgery) surgs.push("Spine Sx");
                 if (cancerSurgery) surgs.push("Cancer Sx");
                 if (surgeryDetails) surgs.push(surgeryDetails);
-                const shx = (surgery === '有' || surgs.length > 0) ? `SHx=${surgs.join('/') || 'Yes'}` : 'SHx=0';
-                
-                const fhx = familyHistory ? `FHx=${familyHistory}` : 'FHx=0';
+                const shxStr = (surgery === '有' || surgs.length > 0) ? `SHx: ${surgs.join('/') || 'Yes'}` : 'SHx: Nil';
+                const fhxStr = familyHistory ? `FHx: ${familyHistory}` : 'FHx: Nil';
 
-                const line3 = [phxStr, rhxStr, shx, fhx].join(', ');
+                const line3 = phxStr;
+                const line4 = `${rhxStr} | ${shxStr} | ${fhxStr}`;
 
-                const travelArr = [...travelHistory];
-                if (travelHistoryOther) travelArr.push(travelHistoryOther);
-                const trav = travelArr.length > 0 ? `Travel(${travelArr.join(',')})` : 'Travel(-)';
-                
-                let alg = 'Allergy(-)';
-                if (allergies === '有') {
-                    const parts = [];
-                    if (allergyDrug) parts.push(allergyDrug);
-                    if (allergyFood) parts.push(allergyFood);
-                    alg = `Allergy(${parts.join('/') || '+'})`;
-                }
+                // Habits
+                const travArr = [...travelHistory];
+                if (travelHistoryOther) travArr.push(travelHistoryOther);
+                const trav = travArr.length > 0 ? `Travel(${travArr.join(',')})` : 'Travel(-)';
+                const animal = animalsPlants === '有' ? `Animal(${animalsPlantsDetail || '+'})` : 'Animal(-)';
+                const alg = allergies === '有' ? `Allergy(${[allergyDrug, allergyFood].filter(Boolean).join('/') || '+'})` : 'Allergy(-)';
+                let alc = alcohol === '有' ? `Alc(+${alcoholDetail ? ':'+alcoholDetail : ''})` : (alcohol === '小酌' ? 'Alc(Social)' : 'Alc(-)');
+                let smk = smoking === '有' ? `Smk(+${smokingYears ? ' '+smokingYears+'y' : ''})` : (smoking === '已戒菸' ? `Smk(Quit)` : 'Smk(-)');
+                const tox = toxicExposure === '是' ? `Toxin(${toxicExposureDetail || '+'})` : 'Toxin(-)';
 
-                let animal = 'Animal(-)';
-                if (animalsPlants === '有') {
-                    animal = `Animal(${animalsPlantsDetail || '+'})`;
-                }
+                const line5 = `${alg} | ${smk}, ${alc}, ${trav}, ${animal}, ${tox}`;
 
-                let alc = 'Alc(-)';
-                if (alcohol === '有') alc = `Alc(+${alcoholDetail ? `: ${alcoholDetail}` : ''})`;
-                if (alcohol === '小酌') alc = 'Alc(Social)';
-
-                let smk = 'Smk(-)';
-                if (smoking === '有') {
-                    smk = `Smk(+)${smokingYears ? `, ${smokingYears}y` : ''}`;
-                } else if (smoking === '已戒菸') {
-                    smk = `Smk(Quit${smokingYears ? `, smoked ${smokingYears}y` : ''}${quitYears ? `, quit ${quitYears}y` : ''})`;
-                }
-
-                const line4 = [trav, animal, alg, alc, smk].join(', ');
-
-                let line5 = '';
+                // Gynecology
+                let line6 = '';
                 if (gender === '女') {
-                    const parts = [];
-                    if (menopause === '已停經') parts.push('MC(-)');
-                    else if (menopause === '規則') parts.push('MC(R)');
-                    else if (menopause === '不規則') parts.push('MC(IR)');
-
-                    if (pregnancy === '確認無') parts.push('Pregnancy: Denied');
-                    else if (pregnancy === '可能/準備中') parts.push('Pregnancy: Possible/Planning');
-
-                    if (hormoneDrug === '是') parts.push('HRT(+)');
-                    else if (hormoneDrug === '否') parts.push('HRT(-)');
-
-                    line5 = parts.join(', ');
+                    const mc = menopause === '已停經' ? 'MC(-)' : (menopause === '規則' ? 'MC(R)' : 'MC(IR)');
+                    const preg = pregnancy === '確認無' ? 'Preg(-)' : 'Preg(+)';
+                    const hrt = hormoneDrug === '是' ? 'HRT(+)' : 'HRT(-)';
+                    line6 = `Gyne: ${mc}, ${preg}, ${hrt}`;
                 }
 
-                const line6 = `Bwt: ${weight || '_'}  BP: ${sbp || '_'}/${dbp || '_'}${hr ? ` HR: ${hr}` : ''}`;
+                // Vitals
+                const line7 = `Vitals: ${weight ? weight+'kg' : '_kg'}, BP ${sbp||'_'}/${dbp||'_'}, HR ${hr||'_'}`;
 
-                return [line1, line2, line3, line4, line5, line6].filter(Boolean).join('\n');
+                return [line1, line2, line3, line4, line5, line6, line7].filter(Boolean).join('\n');
             }, [formData]);
 
             const handleChange = (e) => {
                 const { name, value, type, checked } = e.target;
-                
                 if (type === 'checkbox') {
-                    if (name === 'spineSurgery' || name === 'cancerSurgery') {
+                    if (['spineSurgery', 'cancerSurgery', 'brainSurgery'].includes(name)) {
                          setFormData(prev => ({ ...prev, [name]: checked }));
                     } else if (name === 'travelHistory') {
-                        setFormData(prev => {
-                            const current = prev.travelHistory || [];
-                            if (checked) return { ...prev, travelHistory: [...current, value] };
-                            return { ...prev, travelHistory: current.filter(item => item !== value) };
-                        });
+                        setFormData(prev => ({ 
+                            ...prev, 
+                            travelHistory: checked ? [...(prev.travelHistory || []), value] : (prev.travelHistory || []).filter(i => i !== value) 
+                        }));
                     } else {
-                        if (checked) {
-                            setFormData(prev => ({ ...prev, [name]: [...(prev[name] || []), value] }));
-                        } else {
-                            setFormData(prev => ({ ...prev, [name]: (prev[name] || []).filter(item => item !== value) }));
-                        }
+                        setFormData(prev => ({ 
+                            ...prev, 
+                            [name]: checked ? [...(prev[name] || []), value] : (prev[name] || []).filter(i => i !== value) 
+                        }));
                     }
                 } else {
                     if (name === 'menopause' && value === '已停經') {
@@ -378,10 +239,10 @@
                 const btn = document.getElementById('copy-btn');
                 const originalText = btn.innerText;
                 btn.innerText = '已複製！';
-                btn.classList.add('bg-green-600');
+                btn.classList.add('bg-green-100', 'text-green-800');
                 setTimeout(() => {
                     btn.innerText = originalText;
-                    btn.classList.remove('bg-green-600');
+                    btn.classList.remove('bg-green-100', 'text-green-800');
                 }, 2000);
             };
 
@@ -393,408 +254,398 @@
                 }
                 setFormData(initialFormData);
                 setConfirmReset(false);
-                if (firstInputRef.current) {
-                    firstInputRef.current.focus();
-                }
+                if (firstInputRef.current) firstInputRef.current.focus();
             };
 
             return (
-                <div className="min-h-screen py-6 px-4 flex justify-center">
-                    <div className="bg-white w-full max-w-4xl rounded-xl shadow-lg p-4 md:p-8 space-y-4">
+                <div className="min-h-screen py-2 px-2 sm:px-4 flex justify-center">
+                    {/* 最外層唯一的主卡片 */}
+                    <div className="bg-white w-full max-w-6xl rounded-xl shadow-lg p-4 md:p-6 space-y-4">
                         
-                        {/* 標題區 */}
-                        <header className="flex flex-col sm:flex-row justify-between sm:items-end border-b-2 border-gray-200 pb-2 mb-4 gap-2">
+                        {/* 標題與重設按鈕 */}
+                        <header className="flex justify-between items-end border-b-2 border-gray-800 pb-2 mb-2">
                             <div>
-                                <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-wide">神經內科初診單</h1>
-                                <p className="text-xs md:text-sm text-red-500 font-medium mt-1">
-                                    ※ 該問卷僅供門診使用，並不會作為參與研究計畫或其他用途。
+                                <h1 className="text-xl md:text-2xl font-extrabold text-gray-900 tracking-wide">神經內科初診單</h1>
+                                <p className="text-[11px] md:text-xs text-gray-500 mt-1">
+                                    ※ 該問卷僅供門診使用，不作其他用途。 2024.09.12 廖醫師 (Rev. 2026.04)
                                 </p>
                             </div>
-                            <div className="text-left sm:text-right text-xs md:text-sm text-gray-500 flex justify-between sm:flex-col items-center sm:items-end w-full sm:w-auto">
-                                <span>2024.09.12 廖誼佳醫師 (Rev. 2026.01)</span>
-                                <button 
-                                    onClick={handleReset} 
-                                    className={`mt-2 sm:mt-1 border px-3 py-1.5 rounded text-xs transition-colors flex items-center gap-1 font-bold ${
-                                        confirmReset 
-                                        ? 'bg-red-600 text-white border-red-600 hover:bg-red-700 shadow-md transform scale-105' 
-                                        : 'text-red-600 hover:text-red-800 border-red-200 hover:bg-red-50'
-                                    }`}
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                    </svg>
-                                    {confirmReset ? '確定清除表單？' : '重設表單'}
-                                </button>
-                            </div>
+                            <button 
+                                onClick={handleReset} 
+                                className={`border px-2 py-1 rounded text-xs transition-all duration-300 flex items-center gap-1 font-bold ${
+                                    confirmReset ? 'bg-red-600 text-white border-red-600 shadow-md transform scale-105' : 'text-red-600 hover:text-red-800 border-red-200 hover:bg-red-50 hover:-translate-y-0.5 hover:shadow-sm'
+                                }`}
+                            >
+                                {confirmReset ? '確定清除?' : '重設表單'}
+                            </button>
                         </header>
 
-                        {/* 1. Admin Info */}
-                        <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 flex flex-col md:flex-row gap-4">
-                            <div className="flex-1">
-                                <label className="text-xs font-bold text-gray-600 uppercase mb-1 block">Chart No. 病歷號</label>
-                                <input type="text" name="chartNumber" value={formData.chartNumber} onChange={handleChange} ref={firstInputRef}
-                                    className="w-full font-mono text-lg font-bold text-gray-800 bg-white rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="請輸入" />
-                            </div>
-                            <div className="flex-1">
-                                <label className="text-xs font-bold text-gray-600 uppercase mb-1 block">Date 日期</label>
-                                <input type="date" name="visitDate" value={formData.visitDate} onChange={handleChange} 
-                                    className="w-full text-base bg-white rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none" />
-                            </div>
-                            <div className="flex-1">
-                                <label className="text-xs font-bold text-gray-600 uppercase mb-1 block">Order 診號</label>
-                                <input type="text" name="visitOrder" value={formData.visitOrder} onChange={handleChange} 
-                                    className="w-full text-base bg-white rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="例如: 15" />
-                            </div>
-                        </div>
-
-                        {/* 2. Vitals */}
-                        <div className="bg-red-50 p-4 rounded-xl border border-red-100 flex flex-col md:flex-row gap-4 items-end">
-                            <div className="flex-1 w-full">
-                                <label className="text-xs font-bold text-gray-600 mb-1 block">Weight 體重 (kg)</label>
-                                <input type="number" name="weight" value={formData.weight} onChange={handleChange} 
-                                    className="w-full text-xl font-bold text-center bg-white rounded border border-red-200 px-3 py-2 focus:ring-2 focus:ring-red-500 outline-none" placeholder="kg" />
-                            </div>
-                            <div className="flex-[2] w-full flex flex-col sm:flex-row gap-2 items-center">
-                                <div className="flex-1 w-full relative">
-                                    <label className="text-xs font-bold text-gray-500 mb-1 block text-center">收縮壓 SBP</label>
-                                    <input type="number" name="sbp" value={formData.sbp} onChange={handleChange} 
-                                        className="w-full text-center text-xl font-bold bg-white rounded border border-red-200 py-2 focus:ring-2 focus:ring-red-500 outline-none" placeholder="mmHg" />
+                        {/* 1. Admin Info & Vitals (加強 Hover 邊框與浮出效果) */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 border-b border-gray-200 pb-3">
+                            <div className="bg-blue-50/50 p-2 md:p-3 rounded-xl border border-blue-100 flex gap-2 hover:bg-blue-50 hover:shadow-lg hover:border-blue-300 hover:-translate-y-1 transition-all duration-300">
+                                <div className="flex-[1.5]">
+                                    <label className="text-[11px] font-bold text-gray-500 uppercase mb-0.5 block transition-colors group-hover:text-blue-600">Chart No. 病歷號</label>
+                                    <input type="text" name="chartNumber" value={formData.chartNumber} onChange={handleChange} ref={firstInputRef}
+                                        className={inputClass} placeholder="請輸入" />
                                 </div>
-                                <span className="text-2xl text-gray-400 hidden sm:block pt-4">/</span>
-                                <div className="flex-1 w-full relative">
-                                    <label className="text-xs font-bold text-gray-500 mb-1 block text-center">舒張壓 DBP</label>
-                                    <input type="number" name="dbp" value={formData.dbp} onChange={handleChange} 
-                                        className="w-full text-center text-xl font-bold bg-white rounded border border-red-200 py-2 focus:ring-2 focus:ring-red-500 outline-none" placeholder="mmHg" />
+                                <div className="flex-[1.5]">
+                                    <label className="text-[11px] font-bold text-gray-500 uppercase mb-0.5 block transition-colors group-hover:text-blue-600">Date 日期</label>
+                                    <input type="date" name="visitDate" value={formData.visitDate} onChange={handleChange} 
+                                        className={inputClass} />
+                                </div>
+                                <div className="flex-1 shrink-0">
+                                    <label className="text-[11px] font-bold text-gray-500 uppercase mb-0.5 block transition-colors group-hover:text-blue-600">Order 診號</label>
+                                    <input type="text" name="visitOrder" value={formData.visitOrder} onChange={handleChange} 
+                                        className={inputClass} placeholder="診號" />
                                 </div>
                             </div>
-                            <div className="flex-1 w-full">
-                                <label className="text-xs font-bold text-gray-500 mb-1 block text-center">心跳 HR</label>
-                                <input type="number" name="hr" value={formData.hr} onChange={handleChange} 
-                                    className="w-full text-center text-xl font-bold bg-white rounded border border-red-200 px-3 py-2 focus:ring-2 focus:ring-red-500 outline-none" placeholder="bpm" />
-                            </div>
-                        </div>
-
-                        {/* --- Main Form Sections --- */}
-                        <div className="space-y-3 bg-gray-50/50 p-2 md:p-4 rounded-xl border border-gray-100">
                             
-                            <h2 className="text-lg font-bold text-gray-800 px-2 py-1 mb-2 border-b-2 border-gray-200">基本資料 Demographics</h2>
-                            
-                            <FormRow title="年齡">
-                                <div className="flex items-center w-full md:w-1/3">
-                                    <input type="number" name="age" value={formData.age} onChange={handleChange} className="w-full text-xl text-center font-bold bg-white rounded border border-gray-300 py-2 focus:ring-2 focus:ring-blue-500 outline-none shadow-sm" placeholder="輸入歲數" />
-                                    <span className="ml-2 font-bold text-gray-500">歲</span>
+                            <div className="bg-red-50/50 p-2 md:p-3 rounded-xl border border-red-100 flex gap-2 items-end hover:bg-red-50 hover:shadow-lg hover:border-red-300 hover:-translate-y-1 transition-all duration-300">
+                                <div className="w-16 shrink-0">
+                                    <label className="text-[11px] font-bold text-gray-500 mb-0.5 block transition-colors group-hover:text-red-600">體重 (kg)</label>
+                                    <input type="number" name="weight" value={formData.weight} onChange={handleChange} 
+                                        className={`text-center ${inputClass}`} placeholder="kg" />
                                 </div>
-                            </FormRow>
-
-                            <FormRow title="生理性別">
-                                <div className="flex gap-3 w-full max-w-sm">
-                                    <RadioCard name="gender" value="男" checked={formData.gender === '男'} onChange={handleChange} label="男" />
-                                    <RadioCard name="gender" value="女" checked={formData.gender === '女'} onChange={handleChange} label="女" />
-                                </div>
-                            </FormRow>
-
-                            <FormRow title="慣用手">
-                                <div className="flex gap-3 w-full max-w-sm">
-                                    <RadioCard name="hand" value="右手" checked={formData.hand === '右手'} onChange={handleChange} label="右手" />
-                                    <RadioCard name="hand" value="左手" checked={formData.hand === '左手'} onChange={handleChange} label="左手" />
-                                </div>
-                            </FormRow>
-
-                            <FormRow title="飲食習慣">
-                                <div className="flex gap-3 w-full max-w-sm">
-                                    <RadioCard name="diet" value="非全素" checked={formData.diet === '非全素'} onChange={handleChange} label="非全素" />
-                                    <RadioCard name="diet" value="全素" checked={formData.diet === '全素'} onChange={handleChange} label="全素" />
-                                </div>
-                            </FormRow>
-
-                            <FormRow title="婚姻狀況">
-                                <div className="flex flex-col gap-3 w-full">
-                                    <div className="flex gap-3 w-full lg:w-2/3">
-                                        <RadioCard name="marriage" value="未婚" checked={formData.marriage === '未婚'} onChange={handleChange} label="未婚" />
-                                        <RadioCard name="marriage" value="已婚" checked={formData.marriage === '已婚'} onChange={handleChange} label="已婚" />
-                                        <RadioCard name="marriage" value="離婚" checked={formData.marriage === '離婚'} onChange={handleChange} label="離婚" />
+                                <div className="flex-1 flex items-center gap-1">
+                                    <div className="flex-1">
+                                        <label className="text-[10px] font-bold text-gray-400 mb-0.5 block text-center transition-colors group-hover:text-red-500">收縮 SBP</label>
+                                        <input type="number" name="sbp" value={formData.sbp} onChange={handleChange} 
+                                            className={`text-center ${inputClass}`} placeholder="mmHg" />
                                     </div>
-                                    {(formData.marriage === '已婚' || formData.marriage === '離婚') && (
-                                        <div className="flex items-center bg-gray-50 p-3 rounded-lg border border-gray-200 animate-fade-in w-full md:w-1/2 shadow-inner">
-                                            <span className="font-medium mr-2">育有子女數:</span>
-                                            <input type="number" name="childrenCount" value={formData.childrenCount} onChange={handleChange} className="flex-grow text-center text-lg bg-white border border-gray-300 rounded p-1 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="人數" />
-                                        </div>
-                                    )}
-                                </div>
-                            </FormRow>
-
-                            <FormRow title="居住地">
-                                <div className="flex flex-col gap-3 w-full">
-                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full">
-                                        {['宜蘭市', '羅東', '礁溪', '頭城', '壯圍', '員山', '台北', '其他'].map((place) => (
-                                            <RadioCard key={place} name="residence" value={place} checked={formData.residence === place} onChange={handleChange} label={place} />
-                                        ))}
+                                    <span className="text-sm text-gray-300 pt-3">/</span>
+                                    <div className="flex-1">
+                                        <label className="text-[10px] font-bold text-gray-400 mb-0.5 block text-center transition-colors group-hover:text-red-500">舒張 DBP</label>
+                                        <input type="number" name="dbp" value={formData.dbp} onChange={handleChange} 
+                                            className={`text-center ${inputClass}`} placeholder="mmHg" />
                                     </div>
-                                    {formData.residence === '其他' && (
-                                        <input type="text" name="residenceOther" value={formData.residenceOther} onChange={handleChange} className="w-full p-3 bg-white border border-gray-300 shadow-inner rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-base" placeholder="請輸入地點" />
-                                    )}
                                 </div>
-                            </FormRow>
-
-                            <h2 className="text-lg font-bold text-gray-800 px-2 py-1 mb-2 mt-6 border-b-2 border-gray-200">社會背景 Social History</h2>
-
-                            <FormRow title="職業">
-                                <div className="flex flex-col gap-3 w-full">
-                                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-2 w-full">
-                                        {['無', '家管', '農', '商', '軍', '工', '其他'].map((cat) => (
-                                            <RadioCard key={cat} name="jobCategory" value={cat} checked={formData.jobCategory === cat} onChange={handleChange} label={cat} />
-                                        ))}
-                                    </div>
-                                    <input type="text" name="job" value={formData.job} onChange={handleChange} 
-                                        className="w-full p-3 border border-gray-300 shadow-inner rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none text-base" placeholder="詳細職稱，例如：業務經理、水泥工..." />
+                                <div className="w-16 shrink-0">
+                                    <label className="text-[10px] font-bold text-gray-400 mb-0.5 block text-center transition-colors group-hover:text-red-500">心跳 HR</label>
+                                    <input type="number" name="hr" value={formData.hr} onChange={handleChange} 
+                                        className={`text-center ${inputClass}`} placeholder="bpm" />
                                 </div>
-                            </FormRow>
-
-                            <FormRow title="接觸有毒物質?">
-                                <div className="flex flex-col gap-3 w-full">
-                                    <div className="flex gap-3 w-full md:w-1/2">
-                                        <RadioCard name="toxicExposure" value="否" checked={formData.toxicExposure === '否'} onChange={handleChange} label="否" />
-                                        <RadioCard name="toxicExposure" value="是" checked={formData.toxicExposure === '是'} onChange={handleChange} label="是" />
-                                    </div>
-                                    {formData.toxicExposure === '是' && (
-                                        <input type="text" name="toxicExposureDetail" value={formData.toxicExposureDetail} onChange={handleChange} 
-                                            className="w-full p-3 bg-white border border-gray-300 rounded-lg shadow-inner focus:ring-2 focus:ring-blue-500 outline-none text-base" placeholder="請說明化學/揮發物質..." />
-                                    )}
-                                </div>
-                            </FormRow>
-
-                            <FormRow title="教育程度">
-                                <div className="flex flex-col gap-3 w-full">
-                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full">
-                                        {[
-                                            {v: '未就學', l: '未就學'}, {v: '國小(6)', l: '國小'}, 
-                                            {v: '國中(9)', l: '國中'}, {v: '高中(12)', l: '高中'}, 
-                                            {v: '大學(16)', l: '大學'}, {v: '碩士(18)', l: '碩士'}, 
-                                            {v: '博士(22)', l: '博士'}, {v: '其他', l: '其他'}
-                                        ].map((edu) => (
-                                            <RadioCard key={edu.v} name="education" value={edu.v} checked={formData.education === edu.v} onChange={handleChange} label={edu.l} />
-                                        ))}
-                                    </div>
-                                    {formData.education === '其他' && (
-                                        <input type="text" name="educationOther" value={formData.educationOther} onChange={handleChange} 
-                                            className="w-full p-3 border border-gray-300 rounded-lg shadow-inner bg-white focus:ring-2 focus:ring-blue-500 outline-none text-base" placeholder="請說明" />
-                                    )}
-                                </div>
-                            </FormRow>
-
-                            <h2 className="text-lg font-bold text-gray-800 px-2 py-1 mb-2 mt-6 border-b-2 border-gray-200">過去病史與醫療 Medical History</h2>
-
-                            <FormRow title="過去病史 (可複選)">
-                                <div className="flex flex-col gap-3 w-full">
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 w-full">
-                                        {['糖尿病', '高血壓', '高血脂', '中風', '心肌梗塞', '癌症', '其他'].map((d) => (
-                                            <CheckboxButton key={d} name="history" value={d} checked={formData.history.includes(d)} onChange={handleChange} label={d} />
-                                        ))}
-                                    </div>
-                                    {formData.history.includes('其他') && (
-                                        <input type="text" name="historyOther" value={formData.historyOther} onChange={handleChange} 
-                                            className="w-full p-3 bg-white border border-gray-300 rounded-lg shadow-inner focus:ring-2 focus:ring-blue-500 outline-none text-base" placeholder="請補充其他病史..." />
-                                    )}
-                                </div>
-                            </FormRow>
-
-                            <FormRow title="目前用藥 (可複選)">
-                                <div className="flex flex-col gap-3 w-full">
-                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full">
-                                        <CheckboxButton name="medications" value="抗血小板/抗凝血藥物" checked={formData.medications.includes('抗血小板/抗凝血藥物')} onChange={handleChange} label="抗血小板" />
-                                        <CheckboxButton name="medications" value="心律不整藥物" checked={formData.medications.includes('心律不整藥物')} onChange={handleChange} label="心律不整" />
-                                        <CheckboxButton name="medications" value="中藥" checked={formData.medications.includes('中藥')} onChange={handleChange} label="中藥" />
-                                        <CheckboxButton name="medications" value="其他" checked={formData.medications.includes('其他')} onChange={handleChange} label="其他" />
-                                    </div>
-                                    
-                                    {(formData.medications.includes('抗血小板/抗凝血藥物') || formData.medications.includes('其他')) && (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-1">
-                                            {formData.medications.includes('抗血小板/抗凝血藥物') && (
-                                                <input type="text" name="medsAntiplateletDetail" value={formData.medsAntiplateletDetail} onChange={handleChange} className="w-full p-3 bg-white border border-gray-300 shadow-inner rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-base" placeholder="抗血小板藥名 (例: Bokey)" />
-                                            )}
-                                            {formData.medications.includes('其他') && (
-                                                <input type="text" name="medsOther" value={formData.medsOther} onChange={handleChange} className="w-full p-3 bg-white border border-gray-300 shadow-inner rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-base" placeholder="其他藥物說明" />
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            </FormRow>
-
-                            <FormRow title="手術史">
-                                <div className="flex flex-col gap-3 w-full">
-                                    <div className="flex gap-3 w-full md:w-1/2">
-                                        <RadioCard name="surgery" value="無" checked={formData.surgery === '無'} onChange={handleChange} label="無" />
-                                        <RadioCard name="surgery" value="有" checked={formData.surgery === '有'} onChange={handleChange} label="有" />
-                                    </div>
-                                    
-                                    {formData.surgery === '有' && (
-                                        <div className="flex flex-col gap-3 animate-fade-in bg-gray-50 p-4 rounded-xl border border-gray-200">
-                                            <div className="flex flex-wrap gap-2">
-                                                <CheckboxButton name="spineSurgery" value="true" checked={formData.spineSurgery} onChange={handleChange} label="脊椎手術" className="flex-1" />
-                                                <CheckboxButton name="cancerSurgery" value="true" checked={formData.cancerSurgery} onChange={handleChange} label="癌症手術" className="flex-1" />
-                                            </div>
-                                            <input type="text" name="surgeryDetails" value={formData.surgeryDetails} onChange={handleChange} 
-                                                className="w-full p-3 bg-white border border-gray-300 shadow-inner rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-base" placeholder="請說明其他手術項目及年份..." />
-                                        </div>
-                                    )}
-                                </div>
-                            </FormRow>
-
-                            <FormRow title="家族病史">
-                                <input type="text" name="familyHistory" value={formData.familyHistory} onChange={handleChange} 
-                                    className="w-full p-3 border border-gray-300 rounded-lg bg-white shadow-inner focus:ring-2 focus:ring-blue-500 outline-none text-base" placeholder="無，或請詳述 (例如: 父親有中風...)" />
-                            </FormRow>
-
-                            <h2 className="text-lg font-bold text-gray-800 px-2 py-1 mb-2 mt-6 border-b-2 border-gray-200">習慣與接觸史 Habits & Exposure</h2>
-
-                            <FormRow title="過敏史">
-                                <div className="flex flex-col gap-3 w-full">
-                                    <div className="flex gap-3 w-full md:w-1/2">
-                                        <RadioCard name="allergies" value="無" checked={formData.allergies === '無'} onChange={handleChange} label="無" />
-                                        <RadioCard name="allergies" value="有" checked={formData.allergies === '有'} onChange={handleChange} label="有" />
-                                    </div>
-                                    {formData.allergies === '有' && (
-                                        <div className="flex flex-col sm:flex-row gap-3 animate-fade-in bg-gray-50 p-3 rounded-lg border border-gray-200">
-                                            <div className="flex items-center gap-2 flex-1">
-                                                <span className="font-bold text-gray-600 shrink-0">藥物:</span>
-                                                <input type="text" name="allergyDrug" value={formData.allergyDrug} onChange={handleChange} className="w-full bg-white border border-gray-300 shadow-inner rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="藥名" />
-                                            </div>
-                                            <div className="flex items-center gap-2 flex-1">
-                                                <span className="font-bold text-gray-600 shrink-0">食物:</span>
-                                                <input type="text" name="allergyFood" value={formData.allergyFood} onChange={handleChange} className="w-full bg-white border border-gray-300 shadow-inner rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="食物" />
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </FormRow>
-
-                            <FormRow title="動植物接觸">
-                                <div className="flex flex-col gap-3 w-full">
-                                    <div className="flex gap-3 w-full md:w-1/2">
-                                        <RadioCard name="animalsPlants" value="無" checked={formData.animalsPlants === '無'} onChange={handleChange} label="無" />
-                                        <RadioCard name="animalsPlants" value="有" checked={formData.animalsPlants === '有'} onChange={handleChange} label="有" />
-                                    </div>
-                                    {formData.animalsPlants === '有' && (
-                                        <input type="text" name="animalsPlantsDetail" value={formData.animalsPlantsDetail} onChange={handleChange} 
-                                            className="w-full p-3 border border-gray-300 rounded-lg shadow-inner bg-white focus:ring-2 focus:ring-blue-500 outline-none text-base" placeholder="請說明 (例如: 養貓、種蘭花...)" />
-                                    )}
-                                </div>
-                            </FormRow>
-
-                            <FormRow title="旅遊史 (近三個月)">
-                                <div className="flex flex-col gap-3 w-full overflow-hidden">
-                                    <div className="flex flex-nowrap overflow-x-auto gap-2 pb-2 w-full hide-scrollbar">
-                                        {['無', '台灣', '日本', '韓國', '美國', '中國'].map((loc) => (
-                                            <CheckboxButton key={loc} name="travelHistory" value={loc} checked={formData.travelHistory.includes(loc)} onChange={handleChange} label={loc} className="shrink-0 min-w-[80px]" />
-                                        ))}
-                                    </div>
-                                    <input type="text" name="travelHistoryOther" value={formData.travelHistoryOther} onChange={handleChange} 
-                                        className="w-full p-3 border border-gray-300 rounded-lg shadow-inner bg-white focus:ring-2 focus:ring-blue-500 outline-none text-base" placeholder="其他地點說明..." />
-                                </div>
-                            </FormRow>
-
-                            <FormRow title="飲酒">
-                                <div className="flex flex-col gap-3 w-full">
-                                    <div className="flex gap-3 w-full md:w-2/3">
-                                        <RadioCard name="alcohol" value="無" checked={formData.alcohol === '無'} onChange={handleChange} label="無" />
-                                        <RadioCard name="alcohol" value="小酌" checked={formData.alcohol === '小酌'} onChange={handleChange} label="小酌" />
-                                        <RadioCard name="alcohol" value="有" checked={formData.alcohol === '有'} onChange={handleChange} label="有" />
-                                    </div>
-                                    {formData.alcohol === '有' && (
-                                         <input type="text" name="alcoholDetail" value={formData.alcoholDetail} onChange={handleChange} 
-                                            className="w-full p-3 border border-gray-300 shadow-inner rounded-lg bg-white animate-fade-in focus:ring-2 focus:ring-blue-500 outline-none text-base" placeholder="請說明 (例如: 每天高粱半杯)" />
-                                    )}
-                                </div>
-                            </FormRow>
-
-                            <FormRow title="抽菸">
-                                <div className="flex flex-col gap-3 w-full">
-                                    <div className="flex gap-3 w-full md:w-2/3">
-                                        <RadioCard name="smoking" value="無" checked={formData.smoking === '無'} onChange={handleChange} label="無" />
-                                        <RadioCard name="smoking" value="已戒菸" checked={formData.smoking === '已戒菸'} onChange={handleChange} label="已戒菸" />
-                                        <RadioCard name="smoking" value="有" checked={formData.smoking === '有'} onChange={handleChange} label="有" />
-                                    </div>
-                                    
-                                    {formData.smoking === '有' && (
-                                        <div className="animate-fade-in bg-gray-50 p-4 rounded-xl border border-gray-200 flex flex-wrap gap-2 items-center text-lg">
-                                            <span>一天</span>
-                                            <input type="number" name="smokingPacks" value={formData.smokingPacks} onChange={handleChange} className="w-16 text-center border border-gray-300 shadow-inner rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none bg-white" />
-                                            <span>包，已抽</span>
-                                            <input type="number" name="smokingYears" value={formData.smokingYears} onChange={handleChange} className="w-16 text-center border border-gray-300 shadow-inner rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none bg-white" />
-                                            <span>年</span>
-                                        </div>
-                                    )}
-                                    {formData.smoking === '已戒菸' && (
-                                        <div className="animate-fade-in bg-gray-50 p-4 rounded-xl border border-gray-200 flex flex-wrap gap-2 items-center text-lg">
-                                            <span>共抽</span>
-                                            <input type="number" name="smokingYears" value={formData.smokingYears} onChange={handleChange} className="w-16 text-center border border-gray-300 shadow-inner rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none bg-white" />
-                                            <span>年，已戒</span>
-                                            <input type="number" name="quitYears" value={formData.quitYears} onChange={handleChange} className="w-16 text-center border border-gray-300 shadow-inner rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none bg-white" />
-                                            <span>年</span>
-                                        </div>
-                                    )}
-                                </div>
-                            </FormRow>
-
+                            </div>
                         </div>
 
-                        {/* Female Only Section */}
-                        {formData.gender === '女' && (
-                            <div className="space-y-3 bg-pink-50/50 p-2 md:p-4 rounded-xl border-2 border-pink-200 mt-6 animate-fade-in">
-                                <h2 className="text-lg font-bold text-pink-800 px-2 py-1 mb-2 border-b-2 border-pink-200 flex items-center">
-                                    <span className="bg-pink-600 text-white px-2 py-0.5 rounded-lg text-xs mr-2">女性專屬</span>
-                                    婦科病史 Gynecology
+                        {/* --- Main 雙欄式扁平版面 --- */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-2 items-start pt-2">
+                            
+                            {/* 👈 左欄 */}
+                            <div className="flex flex-col w-full">
+                                
+                                {/* 標題：基本資料 (靛藍色系 Hover 縮排與底色加深) */}
+                                <h2 className="text-[13px] font-extrabold text-indigo-800 border-b-2 border-indigo-200 hover:border-indigo-400 hover:bg-indigo-100/50 hover:pl-3 hover:shadow-sm transition-all duration-300 pb-1 mb-1 mt-2 uppercase tracking-wider rounded-t cursor-default">
+                                    Demographics 基本資料
                                 </h2>
-
-                                <FormRow title="月經狀況">
-                                    <div className="flex flex-col sm:flex-row gap-3 w-full items-start sm:items-center">
-                                        <div className="flex gap-2 w-full lg:w-2/3">
-                                            <RadioCard name="menopause" value="已停經" checked={formData.menopause === '已停經'} onChange={handleChange} label="已停經" />
-                                            <RadioCard name="menopause" value="不規則" checked={formData.menopause === '不規則'} onChange={handleChange} label="不規則" />
-                                            <RadioCard name="menopause" value="規則" checked={formData.menopause === '規則'} onChange={handleChange} label="規則" />
+                                
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+                                    <FormRow title="年齡" hoverColor="group-hover:text-indigo-600">
+                                        <div className="flex items-center">
+                                            <input type="number" name="age" value={formData.age} onChange={handleChange} className={`text-center ${inputClass}`} placeholder="歲數" />
+                                            <span className="ml-1 font-bold text-gray-400 text-xs shrink-0">歲</span>
                                         </div>
-                                        {formData.menopause === '規則' && (
-                                            <div className="flex items-center gap-2 bg-white px-3 py-3 rounded-xl border border-pink-200 shadow-inner w-full sm:w-auto mt-2 sm:mt-0">
-                                                <span className="text-base font-bold shrink-0 text-pink-800">上次日期:</span>
-                                                <input type="date" name="menopauseDate" value={formData.menopauseDate} onChange={handleChange} className="border-none focus:ring-0 text-base bg-transparent outline-none w-full" />
+                                    </FormRow>
+                                    <FormRow title="生理性別" hoverColor="group-hover:text-indigo-600">
+                                        <div className="flex gap-1 w-full">
+                                            <RadioCard name="gender" value="男" checked={formData.gender === '男'} onChange={handleChange} label="男" />
+                                            <RadioCard name="gender" value="女" checked={formData.gender === '女'} onChange={handleChange} label="女" />
+                                        </div>
+                                    </FormRow>
+                                    <FormRow title="慣用手" hoverColor="group-hover:text-indigo-600">
+                                        <div className="flex gap-1 w-full">
+                                            <RadioCard name="hand" value="右手" checked={formData.hand === '右手'} onChange={handleChange} label="右手" />
+                                            <RadioCard name="hand" value="左手" checked={formData.hand === '左手'} onChange={handleChange} label="左手" />
+                                        </div>
+                                    </FormRow>
+                                    <FormRow title="飲食習慣" hoverColor="group-hover:text-indigo-600">
+                                        <div className="flex gap-1 w-full">
+                                            <RadioCard name="diet" value="非全素" checked={formData.diet === '非全素'} onChange={handleChange} label="葷/蛋" />
+                                            <RadioCard name="diet" value="全素" checked={formData.diet === '全素'} onChange={handleChange} label="全素" />
+                                        </div>
+                                    </FormRow>
+                                </div>
+
+                                <FormRow title="婚姻狀況" hoverColor="group-hover:text-indigo-600">
+                                    <div className="flex flex-col sm:flex-row gap-1.5 w-full">
+                                        <div className="flex gap-1 w-full sm:w-auto">
+                                            <RadioCard name="marriage" value="未婚" checked={formData.marriage === '未婚'} onChange={handleChange} label="未婚" />
+                                            <RadioCard name="marriage" value="已婚" checked={formData.marriage === '已婚'} onChange={handleChange} label="已婚" />
+                                            <RadioCard name="marriage" value="離婚" checked={formData.marriage === '離婚'} onChange={handleChange} label="離婚" />
+                                        </div>
+                                        {(formData.marriage === '已婚' || formData.marriage === '離婚') && (
+                                            <div className="flex items-center flex-grow pl-2">
+                                                <span className="font-bold text-xs text-gray-500 mr-1.5 whitespace-nowrap">子女數:</span>
+                                                <input type="number" name="childrenCount" value={formData.childrenCount} onChange={handleChange} className={`w-16 text-center ${inputClass}`} />
                                             </div>
                                         )}
                                     </div>
                                 </FormRow>
 
-                                <FormRow title="懷孕狀況">
-                                    <div className="flex gap-3 w-full md:w-2/3">
-                                        <RadioCard name="pregnancy" value="確認無" checked={formData.pregnancy === '確認無'} onChange={handleChange} label="確認無" />
-                                        <RadioCard name="pregnancy" value="可能/準備中" checked={formData.pregnancy === '可能/準備中'} onChange={handleChange} label="可能/準備" />
+                                <FormRow title="居住地" hoverColor="group-hover:text-indigo-600">
+                                    <div className="flex flex-wrap gap-1 w-full">
+                                        {['宜蘭市', '羅東', '礁溪', '頭城', '壯圍', '員山', '台北', '其他'].map((place) => (
+                                            <div className="flex-1 min-w-[45px]" key={place}>
+                                                <RadioCard name="residence" value={place} checked={formData.residence === place} onChange={handleChange} label={place} />
+                                            </div>
+                                        ))}
+                                    </div>
+                                    {formData.residence === '其他' && (
+                                        <input type="text" name="residenceOther" value={formData.residenceOther} onChange={handleChange} className={`mt-1 ${inputClass}`} placeholder="輸入地點" />
+                                    )}
+                                </FormRow>
+
+                                {/* 標題：社會背景 (翠綠色系 Hover 縮排與底色加深) */}
+                                <h2 className="text-[13px] font-extrabold text-emerald-800 border-b-2 border-emerald-200 hover:border-emerald-400 hover:bg-emerald-100/50 hover:pl-3 hover:shadow-sm transition-all duration-300 pb-1 mb-1 mt-4 uppercase tracking-wider rounded-t cursor-default">
+                                    Social History 社會背景
+                                </h2>
+
+                                <FormRow title="職業" hoverColor="group-hover:text-emerald-600">
+                                    <div className="flex flex-wrap gap-1 w-full">
+                                        {['無', '家管', '農', '商', '工', '軍', '服務業', '其他'].map((cat) => (
+                                            <div className="flex-1 min-w-[45px]" key={cat}>
+                                                <RadioCard name="jobCategory" value={cat} checked={formData.jobCategory === cat} onChange={handleChange} label={cat} />
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <input type="text" name="job" value={formData.job} onChange={handleChange} className={`mt-1 ${inputClass}`} placeholder="詳細職稱..." />
+                                </FormRow>
+
+                                <FormRow title="毒/揮發物?" hoverColor="group-hover:text-emerald-600">
+                                    <div className="flex flex-col sm:flex-row gap-1.5 w-full">
+                                        <div className="flex gap-1 w-full sm:w-1/4">
+                                            <RadioCard name="toxicExposure" value="否" checked={formData.toxicExposure === '否'} onChange={handleChange} label="否" />
+                                            <RadioCard name="toxicExposure" value="是" checked={formData.toxicExposure === '是'} onChange={handleChange} label="是" />
+                                        </div>
+                                        {formData.toxicExposure === '是' && (
+                                            <input type="text" name="toxicExposureDetail" value={formData.toxicExposureDetail} onChange={handleChange} className={`flex-grow pl-1 ${inputClass}`} placeholder="說明物質..." />
+                                        )}
                                     </div>
                                 </FormRow>
 
-                                <FormRow title="使用賀爾蒙藥?">
-                                    <div className="flex gap-3 w-full md:w-1/2">
-                                        <RadioCard name="hormoneDrug" value="否" checked={formData.hormoneDrug === '否'} onChange={handleChange} label="否" />
-                                        <RadioCard name="hormoneDrug" value="是" checked={formData.hormoneDrug === '是'} onChange={handleChange} label="是" />
+                                <FormRow title="教育程度" hoverColor="group-hover:text-emerald-600">
+                                    <div className="flex flex-wrap gap-1 w-full">
+                                        {[ {v: '未就學', l: '未就學'}, {v: '國小(6)', l: '國小'}, {v: '國中(9)', l: '國中'}, {v: '高中(12)', l: '高中'}, 
+                                           {v: '大學(16)', l: '大學'}, {v: '碩士(18)', l: '碩士'}, {v: '博士(22)', l: '博士'}, {v: '其他', l: '其他'}
+                                        ].map((edu) => (
+                                            <div className="flex-1 min-w-[45px]" key={edu.v}>
+                                                <RadioCard name="education" value={edu.v} checked={formData.education === edu.v} onChange={handleChange} label={edu.l} />
+                                            </div>
+                                        ))}
                                     </div>
+                                    {formData.education === '其他' && (
+                                        <input type="text" name="educationOther" value={formData.educationOther} onChange={handleChange} className={`mt-1 ${inputClass}`} placeholder="說明" />
+                                    )}
                                 </FormRow>
+
+                                {/* 女性專屬 */}
+                                {formData.gender === '女' && (
+                                    <div className="mt-4 pt-1">
+                                        {/* 標題：婦科病史 (粉紅色系 Hover 縮排與底色加深) */}
+                                        <h2 className="text-[13px] font-extrabold text-pink-700 border-b-2 border-pink-200 hover:border-pink-400 hover:bg-pink-100/50 hover:pl-3 hover:shadow-sm transition-all duration-300 pb-1 mb-1 flex items-center uppercase tracking-wider rounded-t cursor-default">
+                                            <span className="bg-pink-100 text-pink-800 px-1.5 py-0.5 rounded text-[10px] mr-1.5">Female</span>
+                                            Gynecology 婦科病史
+                                        </h2>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+                                            <FormRow title="月經狀況" labelClass="text-pink-700" hoverColor="group-hover:text-pink-500">
+                                                <div className="flex flex-col gap-1 w-full">
+                                                    <div className="flex gap-1 w-full">
+                                                        <RadioCard name="menopause" value="已停經" checked={formData.menopause === '已停經'} onChange={handleChange} label="已停經" />
+                                                        <RadioCard name="menopause" value="不規則" checked={formData.menopause === '不規則'} onChange={handleChange} label="不規則" />
+                                                        <RadioCard name="menopause" value="規則" checked={formData.menopause === '規則'} onChange={handleChange} label="規則" />
+                                                    </div>
+                                                    {formData.menopause === '規則' && (
+                                                        <div className="flex items-center gap-1.5 pl-1">
+                                                            <span className="text-[11px] font-bold text-pink-600">上次:</span>
+                                                            <input type="date" name="menopauseDate" value={formData.menopauseDate} onChange={handleChange} className={`text-xs flex-grow ${inputClass} focus:border-pink-500 hover:border-pink-400 hover:bg-pink-50/50 border-pink-200`} />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </FormRow>
+                                            <div className="flex flex-col">
+                                                <FormRow title="懷孕狀況" labelClass="text-pink-700" hoverColor="group-hover:text-pink-500">
+                                                    <div className="flex gap-1 w-full">
+                                                        <RadioCard name="pregnancy" value="確認無" checked={formData.pregnancy === '確認無'} onChange={handleChange} label="無" />
+                                                        <RadioCard name="pregnancy" value="可能/準備中" checked={formData.pregnancy === '可能/準備中'} onChange={handleChange} label="準備/可能" />
+                                                    </div>
+                                                </FormRow>
+                                                <FormRow title="賀爾蒙藥" labelClass="text-pink-700" hoverColor="group-hover:text-pink-500">
+                                                    <div className="flex gap-1 w-full sm:w-1/2">
+                                                        <RadioCard name="hormoneDrug" value="否" checked={formData.hormoneDrug === '否'} onChange={handleChange} label="否" />
+                                                        <RadioCard name="hormoneDrug" value="是" checked={formData.hormoneDrug === '是'} onChange={handleChange} label="是" />
+                                                    </div>
+                                                </FormRow>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-                        )}
 
-                        {/* Summary Section */}
-                        <section className="mt-8 bg-slate-800 text-white p-5 rounded-2xl shadow-xl">
-                            <div className="flex justify-between items-center mb-3">
-                                <h3 className="font-bold flex items-center text-base">
-                                    <span className="w-3 h-3 bg-green-400 rounded-full mr-2 shadow-[0_0_10px_#4ade80]"></span>
-                                    病歷摘要生成 (Auto-Summary)
+                            {/* 👉 右欄 */}
+                            <div className="flex flex-col w-full">
+                                
+                                {/* 標題：過去病史 (紫羅蘭色系 Hover 縮排與底色加深) */}
+                                <h2 className="text-[13px] font-extrabold text-violet-800 border-b-2 border-violet-200 hover:border-violet-400 hover:bg-violet-100/50 hover:pl-3 hover:shadow-sm transition-all duration-300 pb-1 mb-1 mt-2 uppercase tracking-wider rounded-t cursor-default">
+                                    Medical History 過去病史
+                                </h2>
+
+                                <FormRow title="過去病史" hoverColor="group-hover:text-violet-600">
+                                    <div className="flex flex-wrap gap-1 w-full">
+                                        {['糖尿病', '高血壓', '高血脂', '痛風', '中風', '心肌梗塞', '癌症', '其他'].map((d) => (
+                                            <div className="flex-1 min-w-[65px]" key={d}>
+                                                <CheckboxButton name="history" value={d} checked={formData.history.includes(d)} onChange={handleChange} label={d} />
+                                            </div>
+                                        ))}
+                                    </div>
+                                    {formData.history.includes('其他') && (
+                                        <input type="text" name="historyOther" value={formData.historyOther} onChange={handleChange} className={`mt-1 ${inputClass}`} placeholder="補充病史..." />
+                                    )}
+                                </FormRow>
+
+                                <FormRow title="目前用藥" hoverColor="group-hover:text-violet-600">
+                                    <div className="flex flex-wrap gap-1 w-full">
+                                        <div className="flex-[1.5] min-w-[100px]"><CheckboxButton name="medications" value="抗血小板/抗凝血藥物" checked={formData.medications.includes('抗血小板/抗凝血藥物')} onChange={handleChange} label="抗血小板/凝血" /></div>
+                                        <div className="flex-1 min-w-[65px]"><CheckboxButton name="medications" value="心律不整藥物" checked={formData.medications.includes('心律不整藥物')} onChange={handleChange} label="心律不整" /></div>
+                                        <div className="flex-1 min-w-[45px]"><CheckboxButton name="medications" value="中藥" checked={formData.medications.includes('中藥')} onChange={handleChange} label="中藥" /></div>
+                                        <div className="flex-1 min-w-[45px]"><CheckboxButton name="medications" value="其他" checked={formData.medications.includes('其他')} onChange={handleChange} label="其他" /></div>
+                                    </div>
+                                    
+                                    {(formData.medications.includes('抗血小板/抗凝血藥物') || formData.medications.includes('其他')) && (
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1 pl-1">
+                                            {formData.medications.includes('抗血小板/抗凝血藥物') && (
+                                                <input type="text" name="medsAntiplateletDetail" value={formData.medsAntiplateletDetail} onChange={handleChange} className={inputClass} placeholder="抗血小板藥名..." />
+                                            )}
+                                            {formData.medications.includes('其他') && (
+                                                <input type="text" name="medsOther" value={formData.medsOther} onChange={handleChange} className={inputClass} placeholder="其他藥物..." />
+                                            )}
+                                        </div>
+                                    )}
+                                </FormRow>
+
+                                <FormRow title="手術史" hoverColor="group-hover:text-violet-600">
+                                    <div className="flex flex-col sm:flex-row gap-1.5 w-full">
+                                        <div className="flex gap-1 w-full sm:w-1/4">
+                                            <RadioCard name="surgery" value="無" checked={formData.surgery === '無'} onChange={handleChange} label="無" />
+                                            <RadioCard name="surgery" value="有" checked={formData.surgery === '有'} onChange={handleChange} label="有" />
+                                        </div>
+                                        {formData.surgery === '有' && (
+                                            <div className="flex flex-col gap-1 flex-grow animate-fade-in pl-1 border-l-2 border-gray-100">
+                                                <div className="flex gap-1">
+                                                    <CheckboxButton name="brainSurgery" value="true" checked={formData.brainSurgery} onChange={handleChange} label="腦" className="flex-1" />
+                                                    <CheckboxButton name="spineSurgery" value="true" checked={formData.spineSurgery} onChange={handleChange} label="脊椎" className="flex-1" />
+                                                    <CheckboxButton name="cancerSurgery" value="true" checked={formData.cancerSurgery} onChange={handleChange} label="癌症" className="flex-1" />
+                                                </div>
+                                                <input type="text" name="surgeryDetails" value={formData.surgeryDetails} onChange={handleChange} className={inputClass} placeholder="其他項目/年份..." />
+                                            </div>
+                                        )}
+                                    </div>
+                                </FormRow>
+
+                                <FormRow title="家族病史" hoverColor="group-hover:text-violet-600">
+                                    <input type="text" name="familyHistory" value={formData.familyHistory} onChange={handleChange} className={inputClass} placeholder="無，或請詳述..." />
+                                </FormRow>
+
+                                {/* 標題：習慣與接觸史 (琥珀橘色系 Hover 縮排與底色加深) */}
+                                <h2 className="text-[13px] font-extrabold text-amber-700 border-b-2 border-amber-200 hover:border-amber-400 hover:bg-amber-100/50 hover:pl-3 hover:shadow-sm transition-all duration-300 pb-1 mb-1 mt-4 uppercase tracking-wider rounded-t cursor-default">
+                                    Habits & Exposure 習慣與接觸
+                                </h2>
+
+                                <FormRow title="過敏史" hoverColor="group-hover:text-amber-600">
+                                    <div className="flex flex-col sm:flex-row gap-1.5 w-full items-start">
+                                        <div className="flex gap-1 w-full sm:w-1/4">
+                                            <RadioCard name="allergies" value="無" checked={formData.allergies === '無'} onChange={handleChange} label="無" />
+                                            <RadioCard name="allergies" value="有" checked={formData.allergies === '有'} onChange={handleChange} label="有" />
+                                        </div>
+                                        {formData.allergies === '有' && (
+                                            <div className="flex gap-2 flex-grow animate-fade-in w-full pl-1">
+                                                <div className="flex items-center gap-1 flex-1">
+                                                    <span className="font-bold text-[11px] text-gray-500 shrink-0">藥物</span>
+                                                    <input type="text" name="allergyDrug" value={formData.allergyDrug} onChange={handleChange} className={inputClass} placeholder="請輸入藥名" />
+                                                </div>
+                                                <div className="flex items-center gap-1 flex-1">
+                                                    <span className="font-bold text-[11px] text-gray-500 shrink-0">食物</span>
+                                                    <input type="text" name="allergyFood" value={formData.allergyFood} onChange={handleChange} className={inputClass} placeholder="請輸入食物" />
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </FormRow>
+
+                                <FormRow title="動植接觸" hoverColor="group-hover:text-amber-600">
+                                    <div className="flex flex-col sm:flex-row gap-1.5 w-full">
+                                        <div className="flex gap-1 w-full sm:w-1/4">
+                                            <RadioCard name="animalsPlants" value="無" checked={formData.animalsPlants === '無'} onChange={handleChange} label="無" />
+                                            <RadioCard name="animalsPlants" value="有" checked={formData.animalsPlants === '有'} onChange={handleChange} label="有" />
+                                        </div>
+                                        {formData.animalsPlants === '有' && (
+                                            <input type="text" name="animalsPlantsDetail" value={formData.animalsPlantsDetail} onChange={handleChange} className={`flex-grow pl-1 ${inputClass}`} placeholder="說明 (如養貓)..." />
+                                        )}
+                                    </div>
+                                </FormRow>
+
+                                <FormRow title="旅遊史" hoverColor="group-hover:text-amber-600">
+                                    <div className="flex flex-col gap-1 w-full overflow-hidden">
+                                        <div className="flex flex-nowrap overflow-x-auto gap-1 pb-1 w-full hide-scrollbar">
+                                            {['無', '台灣', '日本', '韓國', '美國', '中國'].map((loc) => (
+                                                <CheckboxButton key={loc} name="travelHistory" value={loc} checked={formData.travelHistory.includes(loc)} onChange={handleChange} label={loc} className="shrink-0 min-w-[55px]" />
+                                            ))}
+                                        </div>
+                                        <input type="text" name="travelHistoryOther" value={formData.travelHistoryOther} onChange={handleChange} className={inputClass} placeholder="其他地點..." />
+                                    </div>
+                                </FormRow>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+                                    <FormRow title="飲酒" hoverColor="group-hover:text-amber-600">
+                                        <div className="flex flex-col gap-1 w-full">
+                                            <div className="flex gap-1 w-full">
+                                                <RadioCard name="alcohol" value="無" checked={formData.alcohol === '無'} onChange={handleChange} label="無" />
+                                                <RadioCard name="alcohol" value="小酌" checked={formData.alcohol === '小酌'} onChange={handleChange} label="小酌" />
+                                                <RadioCard name="alcohol" value="有" checked={formData.alcohol === '有'} onChange={handleChange} label="有" />
+                                            </div>
+                                            {formData.alcohol === '有' && (
+                                                <input type="text" name="alcoholDetail" value={formData.alcoholDetail} onChange={handleChange} className={`animate-fade-in ${inputClass}`} placeholder="說明..." />
+                                            )}
+                                        </div>
+                                    </FormRow>
+
+                                    <FormRow title="抽菸" hoverColor="group-hover:text-amber-600">
+                                        <div className="flex flex-col gap-1 w-full">
+                                            <div className="flex gap-1 w-full">
+                                                <RadioCard name="smoking" value="無" checked={formData.smoking === '無'} onChange={handleChange} label="無" />
+                                                <RadioCard name="smoking" value="已戒菸" checked={formData.smoking === '已戒菸'} onChange={handleChange} label="戒菸" />
+                                                <RadioCard name="smoking" value="有" checked={formData.smoking === '有'} onChange={handleChange} label="有" />
+                                            </div>
+                                            {(formData.smoking === '有' || formData.smoking === '已戒菸') && (
+                                                <div className="animate-fade-in flex items-center gap-1 text-[11px] text-gray-500 mt-0.5">
+                                                    {formData.smoking === '有' ? '一天' : '共抽'}
+                                                    <input type="number" name="smokingPacks" value={formData.smokingPacks} onChange={handleChange} className={`w-10 text-center ${inputClass}`} />
+                                                    {formData.smoking === '有' ? '包, 已抽' : '年, 已戒'}
+                                                    <input type="number" name={formData.smoking === '有' ? "smokingYears" : "quitYears"} value={formData.smoking === '有' ? formData.smokingYears : formData.quitYears} onChange={handleChange} className={`w-10 text-center ${inputClass}`} />
+                                                    年
+                                                </div>
+                                            )}
+                                        </div>
+                                    </FormRow>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        {/* 輕量化 Summary Section */}
+                        <section className="mt-6 border border-gray-200 bg-gray-50 rounded-lg p-3 group hover:shadow-md transition-shadow duration-300">
+                            <div className="flex justify-between items-center mb-1.5">
+                                <h3 className="font-bold flex items-center text-sm text-gray-700 group-hover:text-blue-700 transition-colors duration-300 cursor-default">
+                                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mr-1.5"></span>
+                                    病歷摘要 (Auto-Summary)
                                 </h3>
-                                <button id="copy-btn" onClick={copySummary} className="bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm px-6 py-3 rounded-xl transition-all shadow-lg active:transform active:scale-95 focus:ring-2 focus:ring-white outline-none">
+                                <button id="copy-btn" onClick={copySummary} className="bg-white border border-gray-300 hover:bg-gray-100 hover:shadow-md hover:-translate-y-0.5 text-gray-700 font-bold text-[11px] px-3 py-1 rounded transition-all duration-300 outline-none shadow-sm">
                                     複製 Copy
                                 </button>
                             </div>
                             <textarea 
                                 readOnly 
                                 value={summaryText} 
-                                className="summary-area w-full h-48 bg-slate-900 text-green-300 font-mono text-base p-4 rounded-xl border border-slate-700 focus:outline-none focus:border-green-500 shadow-inner"
+                                className="w-full h-28 bg-white text-gray-800 font-mono text-[13px] sm:text-sm p-2.5 rounded border border-gray-300 focus:outline-none focus:border-blue-400 hover:shadow-inner hover:border-blue-300 transition-all duration-300 leading-relaxed resize-none"
                             ></textarea>
-                            <p className="text-gray-400 text-sm mt-2 text-right">Tip: 使用 Tab 鍵可快速在欄位間跳轉，按 空白鍵/Enter 勾選選項。</p>
                         </section>
 
                     </div>
