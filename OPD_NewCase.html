@@ -104,6 +104,9 @@
             const today = new Date().toISOString().split('T')[0];
             const firstInputRef = useRef(null);
             const [confirmReset, setConfirmReset] = useState(false);
+            
+            // ★ 摘要區塊折疊狀態
+            const [isSummaryOpen, setIsSummaryOpen] = useState(true);
 
             const initialFormData = {
                 chartNumber: '', visitDate: today, visitOrder: '',
@@ -405,7 +408,7 @@
 
                                     <FormRow title="職業" hoverColor="group-hover:text-emerald-600">
                                         <div className="flex flex-wrap gap-1.5 w-full">
-                                            {['無', '家管', '農', '商', '工', '軍', '服務', '其他'].map((cat) => (
+                                            {['無', '家管', '農', '商', '工', '軍', '服務', '教師', '其他'].map((cat) => (
                                                 <div className="flex-1 min-w-[50px]" key={cat}>
                                                     <RadioCard name="jobCategory" value={cat} checked={formData.jobCategory === cat} onChange={handleChange} label={cat} />
                                                 </div>
@@ -615,13 +618,24 @@
                                                     <RadioCard name="smoking" value="已戒菸" checked={formData.smoking === '已戒菸'} onChange={handleChange} label="戒菸" />
                                                     <RadioCard name="smoking" value="有" checked={formData.smoking === '有'} onChange={handleChange} label="有" />
                                                 </div>
-                                                {(formData.smoking === '有' || formData.smoking === '已戒菸') && (
+                                                
+                                                {/* ★ 修正：將抽菸輸入區塊獨立判斷，避免重繪導致焦點丟失與錯誤 */}
+                                                {formData.smoking === '有' && (
                                                     <div className="animate-fade-in flex items-center gap-1 text-xs text-gray-500 mt-1">
-                                                        {formData.smoking === '有' ? '一天' : '共抽'}
+                                                        <span>一天</span>
                                                         <input type="number" name="smokingPacks" value={formData.smokingPacks} onChange={handleChange} className={`w-10 text-center ${inputClass}`} />
-                                                        {formData.smoking === '有' ? '包, 已抽' : '年, 已戒'}
-                                                        <input type="number" name={formData.smoking === '有' ? "smokingYears" : "quitYears"} value={formData.smoking === '有' ? formData.smokingYears : formData.quitYears} onChange={handleChange} className={`w-10 text-center ${inputClass}`} />
-                                                        年
+                                                        <span>包, 已抽</span>
+                                                        <input type="number" name="smokingYears" value={formData.smokingYears} onChange={handleChange} className={`w-10 text-center ${inputClass}`} />
+                                                        <span>年</span>
+                                                    </div>
+                                                )}
+                                                {formData.smoking === '已戒菸' && (
+                                                    <div className="animate-fade-in flex items-center gap-1 text-xs text-gray-500 mt-1">
+                                                        <span>共抽</span>
+                                                        <input type="number" name="smokingYears" value={formData.smokingYears} onChange={handleChange} className={`w-10 text-center ${inputClass}`} />
+                                                        <span>年, 已戒</span>
+                                                        <input type="number" name="quitYears" value={formData.quitYears} onChange={handleChange} className={`w-10 text-center ${inputClass}`} />
+                                                        <span>年</span>
                                                     </div>
                                                 )}
                                             </div>
