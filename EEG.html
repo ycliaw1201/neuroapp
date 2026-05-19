@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACNS 2021 & IFCN IED 臨床 EEG 標準化決策工具箱</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        clinical: {
+                            navy: '#0f172a',
+                            primary: '#1e3a8a',
+                            secondary: '#0d9488',
+                            accent: '#b91c1c',
+                            bg: '#f8fafc',
+                            card: '#ffffff',
+                            success: '#15803d',
+                            warning: '#b45309'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .active-tab {
+            border-bottom: 3px solid #0d9488;
+            color: #0d9488;
+            font-weight: 700;
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Custom scrollbar for raw data fields */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col antialiased">
+
+    <!-- 頂部導航欄 -->
+    <header class="bg-slate-900 text-white shadow-md border-b border-slate-800 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-teal-600 rounded-lg text-white font-bold text-lg tracking-wider">EEG</div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight">重症與間歇期 EEG 決策系統</h1>
+                    <p class="text-xs text-slate-400">ACNS 2021 Standardized Terminology & IFCN IED Criteria</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 text-xs bg-slate-800 py-1.5 px-3 rounded-full text-slate-300">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>實證醫學臨床指引及計算引擎已載入 (2026 版)</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主容器 -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-6 sm:px-6 lg:px-8">
+        
+        <!-- 頁籤導航 -->
+        <div class="border-b border-slate-200 mb-6 bg-white rounded-xl shadow-sm px-4">
+            <nav class="flex space-x-8 overflow-x-auto py-2" aria-label="Tabs">
+                <button onclick="switchTab('tab-tool')" id="btn-tab-tool" class="active-tab px-3 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-transparent hover:text-teal-600 transition-all flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                    互動式臨床診斷工具箱
+                </button>
+                <button onclick="switchTab('tab-ifcn')" id="btn-tab-ifcn" class="px-3 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-transparent hover:text-teal-600 transition-all flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    IFCN IED 6 大鑑定標準 (Kural 2020)
+                </button>
+                <button onclick="switchTab('tab-acns')" id="btn-tab-acns" class="px-3 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-transparent hover:text-teal-600 transition-all flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    ACNS 2021 術語檢索圖表
+                </button>
+                <button onclick="switchTab('tab-iic')" id="btn-tab-iic" class="px-3 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-transparent hover:text-teal-600 transition-all flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                    IIC 與 BIRDs 診斷流
+                </button>
+            </nav>
+        </div>
+
+        <!-- 頁籤一：互動式臨床診斷工具箱 -->
+        <div id="tab-tool" class="fade-in space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                <!-- 工具 A：IFCN 棘波/尖波評估器 -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-bold text-slate-950 flex items-center gap-2">
+                            <span class="p-1 bg-blue-100 text-blue-800 rounded">Tool A</span>
+                            IFCN 10秒間歇期棘波 (IED) 評估器
+                        </h2>
+                        <span class="text-xs bg-slate-100 px-2.5 py-1 rounded text-slate-500 font-medium">Kural et al. 2020 臨床驗證</span>
+                    </div>
+                    <p class="text-sm text-slate-500 mb-4">
+                        請觀察當前 EEG 畫面中的突發尖銳波形（Sharp Transient），評估並勾選符合以下哪些 IFCN 標準：
+                    </p>
+                    
+                    <div class="space-y-3" id="ied-checklist">
+                        <label class="flex items-start gap-3 p-3 rounded-xl border border-slate-100 hover:bg-slate-50 cursor-pointer transition-all">
+                            <input type="checkbox" onchange="calculateIED()" class="mt-1 w-4.5 h-4.5 text-teal-600 rounded border-slate-300 focus:ring-teal-500" value="1">
+                            <div>
+                                <span class="font-semibold text-sm text-slate-900 block">1. 雙相或三相波形 (Di-/Tri-phasic morphology)</span>
+                                <span class="text-xs text-slate-500 block">具有尖銳或針狀的明確波峰（Pointed peak）</span>
+                            </div>
+                        </label>
+                        <label class="flex items-start gap-3 p-3 rounded-xl border border-slate-100 hover:bg-slate-50 cursor-pointer transition-all">
+                            <input type="checkbox" onchange="calculateIED()" class="mt-1 w-4.5 h-4.5 text-teal-600 rounded border-slate-300 focus:ring-teal-500" value="2">
+                            <div>
+                                <span class="font-semibold text-sm text-slate-900 block">2. 特殊的波寬時程 (Distinct duration)</span>
+                                <span class="text-xs text-slate-500 block">其持續時間明顯較周圍 ongoing 正常背景活動更短或更長</span>
+                            </div>
+                        </label>
+                        <label class="flex items-start gap-3 p-3 rounded-xl border border-slate-100 hover:bg-slate-50 cursor-pointer transition-all">
+                            <input type="checkbox" onchange="calculateIED()" class="mt-1 w-4.5 h-4.5 text-teal-600 rounded border-slate-300 focus:ring-teal-500" value="3">
+                            <div>
+                                <span class="font-semibold text-sm text-slate-900 block">3. 波形具有不對稱性 (Waveform asymmetry)</span>
+                                <span class="text-xs text-slate-500 block">陡峭的上升相 (ascending phase) 伴隨較緩慢的下降相，或反之</span>
+                            </div>
+                        </label>
+                        <label class="flex items-start gap-3 p-3 rounded-xl border border-slate-100 hover:bg-slate-50 cursor-pointer transition-all">
+                            <input type="checkbox" onchange="calculateIED()" class="mt-1 w-4.5 h-4.5 text-teal-600 rounded border-slate-300 focus:ring-teal-500" value="4">
+                            <div>
+                                <span class="font-semibold text-sm text-slate-900 block">4. 緊接慢後波 (Followed by a slow after-wave)</span>
+                                <span class="text-xs text-slate-500 block">尖銳的主波結束後，立即伴隨一個大而慢的慢波 (Slow wave)</span>
+                            </div>
+                        </label>
+                        <label class="flex items-start gap-3 p-3 rounded-xl border border-slate-100 hover:bg-slate-50 cursor-pointer transition-all">
+                            <input type="checkbox" onchange="calculateIED()" class="mt-1 w-4.5 h-4.5 text-teal-600 rounded border-slate-300 focus:ring-teal-500" value="5">
+                            <div>
+                                <span class="font-semibold text-sm text-slate-900 block">5. 背景活動受干擾 (Disruption of background)</span>
+                                <span class="text-xs text-slate-500 block">該放電出現時，會暫時破壞周圍原有的背景節律</span>
+                            </div>
+                        </label>
+                        <label class="flex items-start gap-3 p-3 rounded-xl border border-slate-100 hover:bg-slate-50 cursor-pointer transition-all">
+                            <input type="checkbox" onchange="calculateIED()" class="mt-1 w-4.5 h-4.5 text-teal-600 rounded border-slate-300 focus:ring-teal-500" value="6">
+                            <div>
+                                <span class="font-semibold text-sm text-slate-900 block">6. 三維偶極子源定位 (Dipolar physiological field)</span>
+                                <span class="text-xs text-slate-500 block">頭皮等電壓圖呈現合乎生理的 radial、oblique、或 tangential 電壓分佈</span>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- 診斷結果動態輸出 -->
+                    <div class="mt-6 p-4 rounded-xl bg-slate-50 border border-slate-200 transition-all" id="ied-result-box">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">診斷結果分析</span>
+                            <span id="ied-score-badge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-200 text-slate-700">符合 0 項</span>
+                        </div>
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="text-2xl font-black text-slate-900" id="ied-conclusion">生理性波形或偽影</div>
+                            <div class="text-xs text-slate-500" id="ied-metrics">特異性: -- | 敏感度: --</div>
+                        </div>
+                        <p class="text-xs text-slate-600" id="ied-guide">
+                            未達 IFCN 臨床臨界值。在臨床中強烈不建議將此波形讀寫為間歇期癲癇樣放電 (IED)，以避免誤診癲癇（Over-reading 誤診率高達 25%-30%）。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 工具 B：ACNS 2021 標準術語建構器 -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-lg font-bold text-slate-950 flex items-center gap-2">
+                                <span class="p-1 bg-teal-100 text-teal-800 rounded">Tool B</span>
+                                ACNS 2021 術語組合建構器
+                            </h2>
+                            <span class="text-xs bg-slate-100 px-2.5 py-1 rounded text-slate-500 font-medium">重症護理 EEG 規範</span>
+                        </div>
+                        <p class="text-sm text-slate-500 mb-4">
+                            透過點選以下參數，系統將為您自動編譯出符合 ACNS 2021 的標準病歷描述代碼與完整學術中英文：
+                        </p>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                            <!-- 參數 1：空間定位 -->
+                            <div>
+                                <label class="block text-xs font-bold uppercase text-slate-500 mb-1.5">1. 空間定位 (Localization)</label>
+                                <select id="acns-loc" onchange="buildACNSPattern()" class="w-full rounded-lg border-slate-200 bg-slate-50 text-sm focus:border-teal-500 focus:ring-teal-500 p-2.5">
+                                    <option value="G">G (Generalized)</option>
+                                    <option value="L" selected>L (Localized)</option>
+                                    <option value="BI">BI (Bilateral Independent)</option>
+                                    <option value="Mf">Mf (Multifocal)</option>
+                                    <option value="SW">SW (Symmetric Wide-spread)</option>
+                                </select>
+                            </div>
+                            <!-- 參數 2：主要術語 -->
+                            <div>
+                                <label class="block text-xs font-bold uppercase text-slate-500 mb-1.5">2. 主要術語 (Main Term)</label>
+                                <select id="acns-main" onchange="buildACNSPattern()" class="w-full rounded-lg border-slate-200 bg-slate-50 text-sm focus:border-teal-500 focus:ring-teal-500 p-2.5">
+                                    <option value="PDs" selected>PDs (Periodic Discharges)</option>
+                                    <option value="RDA">RDA (Rhythmic Delta Activity)</option>
+                                    <option value="SW">SW (Spike-and-Wave)</option>
+                                </select>
+                            </div>
+                            <!-- 參數 3：附加修飾詞 -->
+                            <div>
+                                <label class="block text-xs font-bold uppercase text-slate-500 mb-1.5">3. 附加修飾詞 (Modifiers)</label>
+                                <select id="acns-mod" onchange="buildACNSPattern()" class="w-full rounded-lg border-slate-200 bg-slate-50 text-sm focus:border-teal-500 focus:ring-teal-500 p-2.5">
+                                    <option value="" selected>無附加修飾詞 (None)</option>
+                                    <option value="+S">+S (叠加棘/尖波 Superimposed Spikes)</option>
+                                    <option value="+R">+R (叠加節律活動 Rhythmic)</option>
+                                    <option value="+FS">+FS (叠加快速活動 Fast Activity)</option>
+                                    <option value="+S+R">+S+R (叠加棘波與節律)</option>
+                                    <option value="+S+FS">+S+FS (叠加棘波與快速活動)</option>
+                                    <option value="+R+FS">+R+FS (叠加節律與快速活動)</option>
+                                    <option value="+F">+F (波動特徵 Fluctuating)</option>
+                                    <option value="+S+F">+S+F (叠加棘波與波動)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 建構器輸出 -->
+                    <div class="p-5 rounded-2xl bg-teal-50/50 border border-teal-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div class="space-y-1">
+                            <span class="text-xs font-bold text-teal-800 tracking-wider block uppercase">ACNS 標準病歷代碼</span>
+                            <div id="acns-output-code" class="text-3xl font-black text-teal-950 tracking-tight">LPDs</div>
+                            <div id="acns-output-desc" class="text-xs text-slate-600 font-medium">Localized Periodic Discharges (局灶性週期性放電)</div>
+                        </div>
+                        <button onclick="copyToClipboard('acns-output-code')" class="w-full sm:w-auto px-4 py-2.5 bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white font-bold text-sm rounded-xl transition-all shadow-sm flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                            複製代碼
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- 頁籤二：IFCN IED 6 大鑑定標準 -->
+        <div id="tab-ifcn" class="hidden fade-in space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-950">IFCN 間歇期癲癇樣放電 (IED) 判定指引</h2>
+                        <p class="text-xs text-slate-500">基於 2020 年 Neurology 臨床驗證研究 (Class III 實證學術依據)</p>
+                    </div>
+                    <span class="px-3 py-1 bg-amber-50 text-amber-800 rounded-full text-xs font-semibold border border-amber-200">過度解讀預防工具</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- 1. 雙相/三相波 -->
+                    <div class="border border-slate-100 rounded-xl p-4 hover:shadow-md transition-all">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="px-2 py-0.5 bg-blue-50 text-blue-700 text-xs font-bold rounded">1. Waveform Morphology</span>
+                        </div>
+                        <h3 class="font-bold text-sm mb-1 text-slate-900">雙相或三相波</h3>
+                        <p class="text-xs text-slate-500 mb-3">具備明顯尖銳、針狀的突發高峰。通常在頭皮雙極導聯呈現位相倒置 (phase reversal)。</p>
+                        <div class="bg-slate-50 p-2 rounded-lg flex justify-center">
+                            <svg class="w-full h-24" viewBox="0 0 200 80">
+                                <path d="M 10 40 L 80 40 L 95 15 L 110 65 L 125 40 L 190 40" fill="none" stroke="#2563eb" stroke-width="2"/>
+                                <circle cx="95" cy="15" r="3" fill="#ef4444"/>
+                                <text x="105" y="20" font-size="8" fill="#ef4444">尖銳波峰 (Di-phasic)</text>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- 2. 時程不同 -->
+                    <div class="border border-slate-100 rounded-xl p-4 hover:shadow-md transition-all">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="px-2 py-0.5 bg-blue-50 text-blue-700 text-xs font-bold rounded">2. Wave Duration</span>
+                        </div>
+                        <h3 class="font-bold text-sm mb-1 text-slate-900">特殊的波寬時程</h3>
+                        <p class="text-xs text-slate-500 mb-3">波寬持續時間明顯短於或長於 ongoing 背景。Spike 限制為 &lt; 70 ms；Sharp wave 限制為 70-200 ms。</p>
+                        <div class="bg-slate-50 p-2 rounded-lg flex justify-center">
+                            <svg class="w-full h-24" viewBox="0 0 200 80">
+                                <path d="M 10 35 L 50 35 L 70 35 L 85 35 Q 90 20, 93 15 Q 96 20, 101 35 L 120 35 L 190 35" fill="none" stroke="#64748b" stroke-width="1.5"/>
+                                <path d="M 10 45 L 50 45 L 80 45 L 85 10 L 90 60 L 95 45 L 190 45" fill="none" stroke="#0d9488" stroke-width="2"/>
+                                <text x="105" y="15" font-size="8" fill="#0d9488">棘波寬度極窄 (&lt;70ms)</text>
+                                <text x="15" y="25" font-size="8" fill="#64748b">背景慢波</text>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- 3. 不對稱 -->
+                    <div class="border border-slate-100 rounded-xl p-4 hover:shadow-md transition-all">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="px-2 py-0.5 bg-blue-50 text-blue-700 text-xs font-bold rounded">3. Asymmetry</span>
+                        </div>
+                        <h3 class="font-bold text-sm mb-1 text-slate-900">波形不對稱性</h3>
+                        <p class="text-xs text-slate-500 mb-3">上升與下降支斜率有明顯不對稱。多數呈陡峭上升與緩慢下降（如三角波、偏斜波形）。</p>
+                        <div class="bg-slate-50 p-2 rounded-lg flex justify-center">
+                            <svg class="w-full h-24" viewBox="0 0 200 80">
+                                <path d="M 10 50 L 80 50 L 90 15 L 130 50 L 190 50" fill="none" stroke="#2563eb" stroke-width="2"/>
+                                <line x1="80" y1="50" x2="90" y2="15" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="2,2"/>
+                                <line x1="90" y1="15" x2="130" y2="50" stroke="#059669" stroke-width="1.5" stroke-dasharray="2,2"/>
+                                <text x="60" y="30" font-size="8" fill="#ef4444">陡峭上升</text>
+                                <text x="110" y="30" font-size="8" fill="#059669">緩慢下降</text>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- 4. 慢後波 -->
+                    <div class="border border-slate-100 rounded-xl p-4 hover:shadow-md transition-all">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="px-2 py-0.5 bg-blue-50 text-blue-700 text-xs font-bold rounded">4. Slow After-wave</span>
+                        </div>
+                        <h3 class="font-bold text-sm mb-1 text-slate-900">伴隨慢後波</h3>
+                        <p class="text-xs text-slate-500 mb-3">主放電結束後，緊接著一個高波幅、長時程的慢波（抑制性慢波），代表神經元放電後包圍的過極化機制。</p>
+                        <div class="bg-slate-50 p-2 rounded-lg flex justify-center">
+                            <svg class="w-full h-24" viewBox="0 0 200 80">
+                                <path d="M 10 40 L 70 40 L 80 15 L 90 55 L 125 15 Q 150 70, 175 40 L 190 40" fill="none" stroke="#2563eb" stroke-width="2"/>
+                                <text x="125" y="30" font-size="8" fill="#0284c7">高幅慢波抑制</text>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- 5. 背景干擾 -->
+                    <div class="border border-slate-100 rounded-xl p-4 hover:shadow-md transition-all">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="px-2 py-0.5 bg-blue-50 text-blue-700 text-xs font-bold rounded">5. Background Disruption</span>
+                        </div>
+                        <h3 class="font-bold text-sm mb-1 text-slate-900">背景活動干擾</h3>
+                        <p class="text-xs text-slate-500 mb-3">放電不僅波幅突出，更破壞原有基礎電位節律的規律流動（呈現非諧波干擾或突兀的波幅阻斷）。</p>
+                        <div class="bg-slate-50 p-2 rounded-lg flex justify-center">
+                            <svg class="w-full h-24" viewBox="0 0 200 80">
+                                <path d="M 10 40 Q 15 35, 20 40 T 30 40 T 40 40 T 50 40 T 60 40 T 70 40 L 80 10 L 90 70 L 100 40 Q 110 30, 115 50 T 130 40 T 150 40" fill="none" stroke="#64748b" stroke-width="1.5"/>
+                                <rect x="75" y="5" width="30" height="70" fill="#f87171" fill-opacity="0.1" stroke="#f87171" stroke-dasharray="2,2"/>
+                                <text x="110" y="20" font-size="8" fill="#dc2626">背景連續性中斷</text>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- 6. 偶極子場 -->
+                    <div class="border border-slate-100 rounded-xl p-4 hover:shadow-md transition-all">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="px-2 py-0.5 bg-blue-50 text-blue-700 text-xs font-bold rounded">6. Voltage Map</span>
+                        </div>
+                        <h3 class="font-bold text-sm mb-1 text-slate-900">頭皮生理偶極場</h3>
+                        <p class="text-xs text-slate-500 mb-3">頭皮上的正負電壓分佈，應能合理解讀為大腦皮質（radial）或大腦裂溝（tangential）內的偶極發電場，拒絕雜亂偽影。</p>
+                        <div class="bg-slate-50 p-2 rounded-lg flex justify-center">
+                            <svg class="w-full h-24" viewBox="0 0 200 80">
+                                <!-- Brain head model outline -->
+                                <circle cx="100" cy="40" r="30" fill="none" stroke="#94a3b8" stroke-width="1.5"/>
+                                <!-- Nose -->
+                                <path d="M 130 35 L 138 40 L 130 45" fill="none" stroke="#94a3b8" stroke-width="1.5"/>
+                                <!-- Dipole potential fields (blue/red) -->
+                                <path d="M 85 20 Q 100 35, 115 20" fill="none" stroke="#2563eb" stroke-width="1.5"/>
+                                <path d="M 85 60 Q 100 45, 115 60" fill="none" stroke="#dc2626" stroke-width="1.5"/>
+                                <text x="92" y="30" font-size="8" fill="#2563eb">- 負電極</text>
+                                <text x="92" y="55" font-size="8" fill="#dc2626">+ 正電極</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 實證醫學臨床重要性面板 -->
+                <div class="mt-6 bg-slate-900 text-white rounded-2xl p-6">
+                    <h3 class="text-md font-bold text-teal-400 mb-3 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                        為何必須堅持「&ge; 5 項符合」標準？
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+                        <div class="space-y-2">
+                            <h4 class="font-bold text-teal-300">防範過度解讀 (Over-reading)</h4>
+                            <p class="text-xs text-slate-300">
+                                門診或癲癇中心常規轉診患者中，因腦波判定過度寬鬆（誤將一般生理尖銳波或睡眠良性變異判定為 IED）而招致錯誤診斷與藥物誤服者高達 25% - 30%。
+                            </p>
+                        </div>
+                        <div class="space-y-2">
+                            <h4 class="font-bold text-teal-300">精準臨界值 (Specificity &gt;95%)</h4>
+                            <p class="text-xs text-slate-300">
+                                Kural (2020) 團隊實證，符合 4 項指標時特異性僅為 84.78%；而一旦拉高至 <strong>5 項符合</strong> 時，特異性會提升至 <strong>95.65%</strong>，既能避免誤診，又能維持 81.48% 的合理敏感度。
+                            </p>
+                        </div>
+                        <div class="space-y-2">
+                            <h4 class="font-bold text-teal-300">虛擬源空間分析 (Source Space)</h4>
+                            <p class="text-xs text-slate-300">
+                                結合源空間轉換 (Source Space) 的腦波分析可將敏感度進一步推高至 <strong>85.19%</strong>，同時守住 <strong>95.65%</strong> 的特異性，更適用於臨床癲癇灶的 sublobar 級定位。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 頁籤三：ACNS 2021 術語檢索圖表 -->
+        <div id="tab-acns" class="hidden fade-in space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="border-b border-slate-100 pb-4 mb-6">
+                    <h2 class="text-lg font-bold text-slate-950">ACNS 2021 腦波分類術語核心檢索系統</h2>
+                    <p class="text-xs text-slate-500">標準化加護病房 (ICU) 重症腦波與週期性、節律性放電命名規範</p>
+                </div>
+
+                <!-- 1. 三大核心主要術語 -->
+                <div class="mb-8">
+                    <h3 class="text-md font-bold text-slate-900 mb-4 flex items-center gap-2">
+                        <span class="w-1 h-4 bg-teal-600 rounded"></span>
+                        核心定義主要術語 (Main Terms - Term 1)
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                            <span class="px-2 py-0.5 bg-teal-100 text-teal-800 text-xs font-bold rounded">PDs</span>
+                            <h4 class="font-bold text-base mt-2 mb-1 text-slate-950">Periodic Discharges</h4>
+                            <p class="text-xs text-slate-500 mb-3">週期性放電</p>
+                            <p class="text-xs text-slate-600 leading-relaxed">
+                                放電波形（不論是單個 spike, sharp wave 或是多相複合波）以相對固定、可預測的間隔重複出現。波形之間具有明確且平坦的<strong>間歇期 (interdischarge interval)</strong>。
+                            </p>
+                        </div>
+                        <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                            <span class="px-2 py-0.5 bg-teal-100 text-teal-800 text-xs font-bold rounded">RDA</span>
+                            <h4 class="font-bold text-base mt-2 mb-1 text-slate-950">Rhythmic Delta Activity</h4>
+                            <p class="text-xs text-slate-500 mb-3">節律性 Delta 活動</p>
+                            <p class="text-xs text-slate-600 leading-relaxed">
+                                連續、高度規律（Monomorphic）且重複出現的 Delta 節律。與 PDs 不同的是，RDA 的波與波之間<strong>沒有間歇期</strong>，呈連續性正弦樣或鋸齒樣流動。
+                            </p>
+                        </div>
+                        <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                            <span class="px-2 py-0.5 bg-teal-100 text-teal-800 text-xs font-bold rounded">SW</span>
+                            <h4 class="font-bold text-base mt-2 mb-1 text-slate-950">Spike-and-Wave</h4>
+                            <p class="text-xs text-slate-500 mb-3">棘慢複合波 / 尖慢複合波</p>
+                            <p class="text-xs text-slate-600 leading-relaxed">
+                                由一個或多個突出的棘波/尖波（Spike/Sharp wave）與其後緊隨的慢波（Slow wave）共同組成一組，且以特定規律頻率重複出現之複合波形。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. 空間定位與附加修飾詞 -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <!-- 空間定位 -->
+                    <div class="p-5 border border-slate-100 rounded-2xl">
+                        <h4 class="font-bold text-sm text-slate-900 mb-3 flex items-center gap-2">
+                            <svg class="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            空間定位修飾詞 (Localization Modifiers)
+                        </h4>
+                        <div class="space-y-3">
+                            <div class="flex items-start gap-3 p-2.5 rounded-xl hover:bg-slate-50">
+                                <span class="text-sm font-bold text-teal-800 bg-teal-50 px-2 py-0.5 rounded w-10 text-center">G</span>
+                                <div class="text-xs">
+                                    <strong class="text-slate-900 block">Generalized (廣泛性)</strong>
+                                    雙側對稱且同步之分佈。或在雙側廣泛性異常中，主要電壓頂點落於前額葉或後頭葉。
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3 p-2.5 rounded-xl hover:bg-slate-50">
+                                <span class="text-sm font-bold text-teal-800 bg-teal-50 px-2 py-0.5 rounded w-10 text-center">L</span>
+                                <div class="text-xs">
+                                    <strong class="text-slate-900 block">Localized / Focal (局灶性)</strong>
+                                    局限於單一區域、或單側大腦半球，以及明顯不對稱之雙側放電。
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3 p-2.5 rounded-xl hover:bg-slate-50">
+                                <span class="text-sm font-bold text-teal-800 bg-teal-50 px-2 py-0.5 rounded w-10 text-center">BI</span>
+                                <div class="text-xs">
+                                    <strong class="text-slate-900 block">Bilateral Independent (雙側獨立分佈)</strong>
+                                    雙側皆有該主要異常，但兩半球之異常在發生時間上為獨立發生、互不影響（舊稱 BIPDs）。
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3 p-2.5 rounded-xl hover:bg-slate-50">
+                                <span class="text-sm font-bold text-teal-800 bg-teal-50 px-2 py-0.5 rounded w-10 text-center">Mf</span>
+                                <div class="text-xs">
+                                    <strong class="text-slate-900 block">Multifocal (多灶性)</strong>
+                                    具有至少 3 個獨立之局部放電區域，且放電點遍佈雙側半球。
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 時間與演變 -->
+                    <div class="p-5 border border-slate-100 rounded-2xl">
+                        <h4 class="font-bold text-sm text-slate-900 mb-3 flex items-center gap-2">
+                            <svg class="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            時間動態與演變修飾詞 (Dynamic Modifiers)
+                        </h4>
+                        <div class="space-y-3">
+                            <div class="flex items-start gap-3 p-2.5 rounded-xl hover:bg-slate-50">
+                                <span class="text-xs font-bold text-amber-800 bg-amber-50 px-1.5 py-1 rounded">Evolving</span>
+                                <div class="text-xs">
+                                    <strong class="text-slate-900 block">Evolving (演變中)</strong>
+                                    在時間進程中，波幅、頻率或空間分佈出現漸進式、方向一致之改變：
+                                    <ul class="list-disc pl-4 mt-1 text-slate-500">
+                                        <li>頻率改變 &ge; 0.5 Hz</li>
+                                        <li>空間分佈範圍擴大或縮小</li>
+                                        <li>形態（如波形寬度）之漸進改變</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3 p-2.5 rounded-xl hover:bg-slate-50">
+                                <span class="text-xs font-bold text-amber-800 bg-amber-50 px-1.5 py-1 rounded">Fluct.</span>
+                                <div class="text-xs">
+                                    <strong class="text-slate-900 block">Fluctuating (波動性)</strong>
+                                    頻率、波幅或空間位置頻繁且明顯改變，但缺乏一致的方向性演變。
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3 p-2.5 rounded-xl hover:bg-slate-50">
+                                <span class="text-xs font-bold text-slate-800 bg-slate-100 px-1.5 py-1 rounded">Static</span>
+                                <div class="text-xs">
+                                    <strong class="text-slate-900 block">Static (穩定/固定)</strong>
+                                    在整個腦波記錄片段中，形態、頻率及分佈均勻、不變。
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 頁籤四：IIC 與 BIRDs 診斷決策樹 -->
+        <div id="tab-iic" class="hidden fade-in space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="border-b border-slate-100 pb-4 mb-6">
+                    <h2 class="text-lg font-bold text-slate-950">發作期-發作間期過渡狀態 (IIC) 與 BIRDs 臨床診斷工具</h2>
+                    <p class="text-xs text-slate-500">ACNS 2021 加護病房高風險異常之判讀要領</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    
+                    <!-- 診斷導航 -->
+                    <div class="p-5 border border-slate-100 rounded-2xl space-y-4">
+                        <h3 class="font-bold text-sm text-slate-900 flex items-center gap-2">
+                            <span class="w-1.5 h-1.5 rounded-full bg-teal-600"></span>
+                            步驟一：答覆以下患者脑電特徵
+                        </h3>
+                        
+                        <div class="space-y-4">
+                            <!-- 問題 1 -->
+                            <div class="bg-slate-50 p-3 rounded-xl">
+                                <span class="text-xs font-bold text-slate-500 block mb-1">Q1. 異常放電的最高頻率為何？</span>
+                                <div class="flex gap-2">
+                                    <button onclick="setAns('q1', 'high')" id="btn-q1-high" class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold hover:bg-slate-100 active:bg-slate-200 transition-all">大於 2.5 Hz</button>
+                                    <button onclick="setAns('q1', 'mid')" id="btn-q1-mid" class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold hover:bg-slate-100 active:bg-slate-200 transition-all">1.0 Hz ~ 2.5 Hz</button>
+                                    <button onclick="setAns('q1', 'low')" id="btn-q1-low" class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold hover:bg-slate-100 active:bg-slate-200 transition-all">小於 1.0 Hz</button>
+                                </div>
+                            </div>
+
+                            <!-- 問題 2 -->
+                            <div class="bg-slate-50 p-3 rounded-xl">
+                                <span class="text-xs font-bold text-slate-500 block mb-1">Q2. 是否具備演變 (Evolution) 或明顯臨床發作響應？</span>
+                                <div class="flex gap-2">
+                                    <button onclick="setAns('q2', 'yes')" id="btn-q2-yes" class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold hover:bg-slate-100 active:bg-slate-200 transition-all">是 (具有演變 / ASM 治療反應)</button>
+                                    <button onclick="setAns('q2', 'no')" id="btn-q2-no" class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold hover:bg-slate-100 active:bg-slate-200 transition-all">否 (Static / 無響應)</button>
+                                </div>
+                            </div>
+
+                            <!-- 問題 3 -->
+                            <div class="bg-slate-50 p-3 rounded-xl">
+                                <span class="text-xs font-bold text-slate-500 block mb-1">Q3. 是否存在超短時間的節律放電 (BIRDs)？</span>
+                                <p class="text-[10px] text-slate-400 mb-1">BIRDs 定義為超短暫 (&lt; 10 秒) 的高頻 (&ge; 4Hz) 連續放電活動</p>
+                                <div class="flex gap-2">
+                                    <button onclick="setAns('q3', 'yes')" id="btn-q3-yes" class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold hover:bg-slate-100 active:bg-slate-200 transition-all">是 (符合 BIRDs 描述)</button>
+                                    <button onclick="setAns('q3', 'no')" id="btn-q3-no" class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold hover:bg-slate-100 active:bg-slate-200 transition-all">否 (大於 10 秒以上)</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 臨床診斷與防護評估 -->
+                    <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 flex flex-col justify-between">
+                        <div>
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-widest block">動態判定結果</span>
+                            <div id="iic-title" class="text-xl font-bold text-slate-900 mt-2 mb-2">請完成左側問答以開始評估</div>
+                            <p id="iic-desc" class="text-xs text-slate-600 leading-relaxed">
+                                大腦加護病房病患常處於 Ictal-Interictal Continuum (發作-發作間期過渡期) 狀態。該狀態伴隨神經元重疊受損與高度代謝壓力，臨床上必須密切觀察與積極監測。
+                            </p>
+                        </div>
+
+                        <!-- 診斷警報/提示板 -->
+                        <div id="iic-alert-box" class="mt-4 p-4 rounded-xl border bg-white flex items-start gap-3 transition-all">
+                            <div id="iic-icon" class="p-1.5 bg-slate-100 text-slate-600 rounded">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </div>
+                            <div>
+                                <h4 id="iic-status-text" class="text-xs font-bold text-slate-900">未偵測到特殊危險模式</h4>
+                                <p id="iic-action-text" class="text-[11px] text-slate-500 mt-0.5">請回答上述評估條件以獲取具體之臨床指南與 cEEG 監測頻率推薦。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- 頁腳 -->
+    <footer class="bg-slate-900 text-slate-400 border-t border-slate-800 py-6 mt-12 text-center text-xs">
+        <p class="mb-1">ACNS 2021 Standardized Critical Care Terminology & IFCN IED 6 Criteria 臨床工具</p>
+        <p class="text-slate-600">本系統僅供臨床醫師或學術研究討論參考。實際診療行為與用藥請遵循臨床主治醫師指示之專業決策。</p>
+    </footer>
+
+    <!-- JS 邏輯代碼 -->
+    <script>
+        // 頁籤切換邏輯
+        function switchTab(tabId) {
+            // 隱藏所有頁籤內容
+            document.getElementById('tab-tool').classList.add('hidden');
+            document.getElementById('tab-ifcn').classList.add('hidden');
+            document.getElementById('tab-acns').classList.add('hidden');
+            document.getElementById('tab-iic').classList.add('hidden');
+
+            // 取消所有導航欄高亮
+            document.getElementById('btn-tab-tool').classList.remove('active-tab');
+            document.getElementById('btn-tab-ifcn').classList.remove('active-tab');
+            document.getElementById('btn-tab-acns').classList.remove('active-tab');
+            document.getElementById('btn-tab-iic').classList.remove('active-tab');
+
+            // 顯示指定頁籤並高亮
+            document.getElementById(tabId).classList.remove('hidden');
+            document.getElementById('btn-' + tabId).classList.add('active-tab');
+        }
+
+        // Tool A: IFCN IED 計算
+        function calculateIED() {
+            const checkedBoxes = document.querySelectorAll('#ied-checklist input[type="checkbox"]:checked');
+            const score = checkedBoxes.length;
+
+            const scoreBadge = document.getElementById('ied-score-badge');
+            const conclusion = document.getElementById('ied-conclusion');
+            const metrics = document.getElementById('ied-metrics');
+            const guide = document.getElementById('ied-guide');
+            const resultBox = document.getElementById('ied-result-box');
+
+            // 預設樣式還原
+            scoreBadge.innerText = `符合 ${score} 項指標`;
+            scoreBadge.className = "px-2.5 py-0.5 rounded-full text-xs font-bold ";
+
+            if (score <= 3) {
+                scoreBadge.classList.add("bg-slate-200", "text-slate-700");
+                conclusion.innerText = "生理波 / 良性變異 / 偽影";
+                conclusion.className = "text-xl font-black text-slate-700";
+                metrics.innerText = "特異性 (Spec): 極低 | 敏感度: 偏低";
+                guide.innerText = "未達 IFCN 臨床臨界值。在臨床中強烈不建議將此波形讀寫為間歇期癲癇樣放電 (IED)，以避免過度解讀（Over-reading 臨床常見誤診原因）。";
+                resultBox.className = "mt-6 p-4 rounded-xl bg-slate-50 border border-slate-200";
+            } else if (score === 4) {
+                scoreBadge.classList.add("bg-amber-100", "text-amber-800");
+                conclusion.innerText = "疑似癲癇樣放電 (Possible IED)";
+                conclusion.className = "text-xl font-black text-amber-700";
+                metrics.innerText = "特異性 (Spec): 84.78% | 敏感度: 96.30%";
+                guide.innerText = "符合 4 項指標具有極高的敏感度，但特異性偏低。在臨床報告中應持謹慎態度，避免將一般或睡眠生理尖銳波形過度報告。";
+                resultBox.className = "mt-6 p-4 rounded-xl bg-amber-50/50 border border-amber-200";
+            } else if (score === 5) {
+                scoreBadge.classList.add("bg-teal-100", "text-teal-800");
+                conclusion.innerText = "典型癲癇樣放電 (Definite IED)";
+                conclusion.className = "text-xl font-black text-teal-800";
+                metrics.innerText = "特異性 (Spec): 95.65% | 敏感度: 81.48%";
+                guide.innerText = "符合 5 項指標！特異性達到 95.65% 實證安全閾值。這與臨床頂尖腦波專家的診斷一致。強烈建議安全報告為間歇期癲癇樣放電 (IED)。";
+                resultBox.className = "mt-6 p-4 rounded-xl bg-teal-50 border border-teal-200";
+            } else if (score === 6) {
+                scoreBadge.classList.add("bg-emerald-100", "text-emerald-800");
+                conclusion.innerText = "確診癲癇樣放電 (High-Confidence IED)";
+                conclusion.className = "text-xl font-black text-emerald-800";
+                metrics.innerText = "特異性 (Spec): 100.0% | 敏感度: 66.67%";
+                guide.innerText = "滿足 6 大 IFCN 理論指標！此波形確診為 100% 特異性之旅大腦癲癇樣放電。建議詳細分析局部定位並對照臨床癲癇病史。";
+                resultBox.className = "mt-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200";
+            }
+        }
+
+        // Tool B: ACNS 2021 術語組合建構器
+        function buildACNSPattern() {
+            const loc = document.getElementById('acns-loc').value;
+            const main = document.getElementById('acns-main').value;
+            const mod = document.getElementById('acns-mod').value;
+
+            // 輸出代碼字串
+            const codeOutput = document.getElementById('acns-output-code');
+            const descOutput = document.getElementById('acns-output-desc');
+
+            let codeStr = loc + main;
+            if (mod !== "") {
+                codeStr += mod;
+            }
+
+            codeOutput.innerText = codeStr;
+
+            // 對應釋義字典
+            const locDict = {
+                "G": "Generalized (雙側廣泛性)",
+                "L": "Localized / Focal (局灶性)",
+                "BI": "Bilateral Independent (雙側獨立分佈)",
+                "Mf": "Multifocal (多灶性)",
+                "SW": "Symmetric Wide-spread (雙側對稱大範圍性)"
+            };
+
+            const mainDict = {
+                "PDs": "Periodic Discharges (週期性放電)",
+                "RDA": "Rhythmic Delta Activity (節律性 Delta 活動)",
+                "SW": "Spike-and-Wave (棘慢複合波)"
+            };
+
+            const modDict = {
+                "": "",
+                "+S": " with Superimposed Spikes (叠加棘波/尖波)",
+                "+R": " with Superimposed Rhythmic Activity (叠加節律活動)",
+                "+FS": " with Superimposed Fast Activity (叠加快速活動)",
+                "+S+R": " with Superimposed Spikes and Rhythmic Activity",
+                "+S+FS": " with Superimposed Spikes and Fast Activity",
+                "+R+FS": " with Superimposed Rhythmic and Fast Activity",
+                "+F": " with Fluctuating features (波動特性)",
+                "+S+F": " with Superimposed Spikes and Fluctuating features"
+            };
+
+            descOutput.innerText = `${locDict[loc]} ${mainDict[main]}${modDict[mod]}`;
+        }
+
+        // 剪貼簿複製
+        function copyToClipboard(elementId) {
+            const textToCopy = document.getElementById(elementId).innerText;
+            const tempInput = document.createElement("textarea");
+            tempInput.value = textToCopy;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand("copy");
+            document.body.removeChild(tempInput);
+            
+            // 臨時改變按鈕狀態
+            const origHTML = event.currentTarget.innerHTML;
+            event.currentTarget.innerHTML = `
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                複製成功!
+            `;
+            const btn = event.currentTarget;
+            setTimeout(() => {
+                btn.innerHTML = origHTML;
+            }, 1500);
+        }
+
+        // IIC 及 BIRDs 決策引擎變量
+        let answers = {
+            q1: null,
+            q2: null,
+            q3: null
+        };
+
+        function setAns(q, val) {
+            answers[q] = val;
+            
+            // 高亮選取按鈕
+            const options = ["high", "mid", "low", "yes", "no"];
+            options.forEach(opt => {
+                const btn = document.getElementById(`btn-${q}-${opt}`);
+                if (btn) {
+                    btn.className = "px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold hover:bg-slate-100 active:bg-slate-200 transition-all";
+                }
+            });
+
+            const activeBtn = document.getElementById(`btn-${q}-${val}`);
+            activeBtn.className = "px-3 py-1.5 bg-teal-600 border border-teal-600 text-white rounded-lg text-xs font-semibold hover:bg-teal-700 active:bg-teal-800 transition-all";
+
+            evaluateIIC();
+        }
+
+        function evaluateIIC() {
+            const title = document.getElementById('iic-title');
+            const desc = document.getElementById('iic-desc');
+            const alertBox = document.getElementById('iic-alert-box');
+            const icon = document.getElementById('iic-icon');
+            const statusText = document.getElementById('iic-status-text');
+            const actionText = document.getElementById('iic-action-text');
+
+            if (!answers.q1 || !answers.q2 || !answers.q3) {
+                return; // 未完成
+            }
+
+            // 1. 癲癇發作或 SE 定義
+            if (answers.q1 === 'high' && answers.q2 === 'yes') {
+                title.innerText = "符合明確之癲癇發作基準 (EEG Seizure / SE)";
+                desc.innerText = "當前異常高頻放電頻率 > 2.5 Hz，且合併臨床或形態之動態演變。這已超越了發作過渡期狀態，若持續 > 10 分鐘以上或 1 小時內累積超過 20%，則符合非驚厥性癲癇重積狀態 (NCSE) 定義。";
+                
+                alertBox.className = "mt-4 p-4 rounded-xl border border-red-200 bg-red-50 flex items-start gap-3 transition-all animate-bounce";
+                icon.className = "p-1.5 bg-red-100 text-red-600 rounded";
+                icon.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>`;
+                statusText.innerText = "高危警告：大腦皮質高度異常亢進";
+                statusText.className = "text-xs font-bold text-red-900";
+                actionText.innerText = "強烈建議照會癲癇專家，準備給予抗癲癇藥物 (ASM) 介入與行 cEEG 至少 24 小時監護。";
+                actionText.className = "text-[11px] text-red-700 mt-0.5";
+            }
+            // 2. IIC 符合
+            else if (answers.q1 === 'mid' || (answers.q1 === 'high' && answers.q2 === 'no')) {
+                title.innerText = "符合發作期-發作間期過渡狀態 (IIC)";
+                desc.innerText = "異常放電介於 1.0 至 2.5 Hz 間，或高頻但缺乏演變。該病灶正處於高度易激惹臨界狀態（Ictal-Interictal Continuum），可能存在潛在細胞毒性，有發展為實質癲癇的可能。";
+                
+                alertBox.className = "mt-4 p-4 rounded-xl border border-amber-200 bg-amber-50 flex items-start gap-3 transition-all";
+                icon.className = "p-1.5 bg-amber-100 text-amber-600 rounded";
+                icon.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>`;
+                statusText.innerText = "中危警告：處於 IIC 灰區範疇";
+                statusText.className = "text-xs font-bold text-amber-900";
+                actionText.innerText = "建議持續執行持續性腦波監測 (cEEG) 評估。除非有明確代謝病灶引發否則密切觀察。";
+                actionText.className = "text-[11px] text-amber-700 mt-0.5";
+            }
+            // 3. BIRDs 符合
+            else if (answers.q3 === 'yes') {
+                title.innerText = "符合 BIRDs (確診或高度疑似)";
+                desc.innerText = "符合 Brief Potentially Ictal Rhythmic Discharges（短暫潛在發作性節律放電）。BIRDs 在重症監護病患中，往往是高敏感的亞臨床發作指標，有極高機率伴隨實質性癲癇大發作。";
+                
+                alertBox.className = "mt-4 p-4 rounded-xl border border-teal-200 bg-teal-50 flex items-start gap-3 transition-all";
+                icon.className = "p-1.5 bg-teal-100 text-teal-600 rounded";
+                icon.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+                statusText.innerText = "BIRDs 特殊警戒狀態";
+                statusText.className = "text-xs font-bold text-teal-900";
+                actionText.innerText = "ACNS 2021 強烈建議對 BIRDs 頻發患者，實施 24-48小時長程腦波追蹤。";
+                actionText.className = "text-[11px] text-teal-700 mt-0.5";
+            }
+            // 4. 一般 RPP / 無立即發作危險
+            else {
+                title.innerText = "一般的週期性或規律性异常模式";
+                desc.innerText = "頻率低且無任何動態演變或 BIRDs 特徵，發作危險較低。在無進一步急性臨床神經學改變的情況下，通常屬於大腦廣泛性瀰漫病變或既有結構性病變之常態腦電特徵。";
+                
+                alertBox.className = "mt-4 p-4 rounded-xl border border-slate-200 bg-white flex items-start gap-3 transition-all";
+                icon.className = "p-1.5 bg-slate-100 text-slate-600 rounded";
+                icon.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
+                statusText.innerText = "常規安全狀態";
+                statusText.className = "text-xs font-bold text-slate-900";
+                actionText.innerText = "維持常規病房治療，無 cEEG 連續監測之強制必要性。";
+                actionText.className = "text-[11px] text-slate-500 mt-0.5";
+            }
+        }
+
+        // 初始化設定
+        window.onload = function() {
+            buildACNSPattern();
+            calculateIED();
+        }
+    </script>
+</body>
+</html>
