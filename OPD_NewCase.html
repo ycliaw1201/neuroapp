@@ -134,7 +134,7 @@
                     visitDate, chartNumber, visitOrder, age, gender, residence, residenceOther, hand, diet, 
                     marriage, childrenCount, job, jobCategory, education, educationOther, toxicExposure, toxicExposureDetail,
                     history, historyOther, surgery, surgeryDetails, brainSurgery, spineSurgery, cancerSurgery, familyHistory,
-                    travelHistory, travelHistoryOther, allergies, allergyDrug, allergyFood, alcohol, alcoholDetail, smoking, smokingYears, quitYears,
+                    travelHistory, travelHistoryOther, allergies, allergyDrug, allergyFood, alcohol, alcoholDetail, smoking, smokingPacks, smokingYears, quitYears,
                     pregnancy, weight, sbp, dbp, hr, animalsPlants, animalsPlantsDetail,
                     menopause, hormoneDrug, medications, medsAntiplateletDetail, medsOther
                 } = formData;
@@ -619,7 +619,7 @@
                                                     <RadioCard name="smoking" value="有" checked={formData.smoking === '有'} onChange={handleChange} label="有" />
                                                 </div>
                                                 
-                                                {/* ★ 將抽菸輸入區塊獨立判斷，避免重繪導致焦點丟失與錯誤 */}
+                                                {/* ★ 修正：將抽菸輸入區塊獨立判斷，避免重繪導致焦點丟失與錯誤 */}
                                                 {formData.smoking === '有' && (
                                                     <div className="animate-fade-in flex items-center gap-1 text-xs text-gray-500 mt-1">
                                                         <span>一天</span>
