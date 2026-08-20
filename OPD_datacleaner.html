@@ -47,7 +47,7 @@
             <!-- 右側：輸出 -->
             <div class="flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="bg-blue-50 px-4 py-3 border-b border-blue-100 font-medium text-blue-800 flex justify-between items-center">
-                    <span>整理結果 (MM/DD 格式)</span>
+                    <span>整理結果</span>
                     <button id="copy-btn" onclick="copyToClipboard()" disabled class="flex items-center gap-1.5 px-3 py-1 rounded text-xs font-medium transition-all bg-white text-blue-600 border border-blue-200 hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed">
                         <i id="copy-icon" class="fas fa-clipboard"></i>
                         <span id="copy-text">複製文字</span>
@@ -70,13 +70,6 @@
             tumorMarkers: ['CEA', 'AFP', 'CA19-9', 'CA-125', 'PSA', 'CA15-3', 'SCC'],
             autoimmune: ['ANA', 'dsDNA', 'RF', 'C3', 'C4', 'Anti-SSA', 'Anti-Ro', 'Anti-SSB', 'Anti-La', 'Atyp-pANCA', 'Pattern:']
         };
-
-        const DEFAULT_INPUT_EXAMPLE = `115/01/15 17:10  Blood        K           4.0       mmol/L
-115/01/15 17:10  Blood        Na          130       mmol/L
-115/01/15 17:15  Urine        Protein     Negative  qual.
-115/01/15 17:20  Nasal swabInfl A Ag      Negative
-2023/10/05 CEA 1.2 Negative
-2023/11/12 ANA 1:80 Positive`;
 
         const REPLACEMENT_RULES = [
             { p: /CREA/gi, r: 'Crea' },
