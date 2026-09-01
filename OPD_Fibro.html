@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2016 ACR 纖維肌痛症臨床診斷評估系統</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        medical: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            700: '#075985',
+                            800: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+        body {
+            font-family: 'Inter', 'Noto Sans TC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background: white !important;
+                color: black !important;
+                padding: 0 !important;
+            }
+            .print-card {
+                border: 1px solid #cbd5e1 !important;
+                box-shadow: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen antialiased selection:bg-medical-100 selection:text-medical-800 pb-12">
+
+    <header class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-medical-500 text-white flex items-center justify-center font-bold shadow-md shadow-medical-500/20">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                        纖維肌痛症臨床診斷評估系統
+                        <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-medical-100 text-medical-700">2016 ACR 標準</span>
+                    </h1>
+                    <p class="text-xs text-slate-500 hidden sm:block">American College of Rheumatology 診斷標準試算與報告輔助工具</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-2">
+                <button onclick="applySampleCase(true)" class="text-xs px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-100 text-slate-600 transition font-medium">
+                    載入典型陽性範例
+                </button>
+                <button onclick="resetAllForm()" class="text-xs px-3 py-1.5 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-600 transition font-medium flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    重置清空
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            <!-- Left Form Area -->
+            <div class="lg:col-span-8 space-y-6">
+
+                <!-- Section 1: WPI Section -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden transition hover:shadow-md print-card">
+                    <div class="bg-gradient-to-r from-sky-600 to-medical-600 px-5 py-4 text-white flex justify-between items-center">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="flex items-center justify-center w-6 h-6 rounded-full bg-white/20 text-xs font-bold">1</span>
+                            <h2 class="font-bold text-base sm:text-lg tracking-wide">廣泛性疼痛指標 (WPI, 0–19 分)</h2>
+                        </div>
+                        <div class="text-xs bg-white/20 px-2.5 py-1 rounded-full font-medium tracking-wide">
+                            已選 <span id="wpi-header-count" class="font-bold text-yellow-300">0</span> / 19 處
+                        </div>
+                    </div>
+
+                    <div class="p-5 space-y-5">
+                        <div class="bg-sky-50/80 border border-sky-100 rounded-xl p-3.5 text-xs sm:text-sm text-sky-900 flex items-start gap-2.5">
+                            <svg class="w-5 h-5 text-sky-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <div>
+                                <p class="font-semibold">評估說明：</p>
+                                <p class="text-sky-800">請勾選病人在<strong>過去一週內</strong>感到疼痛的部位。依 2016 診斷標準，人體分為 <strong>5 個解剖區域</strong>（左上、右上、左下、右下、中軸），必須涵蓋至少 <strong>4 個區域</strong>以符合全身性疼痛定義。</p>
+                            </div>
+                        </div>
+
+                        <!-- 5 Area Grid -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            
+                            <!-- 1. 左上區域 -->
+                            <div class="rounded-xl border border-slate-200 p-4 bg-slate-50/60 hover:bg-white hover:border-medical-500/40 transition">
+                                <div class="flex justify-between items-center pb-2 mb-3 border-b border-slate-200">
+                                    <div class="flex items-center gap-1.5 font-bold text-slate-800 text-sm">
+                                        <span class="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span>
+                                        1. 左上區域 (Left Upper)
+                                    </div>
+                                    <span id="badge-lu" class="text-xs px-2 py-0.5 rounded-full bg-slate-200 text-slate-600 font-medium">0/4</span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2 text-sm">
+                                    <label class="flex items-center p-2 rounded-lg bg-white border border-slate-200 hover:border-medical-500 cursor-pointer transition select-none">
+                                        <input type="checkbox" data-region="LU" value="左頸" class="wpi-item w-4 h-4 text-medical-600 rounded border-slate-300 focus:ring-medical-500">
+                                        <span class="ml-2 text-slate-700">左頸</span>
+                                    </label>
+                                    <label class="flex items-center p-2 rounded-lg bg-white border border-slate-200 hover:border-medical-500 cursor-pointer transition select-none">
+                                        <input type="checkbox" data-region="LU" value="左肩" class="wpi-item w-4 h-4 text-medical-600 rounded border-slate-300 focus:ring-medical-500">
+                                        <span class="ml-2 text-slate-700">左肩 (肩帶)</span>
+                                    </label>
+                                    <label class="flex items-center p-2 rounded-lg bg-white border border-slate-200 hover:border-medical-500 cursor-pointer transition select-none">
+                                        <input type="checkbox" data-region="LU" value="左上臂" class="wpi-item w-4 h-4 text-medical-600 rounded border-slate-300 focus:ring-medical-500">
+                                        <span class="ml-2 text-slate-700">左上臂</span>
+                                    </label>
+                                    <label class="flex items-center p-2 rounded-lg bg-white border border-slate-200 hover:border-medical-500 cursor-pointer transition select-none">
+                                        <input type="checkbox" data-region="LU" value="左下臂" class="wpi-item w-4 h-4 text-medical-600 rounded border-slate-300 focus:ring-medical-500">
+                                        <span class="ml-2 text-slate-700">左前臂</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- 2. 右上區域 -->
+                            <div class="rounded-xl border border-slate-200 p-4 bg-slate-50/60 hover:bg-white hover:border-medical-500/40 transition">
+                                <div class="flex justify-between items-center pb-2 mb-3 border-b border-slate-200">
+                                    <div class="flex items-center gap-1.5 font-bold text-slate-800 text-sm">
+                                        <span class="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span>
+                                        2. 右上區域 (Right Upper)
+                                    </div>
+                                    <span id="badge-ru" class="text-xs px-2 py-0.5 rounded-full bg-slate-200 text-slate-600 font-medium">0/4</span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2 text-sm">
+                                    <label class="flex items-center p-2 rounded-lg bg-white border border-slate-200 hover:border-medical-500 cursor-pointer transition select-none">
+                                        <input type="checkbox" data-region="RU" value="右頸" class="wpi-item w-4 h-4 text-medical-600 rounded border-slate-300 focus:ring-medical-500">
+                                        <span class="ml-2 text-slate-700">右頸</span>
+                                    </label>
+                                    <label class="flex items-center p-2 rounded-lg bg-white border border-slate-200 hover:border-medical-500 cursor-pointer transition select-none">
+                                        <input type="checkbox" data-region="RU" value="右肩" class="wpi-item w-4 h-4 text-medical-600 rounded border-slate-300 focus:ring-medical-500">
+                                        <span class="ml-2 text-slate-700">右肩 (肩帶)</span>
+                                    </label>
+                                    <label class="flex items-center p-2 rounded-lg bg-white border border-slate-200 hover:border-medical-500 cursor-pointer transition select-none">
+                                        <input type="checkbox" data-region="RU" value="右上臂" class="wpi-item w-4 h-4 text-medical-600 rounded border-slate-300 focus:ring-medical-500">
+                                        <span class="ml-2 text-slate-700">右上臂</span>
+                                    </label>
+                                    <label class="flex items-center p-2 rounded-lg bg-white border border-slate-200 hover:border-medical-500 cursor-pointer transition select-none">
+                                        <input type="checkbox" data-region="RU" value="右下臂" class="wpi-item w-4 h-4 text-medical-600 rounded border-slate-300 focus:ring-medical-500">
+                                        <span class="ml-2 text-slate-700">右前臂</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- 3. 左下區域 -->
+                            <div class="rounded-xl border border-slate-200 p-4 bg-slate-50/60 hover:bg-white hover:border-medical-500/40 transition">
+                                <div class="flex justify-between items-center pb-2 mb-3 border-b border-slate-200">
+                                    <div class="flex items-center gap-1.5 font-bold text-slate-800 text-sm">
+                                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
+                                        3. 左下區域 (Left Lower)
+                                    </div>
+                                    <span id="badge-ll" class="text-xs px-2 py-0.5 rounded-full bg-slate-200 text-slate-600 font-medium">0/3</span>
+                                </div>
+                                <div class="grid grid-cols-1 gap-2 text-sm">
+                                    <label class="flex items-center p-2 rounded-lg bg-white border border-slate-200 hover:border-medical-500 cursor-pointer transition select-none">
+                                        <input type="checkbox" data-region="LL" value="左臀" class="wpi-item w-4 h-4 text-medical-600 rounded border-slate-300 focus:ring-medical-500">
+                                        <span class="ml-2 text-slate-700">左臀 (含臀部與股骨大轉子)</span>
+                                    </label>
+                                    <label class="flex items-center p-2 rounded-lg bg-white border border-slate-200 hover:border-medical-500 cursor-pointer transition select-none">
+                                        <input type="checkbox" data-region="LL" value="左大腿" class="wpi-item w-4 h-4 text-medical-600 rounded border-slate-300 focus:ring-medical-500">
+                                        <span class="ml-2 text-slate-700">左大腿</span>
+                                    </label>
+                                    <label class="flex items-center p-2 rounded-lg bg-white border border-slate-200 hover:border-medical-500 cursor-pointer transition select-none">
+                                        <input type="checkbox" data-region="LL" value="左小腿" class="wpi-item w-4 h-4 text-medical-600 rounded border-slate-300 focus:ring-medical-500">
+                                        <span class="ml-2 text-slate-700">左小腿</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- 4. 右下區域 -->
+                            <div class="rounded-xl border border-slate-200 p-4 bg-slate-50/60 hover:bg-white hover:border-medical-500/40 transition">
+                                <div class="flex justify-between items-center pb-2 mb-3 border-b border-slate-200">
+                                    <div class="flex items-center gap-1.5 font-bold text-slate-800 text-sm">
+                                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
+                                        4. 右下區域 (Right Lower)
+                                    </div>
+                                    <span id="badge-rl" class="text-xs px-2 py-0.5 rounded-full bg-slate-200 text-slate-600 font-medium">0/3</span>
+                                </div>
+                                <div class="grid grid-cols-1 gap-2 text-sm">
+                                    <label class="flex items-center p-2 rounded-lg bg-white border border-slate-200 hover:border-medical-500 cursor-pointer transition select-none">
+                                        <input type="checkbox" data-region="RL" value="右臀" class="wpi-item w-4 h-4 text-medical-600 rounded border-slate-300 focus:ring-medical-500">
+                                        <span class="ml-2 text-slate-700">右臀 (含臀部與股骨大轉子)</span>
+                                    </label>
+                                    <label class="flex items-center p-2 rounded-lg bg-white border border-slate-200 hover:border-medical-500 cursor-pointer transition select-none">
+                                        <input type="checkbox" data-region="RL" value="右大腿" class="wpi-item w-4 h-4 text-medical-600 rounded border-slate-300 focus:ring-medical-500">
+                                        <span class="ml-2 text-slate-700">右大腿</span>
+                                    </label>
+                                    <label class="flex items-center p-2 rounded-lg bg-white border border-slate-200 hover:border-medical-500 cursor-pointer transition select-none">
+                                        <input type="checkbox" data-region="RL" value="右小腿" class="wpi-item w-4 h-4 text-medical-600 rounded border-slate-300 focus:ring-medical-500">
+                                        <span class="ml-2 text-slate-700">右小腿</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- 5. 中軸區域 (橫跨兩欄) -->
+                            <div class="md:col-span-2 rounded-xl border border-slate-200 p-4 bg-slate-50/60 hover:bg-white hover:border-medical-500/40 transition">
+                                <div class="flex justify-between items-center pb-2 mb-3 border-b border-slate-200">
+                                    <div class="flex items-center gap-1.5 font-bold text-slate-800 text-sm">
+                                        <span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span>
+                                        5. 中軸區域 (Axial Region)
+                                    </div>
+                                    <span id="badge-ax" class="text-xs px-2 py-0.5 rounded-full bg-slate-200 text-slate-600 font-medium">0/5</span>
+                                </div>
+                                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 text-sm">
+                                    <label class="flex items-center p-2 rounded-lg bg-white border border-slate-200 hover:border-medical-500 cursor-pointer transition select-none">
+                                        <input type="checkbox" data-region="AX" value="頸部" class="wpi-item w-4 h-4 text-medical-600 rounded border-slate-300 focus:ring-medical-500">
+                                        <span class="ml-2 text-slate-700">頸部</span>
+                                    </label>
+                                    <label class="flex items-center p-2 rounded-lg bg-white border border-slate-200 hover:border-medical-500 cursor-pointer transition select-none">
+                                        <input type="checkbox" data-region="AX" value="上背" class="wpi-item w-4 h-4 text-medical-600 rounded border-slate-300 focus:ring-medical-500">
+                                        <span class="ml-2 text-slate-700">上背</span>
+                                    </label>
+                                    <label class="flex items-center p-2 rounded-lg bg-white border border-slate-200 hover:border-medical-500 cursor-pointer transition select-none">
+                                        <input type="checkbox" data-region="AX" value="下背" class="wpi-item w-4 h-4 text-medical-600 rounded border-slate-300 focus:ring-medical-500">
+                                        <span class="ml-2 text-slate-700">下背</span>
+                                    </label>
+                                    <label class="flex items-center p-2 rounded-lg bg-white border border-slate-200 hover:border-medical-500 cursor-pointer transition select-none">
+                                        <input type="checkbox" data-region="AX" value="胸部" class="wpi-item w-4 h-4 text-medical-600 rounded border-slate-300 focus:ring-medical-500">
+                                        <span class="ml-2 text-slate-700">胸部</span>
+                                    </label>
+                                    <label class="flex items-center p-2 rounded-lg bg-white border border-slate-200 hover:border-medical-500 cursor-pointer transition select-none">
+                                        <input type="checkbox" data-region="AX" value="腹部" class="wpi-item w-4 h-4 text-medical-600 rounded border-slate-300 focus:ring-medical-500">
+                                        <span class="ml-2 text-slate-700">腹部</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: SSS Section -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden transition hover:shadow-md print-card">
+                    <div class="bg-gradient-to-r from-teal-600 to-emerald-600 px-5 py-4 text-white flex justify-between items-center">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="flex items-center justify-center w-6 h-6 rounded-full bg-white/20 text-xs font-bold">2</span>
+                            <h2 class="font-bold text-base sm:text-lg tracking-wide">症狀嚴重程度量表 (SSS, 0–12 分)</h2>
+                        </div>
+                        <div class="text-xs bg-white/20 px-2.5 py-1 rounded-full font-medium tracking-wide">
+                            總計 <span id="sss-header-count" class="font-bold text-yellow-300">0</span> / 12 分
+                        </div>
+                    </div>
+
+                    <div class="p-5 space-y-6">
+                        <!-- SSS Part A -->
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="font-bold text-slate-800 text-sm sm:text-base flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-teal-500"></span>
+                                    A 部分：過去一週三大核心症狀程度 (0–9 分)
+                                </h3>
+                                <span id="sss-part-a-score" class="text-xs font-semibold text-teal-700 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">0 分</span>
+                            </div>
+
+                            <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                                <table class="w-full text-left text-xs sm:text-sm">
+                                    <thead class="bg-slate-50 text-slate-700 border-b border-slate-200 text-center font-semibold">
+                                        <tr>
+                                            <th class="py-3 px-3 sm:px-4 text-left">症狀項目</th>
+                                            <th class="py-3 px-2">0 分<span class="block font-normal text-[11px] text-slate-500">無問題</span></th>
+                                            <th class="py-3 px-2">1 分<span class="block font-normal text-[11px] text-slate-500">輕度 / 間歇</span></th>
+                                            <th class="py-3 px-2">2 分<span class="block font-normal text-[11px] text-slate-500">中度 / 明顯</span></th>
+                                            <th class="py-3 px-2">3 分<span class="block font-normal text-[11px] text-slate-500">重度 / 影響生活</span></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-200">
+                                        <!-- Fatigue -->
+                                        <tr class="hover:bg-slate-50 transition">
+                                            <td class="py-3 px-3 sm:px-4 font-medium text-slate-900">
+                                                疲勞 (Fatigue)
+                                            </td>
+                                            <td class="text-center"><input type="radio" name="sss_fatigue" value="0" checked class="sss-radio w-4 h-4 text-teal-600 focus:ring-teal-500 cursor-pointer"></td>
+                                            <td class="text-center"><input type="radio" name="sss_fatigue" value="1" class="sss-radio w-4 h-4 text-teal-600 focus:ring-teal-500 cursor-pointer"></td>
+                                            <td class="text-center"><input type="radio" name="sss_fatigue" value="2" class="sss-radio w-4 h-4 text-teal-600 focus:ring-teal-500 cursor-pointer"></td>
+                                            <td class="text-center"><input type="radio" name="sss_fatigue" value="3" class="sss-radio w-4 h-4 text-teal-600 focus:ring-teal-500 cursor-pointer"></td>
+                                        </tr>
+                                        <!-- Unrefreshed sleep -->
+                                        <tr class="hover:bg-slate-50 transition">
+                                            <td class="py-3 px-3 sm:px-4 font-medium text-slate-900">
+                                                醒來時覺得沒睡飽 (Waking unrefreshed)
+                                            </td>
+                                            <td class="text-center"><input type="radio" name="sss_sleep" value="0" checked class="sss-radio w-4 h-4 text-teal-600 focus:ring-teal-500 cursor-pointer"></td>
+                                            <td class="text-center"><input type="radio" name="sss_sleep" value="1" class="sss-radio w-4 h-4 text-teal-600 focus:ring-teal-500 cursor-pointer"></td>
+                                            <td class="text-center"><input type="radio" name="sss_sleep" value="2" class="sss-radio w-4 h-4 text-teal-600 focus:ring-teal-500 cursor-pointer"></td>
+                                            <td class="text-center"><input type="radio" name="sss_sleep" value="3" class="sss-radio w-4 h-4 text-teal-600 focus:ring-teal-500 cursor-pointer"></td>
+                                        </tr>
+                                        <!-- Cognitive symptoms -->
+                                        <tr class="hover:bg-slate-50 transition">
+                                            <td class="py-3 px-3 sm:px-4 font-medium text-slate-900">
+                                                認知症狀 (Cognitive symptoms / 腦霧)
+                                            </td>
+                                            <td class="text-center"><input type="radio" name="sss_cog" value="0" checked class="sss-radio w-4 h-4 text-teal-600 focus:ring-teal-500 cursor-pointer"></td>
+                                            <td class="text-center"><input type="radio" name="sss_cog" value="1" class="sss-radio w-4 h-4 text-teal-600 focus:ring-teal-500 cursor-pointer"></td>
+                                            <td class="text-center"><input type="radio" name="sss_cog" value="2" class="sss-radio w-4 h-4 text-teal-600 focus:ring-teal-500 cursor-pointer"></td>
+                                            <td class="text-center"><input type="radio" name="sss_cog" value="3" class="sss-radio w-4 h-4 text-teal-600 focus:ring-teal-500 cursor-pointer"></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- SSS Part B -->
+                        <div class="pt-2">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="font-bold text-slate-800 text-sm sm:text-base flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-teal-500"></span>
+                                    B 部分：過去 6 個月伴隨之身體症狀 (0–3 分，每項 1 分)
+                                </h3>
+                                <span id="sss-part-b-score" class="text-xs font-semibold text-teal-700 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">0 分</span>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <label class="flex items-center p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-white hover:border-teal-500 cursor-pointer transition select-none">
+                                    <input type="checkbox" value="1" id="somatic-headache" class="sss-somatic w-4 h-4 text-teal-600 rounded border-slate-300 focus:ring-teal-500">
+                                    <div class="ml-2.5">
+                                        <div class="font-medium text-slate-800 text-sm">頭痛 (Headache)</div>
+                                        <div class="text-[11px] text-slate-500">+1 分</div>
+                                    </div>
+                                </label>
+
+                                <label class="flex items-center p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-white hover:border-teal-500 cursor-pointer transition select-none">
+                                    <input type="checkbox" value="1" id="somatic-abdomen" class="sss-somatic w-4 h-4 text-teal-600 rounded border-slate-300 focus:ring-teal-500">
+                                    <div class="ml-2.5">
+                                        <div class="font-medium text-slate-800 text-sm">下腹痛或痙攣</div>
+                                        <div class="text-[11px] text-slate-500">腸躁/腹部絞痛 (+1 分)</div>
+                                    </div>
+                                </label>
+
+                                <label class="flex items-center p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-white hover:border-teal-500 cursor-pointer transition select-none">
+                                    <input type="checkbox" value="1" id="somatic-depression" class="sss-somatic w-4 h-4 text-teal-600 rounded border-slate-300 focus:ring-teal-500">
+                                    <div class="ml-2.5">
+                                        <div class="font-medium text-slate-800 text-sm">憂鬱 (Depression)</div>
+                                        <div class="text-[11px] text-slate-500">憂鬱或情緒低落 (+1 分)</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Condition 3 Card -->
+                <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-3 print-card">
+                    <h3 class="font-bold text-slate-800 text-sm sm:text-base flex items-center gap-2">
+                        <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        條件 3：病程時間與臨床鑑別評估
+                    </h3>
+                    <label class="flex items-start p-3.5 rounded-xl border border-indigo-100 bg-indigo-50/40 hover:bg-indigo-50 cursor-pointer transition select-none">
+                        <input type="checkbox" id="duration-check" checked class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 mt-0.5">
+                        <div class="ml-3">
+                            <span class="font-semibold text-slate-900 text-sm">症狀程度相當，且維持 3 個月以上</span>
+                            <p class="text-xs text-slate-600 mt-0.5">病人之全身性疼痛及相關症狀必須具有慢性持續性特質（至少滿 3 個月）。</p>
+                        </div>
+                    </label>
+                    <p class="text-xs text-slate-500 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                        <strong>* 重要臨床準則：</strong> 2016 年修訂準則明確指出「纖維肌痛症的診斷與其他臨床診斷無關，亦不能排除其他疾病的存在」。即使患者罹患其他風濕免疫或神經骨骼疾病，若符合本量表仍可成立診斷。
+                    </p>
+                </div>
+
+            </div>
+
+            <!-- Right Summary Sidebar -->
+            <div class="lg:col-span-4 space-y-6">
+
+                <!-- Realtime Score Summary Sticky Card -->
+                <div class="sticky top-20 space-y-6">
+
+                    <!-- Score Card -->
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4 print-card">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                            <h2 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                                <svg class="w-5 h-5 text-medical-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                                即時量表評分結果
+                            </h2>
+                            <span class="text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-mono no-print">Live Sync</span>
+                        </div>
+
+                        <!-- 4 Stat Cards in 2x2 Grid -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <!-- WPI Score -->
+                            <div class="bg-sky-50/80 border border-sky-100 rounded-xl p-3 text-center">
+                                <span class="text-xs font-medium text-sky-700 block">WPI 總分</span>
+                                <span id="display-wpi" class="text-3xl font-extrabold text-sky-950 my-0.5 block font-mono">0</span>
+                                <span class="text-[11px] text-sky-600 block">介於 0–19 分</span>
+                            </div>
+
+                            <!-- Generalized Region Count -->
+                            <div id="card-region" class="bg-indigo-50/80 border border-indigo-100 rounded-xl p-3 text-center transition">
+                                <span class="text-xs font-medium text-indigo-700 block">疼痛涵蓋區域</span>
+                                <span id="display-regions" class="text-3xl font-extrabold text-indigo-950 my-0.5 block font-mono">0<span class="text-sm font-normal text-indigo-400">/5</span></span>
+                                <span id="region-status-badge" class="text-[11px] text-indigo-600 font-medium block">需 ≥ 4 區域</span>
+                            </div>
+
+                            <!-- SSS Score -->
+                            <div class="bg-teal-50/80 border border-teal-100 rounded-xl p-3 text-center">
+                                <span class="text-xs font-medium text-teal-700 block">SSS 總分</span>
+                                <span id="display-sss" class="text-3xl font-extrabold text-teal-950 my-0.5 block font-mono">0</span>
+                                <span class="text-[11px] text-teal-600 block">介於 0–12 分</span>
+                            </div>
+
+                            <!-- FS Score -->
+                            <div class="bg-slate-100/90 border border-slate-200 rounded-xl p-3 text-center">
+                                <span class="text-xs font-medium text-slate-700 block">FS 嚴重度總分</span>
+                                <span id="display-fs" class="text-3xl font-extrabold text-slate-900 my-0.5 block font-mono">0</span>
+                                <span class="text-[11px] text-slate-500 block">WPI+SSS (0–31)</span>
+                            </div>
+                        </div>
+
+                        <!-- Verdict Status Box -->
+                        <div id="verdict-banner" class="rounded-xl p-4 border transition-all duration-300 bg-slate-100 border-slate-200 text-slate-700">
+                            <div class="flex items-center gap-3">
+                                <div id="verdict-icon" class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-slate-200 text-slate-600">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                </div>
+                                <div>
+                                    <div id="verdict-title" class="font-bold text-base text-slate-900 leading-tight">未達診斷標準</div>
+                                    <div id="verdict-desc" class="text-xs text-slate-600 mt-0.5">尚未滿足 2016 ACR 診斷全部條件</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3 Criteria Verification List -->
+                        <div class="space-y-2 pt-2 border-t border-slate-100 text-xs">
+                            <div class="font-semibold text-slate-700 mb-2">2016 ACR 診斷標準三大條件檢驗：</div>
+
+                            <!-- Criterion 1 -->
+                            <div id="crit-box-1" class="p-2.5 rounded-lg border bg-slate-50 border-slate-200 flex items-start justify-between gap-2">
+                                <div>
+                                    <div class="font-medium text-slate-800">條件 1：評分門檻</div>
+                                    <div class="text-[11px] text-slate-500 leading-tight mt-0.5">【WPI ≥ 7 且 SSS ≥ 5】或【WPI 4–6 且 SSS ≥ 9】</div>
+                                </div>
+                                <span id="crit-badge-1" class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-200 text-slate-600 flex-shrink-0">未符合</span>
+                            </div>
+
+                            <!-- Criterion 2 -->
+                            <div id="crit-box-2" class="p-2.5 rounded-lg border bg-slate-50 border-slate-200 flex items-start justify-between gap-2">
+                                <div>
+                                    <div class="font-medium text-slate-800">條件 2：全身性疼痛 (Generalized Pain)</div>
+                                    <div class="text-[11px] text-slate-500 leading-tight mt-0.5">5 個區域中至少 4 個區域發生疼痛</div>
+                                </div>
+                                <span id="crit-badge-2" class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-200 text-slate-600 flex-shrink-0">未符合</span>
+                            </div>
+
+                            <!-- Criterion 3 -->
+                            <div id="crit-box-3" class="p-2.5 rounded-lg border bg-slate-50 border-slate-200 flex items-start justify-between gap-2">
+                                <div>
+                                    <div class="font-medium text-slate-800">條件 3：症狀持續時間</div>
+                                    <div class="text-[11px] text-slate-500 leading-tight mt-0.5">症狀程度相當，維持 3 個月以上</div>
+                                </div>
+                                <span id="crit-badge-3" class="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-700 flex-shrink-0">符合 ✓</span>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons: Copy / Print -->
+                        <div class="pt-2 flex gap-2 no-print">
+                            <button onclick="copyClinicalReport()" class="flex-1 py-2 px-3 bg-medical-50 hover:bg-medical-100 text-medical-700 rounded-xl font-medium text-xs border border-medical-200 flex items-center justify-center gap-1.5 transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                                複製病歷摘要
+                            </button>
+                            <button onclick="window.print()" class="py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-medium text-xs border border-slate-200 flex items-center justify-center gap-1.5 transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                                列印評估表
+                            </button>
+                        </div>
+
+                    </div>
+
+                    <!-- Informational Note -->
+                    <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-900 leading-relaxed no-print">
+                        <div class="font-bold flex items-center gap-1.5 mb-1 text-amber-950">
+                            <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            2016 修訂版重點摘要：
+                        </div>
+                        2016 年修訂版取消了 2010 年繁雜的身體症狀清單，精簡為頭痛、下腹痛與憂鬱 3 大項；並加嚴全身性疼痛定義（需涵蓋 5 區中至少 4 區），避免局部肌筋膜疼痛症候群被過度診斷。
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white text-xs px-4 py-3 rounded-xl shadow-lg transform translate-y-20 opacity-0 transition duration-300 pointer-events-none flex items-center gap-2 z-50">
+        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+        <span id="toast-message">病歷摘要已複製到剪貼簿！</span>
+    </div>
+
+    <script>
+        // Global Calculation state holder
+        let calculationState = {
+            wpiScore: 0,
+            regions: { LU: 0, RU: 0, LL: 0, RL: 0, AX: 0 },
+            activeRegionCount: 0,
+            sssPartA: 0,
+            sssPartB: 0,
+            sssScore: 0,
+            fsScore: 0,
+            crit1: false,
+            crit2: false,
+            crit3: true,
+            isFibromyalgia: false,
+            selectedSites: []
+        };
+
+        function recalculateScores() {
+            // 1. Calculate WPI and Region Counts
+            const wpiCheckboxes = document.querySelectorAll('.wpi-item');
+            let wpiCount = 0;
+            const regions = { LU: 0, RU: 0, LL: 0, RL: 0, AX: 0 };
+            const selectedSites = [];
+
+            wpiCheckboxes.forEach(cb => {
+                if (cb.checked) {
+                    wpiCount++;
+                    const reg = cb.getAttribute('data-region');
+                    if (regions[reg] !== undefined) {
+                        regions[reg]++;
+                    }
+                    selectedSites.push(cb.value);
+                }
+            });
+
+            calculationState.wpiScore = wpiCount;
+            calculationState.regions = regions;
+            calculationState.selectedSites = selectedSites;
+
+            // Count Active Regions (> 0)
+            let activeRegs = 0;
+            for (let k in regions) {
+                if (regions[k] > 0) activeRegs++;
+            }
+            calculationState.activeRegionCount = activeRegs;
+
+            // 2. Calculate SSS
+            // Part A
+            let partA = 0;
+            ['sss_fatigue', 'sss_sleep', 'sss_cog'].forEach(name => {
+                const el = document.querySelector(`input[name="${name}"]:checked`);
+                if (el) partA += parseInt(el.value, 10);
+            });
+            calculationState.sssPartA = partA;
+
+            // Part B
+            let partB = 0;
+            document.querySelectorAll('.sss-somatic:checked').forEach(cb => {
+                partB += parseInt(cb.value, 10);
+            });
+            calculationState.sssPartB = partB;
+            calculationState.sssScore = partA + partB;
+            calculationState.fsScore = wpiCount + calculationState.sssScore;
+
+            // 3. Evaluate 2016 ACR Diagnostic Criteria
+            // Criteria 1: (WPI >= 7 && SSS >= 5) OR (WPI 4-6 && SSS >= 9)
+            calculationState.crit1 = (wpiCount >= 7 && calculationState.sssScore >= 5) || 
+                                     (wpiCount >= 4 && wpiCount <= 6 && calculationState.sssScore >= 9);
+            
+            // Criteria 2: Generalized pain, defined as pain in at least 4 of 5 regions
+            calculationState.crit2 = (activeRegs >= 4);
+
+            // Criteria 3: Symptoms have been present at a similar level for at least 3 months
+            const durationEl = document.getElementById('duration-check');
+            calculationState.crit3 = durationEl ? durationEl.checked : true;
+
+            // Final Composite Diagnosis
+            calculationState.isFibromyalgia = calculationState.crit1 && calculationState.crit2 && calculationState.crit3;
+
+            // 4. Update UI Components
+            updateUI();
+        }
+
+        function updateUI() {
+            // Header stats
+            document.getElementById('wpi-header-count').innerText = calculationState.wpiScore;
+            document.getElementById('sss-header-count').innerText = calculationState.sssScore;
+            document.getElementById('sss-part-a-score').innerText = `${calculationState.sssPartA} 分`;
+            document.getElementById('sss-part-b-score').innerText = `${calculationState.sssPartB} 分`;
+
+            // Region badges
+            document.getElementById('badge-lu').innerText = `${calculationState.regions.LU}/4`;
+            document.getElementById('badge-ru').innerText = `${calculationState.regions.RU}/4`;
+            document.getElementById('badge-ll').innerText = `${calculationState.regions.LL}/3`;
+            document.getElementById('badge-rl').innerText = `${calculationState.regions.RL}/3`;
+            document.getElementById('badge-ax').innerText = `${calculationState.regions.AX}/5`;
+
+            [
+                { id: 'badge-lu', count: calculationState.regions.LU },
+                { id: 'badge-ru', count: calculationState.regions.RU },
+                { id: 'badge-ll', count: calculationState.regions.LL },
+                { id: 'badge-rl', count: calculationState.regions.RL },
+                { id: 'badge-ax', count: calculationState.regions.AX }
+            ].forEach(item => {
+                const el = document.getElementById(item.id);
+                if (item.count > 0) {
+                    el.className = "text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold";
+                } else {
+                    el.className = "text-xs px-2 py-0.5 rounded-full bg-slate-200 text-slate-600 font-medium";
+                }
+            });
+
+            // Summary Score Numbers
+            document.getElementById('display-wpi').innerText = calculationState.wpiScore;
+            document.getElementById('display-regions').innerHTML = `${calculationState.activeRegionCount}<span class="text-sm font-normal text-indigo-400">/5</span>`;
+            document.getElementById('display-sss').innerText = calculationState.sssScore;
+            document.getElementById('display-fs').innerText = calculationState.fsScore;
+
+            // Region card status styling
+            const regionCard = document.getElementById('card-region');
+            const regionBadge = document.getElementById('region-status-badge');
+            if (calculationState.crit2) {
+                regionCard.className = "bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-center transition";
+                regionBadge.className = "text-[11px] text-emerald-700 font-bold block";
+                regionBadge.innerText = "已達全身性 (≥4區) ✓";
+            } else {
+                regionCard.className = "bg-indigo-50/80 border border-indigo-100 rounded-xl p-3 text-center transition";
+                regionBadge.className = "text-[11px] text-indigo-600 font-medium block";
+                regionBadge.innerText = "需 ≥ 4 區域";
+            }
+
+            // Criteria Checkboxes in sidebar
+            setCriteriaUI('crit-box-1', 'crit-badge-1', calculationState.crit1, '符合 (Score Met) ✓', '未符合 ✗');
+            setCriteriaUI('crit-box-2', 'crit-badge-2', calculationState.crit2, '符合 (≥4區) ✓', '未符合 (<4區) ✗');
+            setCriteriaUI('crit-box-3', 'crit-badge-3', calculationState.crit3, '符合 (≥3個月) ✓', '未達 3 個月 ✗');
+
+            // Final Verdict Banner
+            const verdictBanner = document.getElementById('verdict-banner');
+            const verdictIcon = document.getElementById('verdict-icon');
+            const verdictTitle = document.getElementById('verdict-title');
+            const verdictDesc = document.getElementById('verdict-desc');
+
+            if (calculationState.isFibromyalgia) {
+                verdictBanner.className = "rounded-xl p-4 border transition-all duration-300 bg-rose-50 border-rose-300 text-rose-900 shadow-sm";
+                verdictIcon.className = "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-rose-500 text-white";
+                verdictIcon.innerHTML = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>`;
+                verdictTitle.className = "font-bold text-base text-rose-950 leading-tight";
+                verdictTitle.innerText = "符合 2016 ACR 纖維肌痛症診斷標準";
+                verdictDesc.className = "text-xs text-rose-700 mt-0.5";
+                verdictDesc.innerText = "已滿足 WPI/SSS 分數、5 區涵蓋 ≥ 4 區及病程 ≥ 3 個月。";
+            } else {
+                verdictBanner.className = "rounded-xl p-4 border transition-all duration-300 bg-slate-100 border-slate-200 text-slate-700";
+                verdictIcon.className = "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-slate-200 text-slate-600";
+                verdictIcon.innerHTML = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+                verdictTitle.className = "font-bold text-base text-slate-900 leading-tight";
+                verdictTitle.innerText = "未達 2016 ACR 診斷標準";
+                verdictDesc.className = "text-xs text-slate-600 mt-0.5";
+                verdictDesc.innerText = "尚未同時滿足所有必備準則。";
+            }
+        }
+
+        function setCriteriaUI(boxId, badgeId, isMet, metText, unMetText) {
+            const box = document.getElementById(boxId);
+            const badge = document.getElementById(badgeId);
+            if (isMet) {
+                box.className = "p-2.5 rounded-lg border bg-emerald-50 border-emerald-200 flex items-start justify-between gap-2";
+                badge.className = "px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-200 text-emerald-800 flex-shrink-0";
+                badge.innerText = metText;
+            } else {
+                box.className = "p-2.5 rounded-lg border bg-slate-50 border-slate-200 flex items-start justify-between gap-2";
+                badge.className = "px-2 py-0.5 rounded text-[11px] font-bold bg-slate-200 text-slate-600 flex-shrink-0";
+                badge.innerText = unMetText;
+            }
+        }
+
+        // Reset Everything
+        function resetAllForm() {
+            document.querySelectorAll('.wpi-item').forEach(cb => cb.checked = false);
+            document.querySelectorAll('.sss-somatic').forEach(cb => cb.checked = false);
+            document.querySelectorAll('input[type="radio"][value="0"]').forEach(r => r.checked = true);
+            const durationEl = document.getElementById('duration-check');
+            if (durationEl) durationEl.checked = true;
+            recalculateScores();
+            showToast("已重置所有選項與評分");
+        }
+
+        // Apply Sample Clinical Case for demonstration
+        function applySampleCase(isPositive) {
+            resetAllForm();
+            if (isPositive) {
+                // Select 8 WPI across 4 regions
+                const sitesToSelect = ['左頸', '左肩', '右頸', '右肩', '左臀', '右大腿', '頸部', '上背'];
+                document.querySelectorAll('.wpi-item').forEach(cb => {
+                    if (sitesToSelect.includes(cb.value)) cb.checked = true;
+                });
+
+                // SSS: Fatigue=2, Sleep=2, Cog=2
+                document.querySelector('input[name="sss_fatigue"][value="2"]').checked = true;
+                document.querySelector('input[name="sss_sleep"][value="2"]').checked = true;
+                document.querySelector('input[name="sss_cog"][value="1"]').checked = true;
+
+                // Somatic: Headache=1, Abdomen=1
+                document.getElementById('somatic-headache').checked = true;
+                document.getElementById('somatic-abdomen').checked = true;
+            }
+            recalculateScores();
+            showToast("已載入陽性臨床診斷示範案例");
+        }
+
+        // Copy Clinical EHR Summary
+        function copyClinicalReport() {
+            const dateStr = new Date().toLocaleDateString('zh-TW');
+            const summary = `【2016 ACR 纖維肌痛症 (Fibromyalgia) 評估報告】
+評估日期: ${dateStr}
+----------------------------------------
+1. 廣泛性疼痛指標 (WPI): ${calculationState.wpiScore} / 19 分
+   - 疼痛分佈區域數: ${calculationState.activeRegionCount} / 5 區 (左上:${calculationState.regions.LU}, 右上:${calculationState.regions.RU}, 左下:${calculationState.regions.LL}, 右下:${calculationState.regions.RL}, 中軸:${calculationState.regions.AX})
+   - 勾選部位: ${calculationState.selectedSites.join('、') || '無'}
+
+2. 症狀嚴重程度 (SSS): ${calculationState.sssScore} / 12 分
+   - A部分 核心症狀得分: ${calculationState.sssPartA} / 9 分
+   - B部分 伴隨症狀得分: ${calculationState.sssPartB} / 3 分
+
+3. 纖維肌痛症嚴重度總分 (FS Score): ${calculationState.fsScore} / 31 分
+4. 症狀維持 ≥ 3 個月: ${calculationState.crit3 ? '是' : '否'}
+----------------------------------------
+【診斷評估結論】
+- 條件1 (評分門檻): ${calculationState.crit1 ? '符合' : '未達標'}
+- 條件2 (全身性疼痛 ≥4區): ${calculationState.crit2 ? '符合' : '未達標'}
+- 條件3 (持續 ≥3個月): ${calculationState.crit3 ? '符合' : '未達標'}
+>> 診斷判定: 【${calculationState.isFibromyalgia ? '符合 2016 ACR 纖維肌痛症診斷標準' : '未達 2016 ACR 診斷標準'}】`;
+
+            // Fallback safe copy
+            const textarea = document.createElement('textarea');
+            textarea.value = summary;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+
+            showToast("病歷評估摘要已成功複製至剪貼簿！");
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            toastMsg.innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+                toast.classList.remove('translate-y-0', 'opacity-100');
+            }, 2500);
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            // Attach onchange listeners to all inputs
+            document.querySelectorAll('.wpi-item, .sss-radio, .sss-somatic, #duration-check').forEach(element => {
+                element.addEventListener('change', recalculateScores);
+            });
+
+            // Initial calculation
+            recalculateScores();
+        });
+    </script>
+</body>
+</html>
