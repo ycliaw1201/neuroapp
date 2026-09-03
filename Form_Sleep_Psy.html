@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>心理健康與睡眠品質臨床量表評估系統</title>
+  <title>心理健康與睡眠品質量表評估系統</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- FontAwesome Icons CDN -->
@@ -12,20 +12,20 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&display=swap');
     body {
       font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
-      font-size: 13px;
     }
     
-    /* 緊湊精緻輸入框 */
+    /* 放大、清晰的快速輸入框 */
     .quick-input {
-      width: 2.25rem;
-      height: 1.85rem;
+      width: 2.6rem;
+      height: 2.2rem;
       text-align: center;
+      font-size: 1rem;
       font-weight: 700;
-      border-radius: 0.375rem;
-      border: 1.5px solid #cbd5e1;
+      border-radius: 0.5rem;
+      border: 2px solid #cbd5e1;
       background-color: #ffffff;
       color: #0f172a;
       transition: all 0.15s ease-in-out;
@@ -33,19 +33,19 @@
     .quick-input:focus {
       outline: none;
       border-color: #2563eb;
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
       background-color: #eff6ff;
     }
 
-    /* 緊湊選項按鈕 */
+    /* 單選核取效果 */
     .compact-opt input:checked + span {
       background-color: #2563eb;
       color: #ffffff;
       border-color: #1d4ed8;
-      font-weight: 600;
+      font-weight: 700;
     }
 
-    /* 隱藏 Chrome/Safari 數字微調箭頭 */
+    /* 移除數字旋鈕 */
     input[type=number]::-webkit-inner-spin-button, 
     input[type=number]::-webkit-outer-spin-button { 
       -webkit-appearance: none; 
@@ -55,395 +55,393 @@
       -moz-appearance: textfield;
     }
 
-    /* 自訂精簡卷軸 */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #f1f5f9;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
-      border-radius: 3px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #94a3b8;
-    }
-
-    /* 列印專用配置 */
-    @media print {
-      .no-print { display: none !important; }
-      body { background: #ffffff !important; color: #000000 !important; }
-      .scale-card { break-inside: avoid; border: 1px solid #cbd5e1 !important; box-shadow: none !important; }
+    /* 頁面無捲軸容器高度規範 */
+    @media (min-width: 1024px) {
+      .tab-page-container {
+        height: calc(100vh - 122px);
+      }
     }
   </style>
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col antialiased">
+<body class="bg-slate-100 text-slate-800 h-screen flex flex-col overflow-hidden antialiased select-none">
 
-  <header class="bg-slate-900 text-white shadow-md sticky top-0 z-50 border-b border-slate-800 no-print">
-    <div class="max-w-[1700px] mx-auto px-3 sm:px-5 py-2.5 flex items-center justify-between gap-3">
+  <!-- 頂部精簡控制列 -->
+  <header class="bg-slate-900 text-white shadow-md z-50 border-b border-slate-800 shrink-0">
+    <div class="max-w-[1920px] mx-auto px-4 py-2 flex items-center justify-between gap-3">
       <div class="flex items-center space-x-3">
-        <div class="w-8 h-8 rounded-lg bg-blue-600/30 border border-blue-400/40 flex items-center justify-center text-blue-400 text-base font-bold shadow-inner">
+        <div class="w-8 h-8 rounded-lg bg-blue-600/30 border border-blue-400/40 flex items-center justify-center text-blue-400 text-base font-bold">
           <i class="fa-solid fa-brain"></i>
         </div>
         <div>
-          <h1 class="text-sm sm:text-base font-bold tracking-tight text-white flex items-center gap-2">
-            心理健康與睡眠量表綜合系統
-            <span class="text-[10px] font-normal px-2 py-0.5 bg-blue-500/20 text-blue-300 border border-blue-400/30 rounded">單頁密集多欄 + Tab 快速輸入版</span>
+          <h1 class="text-base font-bold tracking-tight text-white flex items-center gap-2">
+            心理健康與睡眠量表系統
+            <span class="text-xs font-normal px-2 py-0.5 bg-blue-500/20 text-blue-300 border border-blue-400/30 rounded">單頁分欄 × 鍵盤快速輸入</span>
           </h1>
         </div>
       </div>
 
-      <!-- 頂部按鈕 -->
+      <!-- 即時精簡分數預覽與動作按鈕 -->
       <div class="flex items-center space-x-2">
-        <button onclick="scrollToSection('radar-summary-card')" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 rounded border border-slate-700 transition flex items-center gap-1.5">
-          <i class="fa-solid fa-chart-radar text-blue-400"></i>
-          <span>分析摘要</span>
-        </button>
-        <button onclick="copyComprehensiveReport()" class="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-xs font-semibold text-white rounded transition flex items-center gap-1.5 shadow-sm">
+        <!-- 簡化病歷字串預覽列 -->
+        <div class="hidden xl:flex items-center px-3 py-1 bg-slate-800 rounded-lg border border-slate-700 text-xs font-mono text-blue-200">
+          <span id="quick-preview-string">PSQI ( 0 ), ISI ( 0 ), ESS ( 0 ), Y-BOCS ( 0 ), HADS ( 0, A-0, D-0 ), BDI ( 0 )</span>
+        </div>
+
+        <button onclick="copySimplifiedScores()" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm font-bold text-white rounded-lg transition flex items-center gap-1.5 shadow-sm active:scale-95">
           <i class="fa-regular fa-copy"></i>
-          <span>複製病歷報告</span>
+          <span>複製臨床分數</span>
         </button>
-        <button onclick="window.print()" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 rounded border border-slate-700 transition flex items-center gap-1.5">
-          <i class="fa-solid fa-print"></i>
-          <span>列印</span>
-        </button>
-        <button onclick="resetAllScales()" class="px-2.5 py-1.5 bg-rose-900/40 hover:bg-rose-800 text-rose-300 hover:text-white text-xs font-medium rounded border border-rose-700/50 transition flex items-center gap-1.5">
+        <button onclick="resetAllScales()" class="px-3 py-1.5 bg-rose-950/60 hover:bg-rose-900 text-rose-300 hover:text-white text-xs sm:text-sm font-semibold rounded-lg border border-rose-700/60 transition flex items-center gap-1.5 active:scale-95">
           <i class="fa-solid fa-trash-can"></i>
           <span>全部重置</span>
         </button>
       </div>
     </div>
+
+    <!-- 頁籤導覽標籤列 -->
+    <div class="max-w-[1920px] mx-auto px-4 flex space-x-1.5 overflow-x-auto bg-slate-950/60 py-1.5 border-t border-slate-800 text-xs sm:text-sm">
+      <button onclick="switchTab('psqi')" id="tab-psqi" class="tab-btn px-4 py-2 font-bold rounded-lg transition flex items-center gap-2 bg-blue-600 text-white shadow">
+        <i class="fa-solid fa-bed text-blue-200"></i>
+        <span>1. PSQI 睡眠品質</span>
+        <span id="tab-badge-psqi" class="px-1.5 py-0.2 text-[11px] rounded bg-white/20">0分</span>
+      </button>
+
+      <button onclick="switchTab('isi')" id="tab-isi" class="tab-btn px-4 py-2 font-bold rounded-lg transition flex items-center gap-2 text-slate-300 hover:text-white hover:bg-slate-800">
+        <i class="fa-solid fa-moon text-amber-300"></i>
+        <span>2. ISI 失眠嚴重度</span>
+        <span id="tab-badge-isi" class="px-1.5 py-0.2 text-[11px] rounded bg-slate-800 text-slate-300">0分</span>
+      </button>
+
+      <button onclick="switchTab('ess')" id="tab-ess" class="tab-btn px-4 py-2 font-bold rounded-lg transition flex items-center gap-2 text-slate-300 hover:text-white hover:bg-slate-800">
+        <i class="fa-solid fa-cloud-moon text-indigo-300"></i>
+        <span>3. ESS 嗜睡量表</span>
+        <span id="tab-badge-ess" class="px-1.5 py-0.2 text-[11px] rounded bg-slate-800 text-slate-300">0分</span>
+      </button>
+
+      <button onclick="switchTab('ybocs')" id="tab-ybocs" class="tab-btn px-4 py-2 font-bold rounded-lg transition flex items-center gap-2 text-slate-300 hover:text-white hover:bg-slate-800">
+        <i class="fa-solid fa-arrows-rotate text-purple-300"></i>
+        <span>4. Y-BOCS 強迫症</span>
+        <span id="tab-badge-ybocs" class="px-1.5 py-0.2 text-[11px] rounded bg-slate-800 text-slate-300">0分</span>
+      </button>
+
+      <button onclick="switchTab('hads')" id="tab-hads" class="tab-btn px-4 py-2 font-bold rounded-lg transition flex items-center gap-2 text-slate-300 hover:text-white hover:bg-slate-800">
+        <i class="fa-solid fa-heart-pulse text-teal-300"></i>
+        <span>5. HADS 焦慮抑鬱</span>
+        <span id="tab-badge-hads" class="px-1.5 py-0.2 text-[11px] rounded bg-slate-800 text-slate-300">A:0 D:0</span>
+      </button>
+
+      <button onclick="switchTab('bdi')" id="tab-bdi" class="tab-btn px-4 py-2 font-bold rounded-lg transition flex items-center gap-2 text-slate-300 hover:text-white hover:bg-slate-800">
+        <i class="fa-solid fa-cloud-rain text-rose-300"></i>
+        <span>6. BDI 貝克憂鬱</span>
+        <span id="tab-badge-bdi" class="px-1.5 py-0.2 text-[11px] rounded bg-slate-800 text-slate-300">0分</span>
+      </button>
+
+      <button onclick="switchTab('summary')" id="tab-summary" class="tab-btn px-4 py-2 font-bold rounded-lg transition flex items-center gap-2 text-slate-300 hover:text-white hover:bg-slate-800">
+        <i class="fa-solid fa-chart-radar text-emerald-300"></i>
+        <span>7. 綜合報告儀表板</span>
+      </button>
+    </div>
   </header>
 
-  <main class="max-w-[1700px] mx-auto px-2 sm:px-4 py-3 flex-grow w-full space-y-3">
-    
-    <!-- 頂部快速計分看板 -->
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 no-print">
-      <div class="bg-white px-3 py-2 rounded-lg border border-slate-200 shadow-2xs flex items-center justify-between cursor-pointer hover:border-blue-300 transition" onclick="scrollToSection('scale-psqi')">
-        <div>
-          <div class="text-[11px] font-bold text-blue-600">PSQI 睡眠</div>
-          <div class="text-base font-black text-slate-800" id="live-psqi">0 <span class="text-[10px] font-normal text-slate-400">/21</span></div>
-        </div>
-        <span id="tag-psqi" class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">正常</span>
-      </div>
+  <!-- 主內容區塊：各頁籤單頁容器 -->
+  <main class="max-w-[1920px] mx-auto px-4 py-3 flex-grow w-full tab-page-container overflow-y-auto lg:overflow-hidden">
 
-      <div class="bg-white px-3 py-2 rounded-lg border border-slate-200 shadow-2xs flex items-center justify-between cursor-pointer hover:border-indigo-300 transition" onclick="scrollToSection('scale-ess')">
-        <div>
-          <div class="text-[11px] font-bold text-indigo-600">ESS 嗜睡</div>
-          <div class="text-base font-black text-slate-800" id="live-ess">0 <span class="text-[10px] font-normal text-slate-400">/24</span></div>
-        </div>
-        <span id="tag-ess" class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">正常</span>
-      </div>
-
-      <div class="bg-white px-3 py-2 rounded-lg border border-slate-200 shadow-2xs flex items-center justify-between cursor-pointer hover:border-amber-300 transition" onclick="scrollToSection('scale-isi')">
-        <div>
-          <div class="text-[11px] font-bold text-amber-600">ISI 失眠</div>
-          <div class="text-base font-black text-slate-800" id="live-isi">0 <span class="text-[10px] font-normal text-slate-400">/28</span></div>
-        </div>
-        <span id="tag-isi" class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">正常</span>
-      </div>
-
-      <div class="bg-white px-3 py-2 rounded-lg border border-slate-200 shadow-2xs flex items-center justify-between cursor-pointer hover:border-purple-300 transition" onclick="scrollToSection('scale-ybocs')">
-        <div>
-          <div class="text-[11px] font-bold text-purple-600">Y-BOCS 強迫</div>
-          <div class="text-base font-black text-slate-800" id="live-ybocs">0 <span class="text-[10px] font-normal text-slate-400">/40</span></div>
-        </div>
-        <span id="tag-ybocs" class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">無症狀</span>
-      </div>
-
-      <div class="bg-white px-3 py-2 rounded-lg border border-slate-200 shadow-2xs flex items-center justify-between cursor-pointer hover:border-teal-300 transition" onclick="scrollToSection('scale-hads')">
-        <div>
-          <div class="text-[11px] font-bold text-teal-600">HADS 焦慮/抑鬱</div>
-          <div class="text-base font-black text-slate-800" id="live-hads">A:0 D:0</div>
-        </div>
-        <span id="tag-hads" class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">無異常</span>
-      </div>
-
-      <div class="bg-white px-3 py-2 rounded-lg border border-slate-200 shadow-2xs flex items-center justify-between cursor-pointer hover:border-rose-300 transition" onclick="scrollToSection('scale-bdi')">
-        <div>
-          <div class="text-[11px] font-bold text-rose-600">BDI 憂鬱</div>
-          <div class="text-base font-black text-slate-800" id="live-bdi">0 <span class="text-[10px] font-normal text-slate-400">/63</span></div>
-        </div>
-        <span id="tag-bdi" class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">正常</span>
-      </div>
-    </div>
-
-    <!-- 6 大量表密集三欄式排列 -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-3">
-
-      <!-- ================= 1. PSQI 睡眠品質量表 ================= -->
-      <section id="scale-psqi" class="scale-card bg-white rounded-xl border border-slate-200 shadow-2xs p-3.5 flex flex-col justify-between">
-        <div>
-          <div class="flex items-center justify-between pb-2 border-b border-slate-200 mb-2.5">
-            <div class="flex items-center gap-1.5">
-              <span class="w-6 h-6 rounded bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center">1</span>
-              <div>
-                <h2 class="text-sm font-bold text-slate-900 leading-none">PSQI 匹茲堡睡眠品質量表</h2>
-                <span class="text-[10px] text-slate-400">過去一個月睡眠習慣 (0-21分，≥5分異常)</span>
-              </div>
-            </div>
-            <div class="flex items-center gap-1.5">
-              <span id="score-psqi-badge" class="px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-bold text-xs">0 分</span>
-              <button onclick="resetPSQI()" title="重置 PSQI" class="w-6 h-6 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-700 flex items-center justify-center transition">
-                <i class="fa-solid fa-rotate-left text-xs"></i>
-              </button>
-            </div>
-          </div>
-
-          <!-- PSQI 作息時間輸入 -->
-          <div class="bg-blue-50/50 p-2.5 rounded-lg border border-blue-100 mb-2.5 space-y-2">
-            <div class="text-[11px] font-bold text-blue-900 flex items-center justify-between">
-              <span>一、作息與睡眠時間設定</span>
-              <span id="psqi-calc-stats" class="text-[10px] text-blue-700 font-normal">效率: 85.7% (6.0h/7.0h)</span>
-            </div>
-            <div class="grid grid-cols-2 gap-2 text-xs">
-              <div>
-                <label class="block text-[11px] text-slate-600 mb-0.5">1. 就寢上床時間</label>
-                <input type="time" id="psqi_q1" value="23:30" onchange="calcAll()" tabindex="1" class="w-full px-2 py-1 border border-slate-300 rounded text-xs bg-white focus:ring-1 focus:ring-blue-500 focus:outline-none">
-              </div>
-              <div>
-                <label class="block text-[11px] text-slate-600 mb-0.5">2. 幾分鐘入睡？</label>
-                <div class="flex items-center gap-1">
-                  <input type="number" id="psqi_q2" min="0" max="600" value="30" oninput="calcAll()" tabindex="2" class="w-full px-2 py-1 border border-slate-300 rounded text-xs bg-white text-center font-bold focus:ring-1 focus:ring-blue-500 focus:outline-none">
-                  <span class="text-[10px] text-slate-500 shrink-0">分</span>
-                </div>
-              </div>
-              <div>
-                <label class="block text-[11px] text-slate-600 mb-0.5">3. 早上起床時間</label>
-                <input type="time" id="psqi_q3" value="07:00" onchange="calcAll()" tabindex="3" class="w-full px-2 py-1 border border-slate-300 rounded text-xs bg-white focus:ring-1 focus:ring-blue-500 focus:outline-none">
-              </div>
-              <div>
-                <label class="block text-[11px] text-slate-600 mb-0.5">4. 實際睡著幾小時？</label>
-                <div class="grid grid-cols-2 gap-1">
-                  <input type="number" id="psqi_q4_h" min="0" max="24" value="6" oninput="calcAll()" tabindex="4" class="px-1.5 py-1 border border-slate-300 rounded text-xs bg-white text-center font-bold" placeholder="時">
-                  <input type="number" id="psqi_q4_m" min="0" max="59" value="0" oninput="calcAll()" tabindex="5" class="px-1.5 py-1 border border-slate-300 rounded text-xs bg-white text-center font-bold" placeholder="分">
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- PSQI Q5 子項目列表 (附快速數字輸入框) -->
-          <div class="space-y-1.5 mb-2.5">
-            <div class="text-[11px] font-bold text-slate-700">5. 睡眠困擾 (0:從未, 1:&lt;1次/週, 2:1-2次/週, 3:≥3次/週)</div>
-            <div id="psqi-q5-list" class="space-y-1">
-              <!-- 由 JS 渲染 -->
-            </div>
-          </div>
-
-          <!-- PSQI Q6-9 (附快速數字輸入框) -->
-          <div class="space-y-1.5 pt-2 border-t border-slate-100" id="psqi-q69-list">
-            <!-- 由 JS 渲染 -->
-          </div>
-        </div>
-      </section>
-
-      <!-- ================= 2. ESS 嗜睡量表 ================= -->
-      <section id="scale-ess" class="scale-card bg-white rounded-xl border border-slate-200 shadow-2xs p-3.5 flex flex-col justify-between">
-        <div>
-          <div class="flex items-center justify-between pb-2 border-b border-slate-200 mb-2.5">
-            <div class="flex items-center gap-1.5">
-              <span class="w-6 h-6 rounded bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center justify-center">2</span>
-              <div>
-                <h2 class="text-sm font-bold text-slate-900 leading-none">ESS Epworth 嗜睡量表</h2>
-                <span class="text-[10px] text-slate-400">白天打瞌睡機率 (0-24分，≥11分嗜睡高風險)</span>
-              </div>
-            </div>
-            <div class="flex items-center gap-1.5">
-              <span id="score-ess-badge" class="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 font-bold text-xs">0 分</span>
-              <button onclick="resetESS()" title="重置 ESS" class="w-6 h-6 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-700 flex items-center justify-center transition">
-                <i class="fa-solid fa-rotate-left text-xs"></i>
-              </button>
-            </div>
-          </div>
-
-          <div class="text-[11px] text-slate-500 mb-2 bg-slate-50 p-1.5 rounded border border-slate-200">
-            評分標準：<b>0</b>:從未打瞌睡 ｜ <b>1</b>:很少/偶爾 ｜ <b>2</b>:可能/一半以上 ｜ <b>3</b>:經常/幾乎都會
-          </div>
-
-          <div id="ess-list" class="space-y-1">
-            <!-- 由 JS 渲染 -->
-          </div>
-        </div>
-      </section>
-
-      <!-- ================= 3. ISI 失眠嚴重度量表 ================= -->
-      <section id="scale-isi" class="scale-card bg-white rounded-xl border border-slate-200 shadow-2xs p-3.5 flex flex-col justify-between">
-        <div>
-          <div class="flex items-center justify-between pb-2 border-b border-slate-200 mb-2.5">
-            <div class="flex items-center gap-1.5">
-              <span class="w-6 h-6 rounded bg-amber-100 text-amber-700 text-xs font-bold flex items-center justify-center">3</span>
-              <div>
-                <h2 class="text-sm font-bold text-slate-900 leading-none">ISI 失眠嚴重度量表</h2>
-                <span class="text-[10px] text-slate-400">近兩週失眠情況 (0-28分，≥15分達臨床失眠)</span>
-              </div>
-            </div>
-            <div class="flex items-center gap-1.5">
-              <span id="score-isi-badge" class="px-2 py-0.5 rounded bg-amber-50 text-amber-700 font-bold text-xs">0 分</span>
-              <button onclick="resetISI()" title="重置 ISI" class="w-6 h-6 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-700 flex items-center justify-center transition">
-                <i class="fa-solid fa-rotate-left text-xs"></i>
-              </button>
-            </div>
-          </div>
-
-          <div class="text-[11px] text-slate-500 mb-2 bg-slate-50 p-1.5 rounded border border-slate-200">
-            評分標準：<b>0</b>:無 ｜ <b>1</b>:輕度 ｜ <b>2</b>:中度 ｜ <b>3</b>:重度 ｜ <b>4</b>:極度嚴重
-          </div>
-
-          <div id="isi-list" class="space-y-1.5">
-            <!-- 由 JS 渲染 -->
-          </div>
-        </div>
-      </section>
-
-      <!-- ================= 4. Y-BOCS 耶魯布朗強迫症量表 ================= -->
-      <section id="scale-ybocs" class="scale-card bg-white rounded-xl border border-slate-200 shadow-2xs p-3.5 flex flex-col justify-between">
-        <div>
-          <div class="flex items-center justify-between pb-2 border-b border-slate-200 mb-2.5">
-            <div class="flex items-center gap-1.5">
-              <span class="w-6 h-6 rounded bg-purple-100 text-purple-700 text-xs font-bold flex items-center justify-center">4</span>
-              <div>
-                <h2 class="text-sm font-bold text-slate-900 leading-none">Y-BOCS 耶魯-布朗強迫症量表</h2>
-                <span class="text-[10px] text-slate-400">過去一週強迫思考與行為 (0-40分)</span>
-              </div>
-            </div>
-            <div class="flex items-center gap-1.5">
-              <span id="score-ybocs-badge" class="px-2 py-0.5 rounded bg-purple-50 text-purple-700 font-bold text-xs">0 分</span>
-              <button onclick="resetYBOCS()" title="重置 Y-BOCS" class="w-6 h-6 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-700 flex items-center justify-center transition">
-                <i class="fa-solid fa-rotate-left text-xs"></i>
-              </button>
-            </div>
-          </div>
-
-          <div class="text-[11px] text-slate-500 mb-2 bg-slate-50 p-1.5 rounded border border-slate-200">
-            每題評分 <b>0 ~ 4 分</b>（0:無/完全控制，4:極度嚴重/無法控制）
-          </div>
-
-          <div class="space-y-2">
-            <div>
-              <div class="text-[11px] font-bold text-purple-900 bg-purple-50 px-2 py-0.5 rounded mb-1 flex items-center justify-between">
-                <span>一、強迫性思想 (Q1 ~ Q5)</span>
-                <span id="ybocs-obs-sub" class="font-normal text-purple-700">0 / 20 分</span>
-              </div>
-              <div id="ybocs-obs-list" class="space-y-1"></div>
-            </div>
-
-            <div>
-              <div class="text-[11px] font-bold text-indigo-900 bg-indigo-50 px-2 py-0.5 rounded mb-1 flex items-center justify-between">
-                <span>二、強迫行為 (Q6 ~ Q10)</span>
-                <span id="ybocs-comp-sub" class="font-normal text-indigo-700">0 / 20 分</span>
-              </div>
-              <div id="ybocs-comp-list" class="space-y-1"></div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ================= 5. HADS 醫院焦慮抑鬱情緒測量表 ================= -->
-      <section id="scale-hads" class="scale-card bg-white rounded-xl border border-slate-200 shadow-2xs p-3.5 flex flex-col justify-between">
-        <div>
-          <div class="flex items-center justify-between pb-2 border-b border-slate-200 mb-2.5">
-            <div class="flex items-center gap-1.5">
-              <span class="w-6 h-6 rounded bg-teal-100 text-teal-700 text-xs font-bold flex items-center justify-center">5</span>
-              <div>
-                <h2 class="text-sm font-bold text-slate-900 leading-none">HADS 醫院焦慮抑鬱情緒量表</h2>
-                <span class="text-[10px] text-slate-400">焦慮 (A) 0-21分 ｜ 抑鬱 (D) 0-21分 (≥8分臨界)</span>
-              </div>
-            </div>
-            <div class="flex items-center gap-1.5">
-              <span id="score-hads-badge" class="px-2 py-0.5 rounded bg-teal-50 text-teal-700 font-bold text-xs">A:0 D:0</span>
-              <button onclick="resetHADS()" title="重置 HADS" class="w-6 h-6 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-700 flex items-center justify-center transition">
-                <i class="fa-solid fa-rotate-left text-xs"></i>
-              </button>
-            </div>
-          </div>
-
-          <div class="text-[11px] text-slate-500 mb-2 bg-slate-50 p-1.5 rounded border border-slate-200">
-            請依近一週真實感受作答，輸入 <b>0 ~ 3 分</b>（已自動區分 A焦慮 與 D抑鬱 因子）
-          </div>
-
-          <div id="hads-list" class="space-y-1">
-            <!-- 由 JS 渲染 -->
-          </div>
-        </div>
-      </section>
-
-      <!-- ================= 6. BDI 貝克憂鬱量表 ================= -->
-      <section id="scale-bdi" class="scale-card bg-white rounded-xl border border-slate-200 shadow-2xs p-3.5 flex flex-col justify-between">
-        <div>
-          <div class="flex items-center justify-between pb-2 border-b border-slate-200 mb-2.5">
-            <div class="flex items-center gap-1.5">
-              <span class="w-6 h-6 rounded bg-rose-100 text-rose-700 text-xs font-bold flex items-center justify-center">6</span>
-              <div>
-                <h2 class="text-sm font-bold text-slate-900 leading-none">BDI 貝克憂鬱量表 (21題)</h2>
-                <span class="text-[10px] text-slate-400">近一至兩週情緒 (0-63分，≥17分達臨床憂鬱)</span>
-              </div>
-            </div>
-            <div class="flex items-center gap-1.5">
-              <span id="score-bdi-badge" class="px-2 py-0.5 rounded bg-rose-50 text-rose-700 font-bold text-xs">0 分</span>
-              <button onclick="resetBDI()" title="重置 BDI" class="w-6 h-6 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-700 flex items-center justify-center transition">
-                <i class="fa-solid fa-rotate-left text-xs"></i>
-              </button>
-            </div>
-          </div>
-
-          <div class="text-[11px] text-slate-500 mb-2 bg-slate-50 p-1.5 rounded border border-slate-200">
-            每題輸入 <b>0 ~ 3 分</b>（0:無症狀，3:極為嚴重。第9題為自殺意念警示）
-          </div>
-
-          <div id="bdi-list" class="space-y-1 max-h-[580px] overflow-y-auto pr-1">
-            <!-- 由 JS 渲染 21 題 -->
-          </div>
-        </div>
-      </section>
-
-    </div>
-
-    <!-- ================= 7. 綜合評估總覽與雷達圖 (緊湊版) ================= -->
-    <section id="radar-summary-card" class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 mt-3">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-200 gap-2">
-        <div class="flex items-center gap-2">
-          <span class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm font-bold">
-            <i class="fa-solid fa-chart-pie"></i>
-          </span>
+    <!-- ========================================== -->
+    <!-- 1. PSQI 匹茲堡睡眠品質量表 (2欄排版)        -->
+    <!-- ========================================== -->
+    <section id="section-psqi" class="tab-content h-full flex flex-col justify-between space-y-2">
+      <!-- 頂部資訊與獨立重置 -->
+      <div class="bg-white px-4 py-2.5 rounded-xl border border-slate-200 shadow-2xs flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-3">
+          <span class="px-2.5 py-1 bg-blue-100 text-blue-800 text-xs font-bold rounded">PSQI</span>
           <div>
-            <h3 class="text-sm sm:text-base font-bold text-slate-900 leading-none">6 大量表綜合臨床評估儀表板</h3>
-            <p class="text-[11px] text-slate-500 mt-0.5">即時多維度症狀負荷雷達圖與臨床處置指引</p>
+            <h2 class="text-base sm:text-lg font-bold text-slate-900">匹茲堡睡眠品質量表 (0-21分，≥5分顯示睡眠障礙)</h2>
+            <p class="text-xs text-slate-500">過去一個月日常睡眠習慣 ｜ 七大面向綜合評估</p>
           </div>
         </div>
-        <div class="flex items-center gap-2 no-print">
-          <button onclick="copyComprehensiveReport()" class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded transition flex items-center gap-1.5 shadow-sm">
-            <i class="fa-regular fa-copy"></i>
-            <span>複製臨床病歷摘要</span>
+        <div class="flex items-center gap-3">
+          <div class="text-right">
+            <span class="text-xs text-slate-400">當前得分</span>
+            <div id="score-psqi-badge" class="text-xl font-black text-blue-600 leading-none">0 分</div>
+          </div>
+          <button onclick="resetPSQI()" title="重置本量表" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg border border-slate-300 transition flex items-center gap-1">
+            <i class="fa-solid fa-rotate-left text-xs"></i>
+            <span>重置 PSQI</span>
           </button>
         </div>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-3">
-        <!-- 雷達圖 -->
-        <div class="lg:col-span-4 bg-slate-50 p-3 rounded-lg border border-slate-200 flex flex-col items-center justify-center">
-          <div class="text-xs font-bold text-slate-700 mb-1">多維度症狀嚴重度百分比 (0-100%)</div>
-          <div class="w-full h-56 relative">
+      <!-- 主體雙欄無卷軸排版 -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 flex-grow min-h-0">
+        <!-- 左欄：Q1-Q4 作息與 Q6-Q9 -->
+        <div class="flex flex-col justify-between space-y-2">
+          <!-- 作息與時間卡片 -->
+          <div class="bg-blue-50/50 p-3 rounded-xl border border-blue-100 space-y-2">
+            <div class="flex items-center justify-between text-xs font-bold text-blue-900 border-b border-blue-200/60 pb-1.5">
+              <span>一、作息與睡眠時間換算</span>
+              <span id="psqi-calc-stats" class="text-blue-700 font-semibold">效率: 85.7% (6.0h / 7.0h)</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div class="bg-white p-2 rounded-lg border border-slate-200">
+                <label class="block text-slate-600 font-medium mb-1">1. 通常何時上床就寢？</label>
+                <input type="time" id="psqi_q1" value="23:30" onchange="calcAll()" tabindex="1" class="w-full px-2 py-1.5 border border-slate-300 rounded text-sm bg-white font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+              </div>
+              <div class="bg-white p-2 rounded-lg border border-slate-200">
+                <label class="block text-slate-600 font-medium mb-1">2. 幾分鐘才能入睡？</label>
+                <div class="flex items-center gap-1">
+                  <input type="number" id="psqi_q2" min="0" max="600" value="30" oninput="calcAll()" tabindex="2" class="w-full px-2 py-1.5 border border-slate-300 rounded text-sm bg-white text-center font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                  <span class="text-slate-500 font-bold shrink-0">分鐘</span>
+                </div>
+              </div>
+              <div class="bg-white p-2 rounded-lg border border-slate-200">
+                <label class="block text-slate-600 font-medium mb-1">3. 早上通常何時起床？</label>
+                <input type="time" id="psqi_q3" value="07:00" onchange="calcAll()" tabindex="3" class="w-full px-2 py-1.5 border border-slate-300 rounded text-sm bg-white font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+              </div>
+              <div class="bg-white p-2 rounded-lg border border-slate-200">
+                <label class="block text-slate-600 font-medium mb-1">4. 實際睡著幾小時？</label>
+                <div class="grid grid-cols-2 gap-1">
+                  <input type="number" id="psqi_q4_h" min="0" max="24" value="6" oninput="calcAll()" tabindex="4" class="px-1.5 py-1.5 border border-slate-300 rounded text-sm bg-white text-center font-bold" placeholder="時">
+                  <input type="number" id="psqi_q4_m" min="0" max="59" value="0" oninput="calcAll()" tabindex="5" class="px-1.5 py-1.5 border border-slate-300 rounded text-sm bg-white text-center font-bold" placeholder="分">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Q6-Q9 單項選擇 -->
+          <div class="bg-white p-3 rounded-xl border border-slate-200 flex-grow flex flex-col justify-around space-y-1.5" id="psqi-q69-list">
+            <!-- 由 JS 渲染 Q6-Q9 -->
+          </div>
+        </div>
+
+        <!-- 右欄：Q5 睡眠困擾 10 小項 (5a ~ 5j) -->
+        <div class="bg-white p-3 rounded-xl border border-slate-200 flex flex-col justify-between">
+          <div class="text-xs font-bold text-slate-700 pb-1 border-b border-slate-200 flex items-center justify-between">
+            <span>5. 睡眠出現下列困擾頻率 (0:從未, 1:&lt;1次/週, 2:1-2次/週, 3:≥3次/週)</span>
+            <span class="text-slate-400 font-normal">直接輸入 0~3 分或按 Tab</span>
+          </div>
+          <div class="space-y-1 my-auto" id="psqi-q5-list">
+            <!-- 由 JS 渲染 10 題 -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 2. ISI 失眠嚴重度量表 (單頁寬敞多題排版)     -->
+    <!-- ========================================== -->
+    <section id="section-isi" class="tab-content hidden h-full flex flex-col justify-between space-y-2">
+      <div class="bg-white px-4 py-2.5 rounded-xl border border-slate-200 shadow-2xs flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-3">
+          <span class="px-2.5 py-1 bg-amber-100 text-amber-800 text-xs font-bold rounded">ISI</span>
+          <div>
+            <h2 class="text-base sm:text-lg font-bold text-slate-900">ISI 失眠嚴重度量表 (0-28分，≥15分達中重度失眠)</h2>
+            <p class="text-xs text-slate-500">評估近兩週內失眠困擾與對日常生活的干擾程度</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="text-right">
+            <span class="text-xs text-slate-400">當前得分</span>
+            <div id="score-isi-badge" class="text-xl font-black text-amber-600 leading-none">0 分</div>
+          </div>
+          <button onclick="resetISI()" title="重置本量表" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg border border-slate-300 transition flex items-center gap-1">
+            <i class="fa-solid fa-rotate-left text-xs"></i>
+            <span>重置 ISI</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="bg-white p-4 rounded-xl border border-slate-200 flex-grow flex flex-col justify-around space-y-2" id="isi-list">
+        <!-- 由 JS 渲染 7 題 -->
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 3. ESS Epworth 嗜睡量表 (單頁 8 題排版)     -->
+    <!-- ========================================== -->
+    <section id="section-ess" class="tab-content hidden h-full flex flex-col justify-between space-y-2">
+      <div class="bg-white px-4 py-2.5 rounded-xl border border-slate-200 shadow-2xs flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-3">
+          <span class="px-2.5 py-1 bg-indigo-100 text-indigo-800 text-xs font-bold rounded">ESS</span>
+          <div>
+            <h2 class="text-base sm:text-lg font-bold text-slate-900">Epworth 嗜睡量表 (0-24分，≥11分日間過度嗜睡高風險)</h2>
+            <p class="text-xs text-slate-500">0:不曾打瞌睡 ｜ 1:很少/偶爾 ｜ 2:可能/一半以上 ｜ 3:經常/幾乎都會</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="text-right">
+            <span class="text-xs text-slate-400">當前得分</span>
+            <div id="score-ess-badge" class="text-xl font-black text-indigo-600 leading-none">0 分</div>
+          </div>
+          <button onclick="resetESS()" title="重置本量表" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg border border-slate-300 transition flex items-center gap-1">
+            <i class="fa-solid fa-rotate-left text-xs"></i>
+            <span>重置 ESS</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="bg-white p-4 rounded-xl border border-slate-200 flex-grow flex flex-col justify-around space-y-2" id="ess-list">
+        <!-- 由 JS 渲染 8 題 -->
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 4. Y-BOCS 耶魯布朗強迫症量表 (雙欄對稱排版)   -->
+    <!-- ========================================== -->
+    <section id="section-ybocs" class="tab-content hidden h-full flex flex-col justify-between space-y-2">
+      <div class="bg-white px-4 py-2.5 rounded-xl border border-slate-200 shadow-2xs flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-3">
+          <span class="px-2.5 py-1 bg-purple-100 text-purple-800 text-xs font-bold rounded">Y-BOCS</span>
+          <div>
+            <h2 class="text-base sm:text-lg font-bold text-slate-900">耶魯-布朗強迫症量表 (0-40分，每題0~4分)</h2>
+            <p class="text-xs text-slate-500">評估過去一星期的強迫性思想 (1-5題) 與強迫行為 (6-10題)</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="text-right">
+            <span class="text-xs text-slate-400">當前總分</span>
+            <div id="score-ybocs-badge" class="text-xl font-black text-purple-600 leading-none">0 分</div>
+          </div>
+          <button onclick="resetYBOCS()" title="重置本量表" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg border border-slate-300 transition flex items-center gap-1">
+            <i class="fa-solid fa-rotate-left text-xs"></i>
+            <span>重置 Y-BOCS</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 左右兩欄：左側強迫思想、右側強迫行為 -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 flex-grow min-h-0">
+        <div class="bg-purple-50/40 p-3 rounded-xl border border-purple-100 flex flex-col justify-between">
+          <div class="text-xs font-bold text-purple-900 pb-1.5 border-b border-purple-200 flex items-center justify-between">
+            <span>第一部分：強迫性思想 (Obsessions, Q1 ~ Q5)</span>
+            <span id="ybocs-obs-sub" class="text-purple-700 font-bold">0 / 20 分</span>
+          </div>
+          <div class="space-y-1.5 my-auto" id="ybocs-obs-list"></div>
+        </div>
+
+        <div class="bg-indigo-50/40 p-3 rounded-xl border border-indigo-100 flex flex-col justify-between">
+          <div class="text-xs font-bold text-indigo-900 pb-1.5 border-b border-indigo-200 flex items-center justify-between">
+            <span>第二部分：強迫行為 (Compulsions, Q6 ~ Q10)</span>
+            <span id="ybocs-comp-sub" class="text-indigo-700 font-bold">0 / 20 分</span>
+          </div>
+          <div class="space-y-1.5 my-auto" id="ybocs-comp-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 5. HADS 醫院焦慮抑鬱情緒量表 (雙欄排版)      -->
+    <!-- ========================================== -->
+    <section id="section-hads" class="tab-content hidden h-full flex flex-col justify-between space-y-2">
+      <div class="bg-white px-4 py-2.5 rounded-xl border border-slate-200 shadow-2xs flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-3">
+          <span class="px-2.5 py-1 bg-teal-100 text-teal-800 text-xs font-bold rounded">HADS</span>
+          <div>
+            <h2 class="text-base sm:text-lg font-bold text-slate-900">醫院焦慮抑鬱情緒測量表 (A 焦慮 0-21分 / D 抑鬱 0-21分)</h2>
+            <p class="text-xs text-slate-500">近一週情緒體驗 ｜ 0-7分正常，8-10分臨界，11-21分明顯焦慮/抑鬱</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="text-right">
+            <span class="text-xs text-slate-400">當前維度得分</span>
+            <div id="score-hads-badge" class="text-xl font-black text-teal-600 leading-none">A:0 D:0</div>
+          </div>
+          <button onclick="resetHADS()" title="重置本量表" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg border border-slate-300 transition flex items-center gap-1">
+            <i class="fa-solid fa-rotate-left text-xs"></i>
+            <span>重置 HADS</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 左右兩欄：前 7 題 與 後 7 題 -->
+      <div class="bg-white p-3 rounded-xl border border-slate-200 flex-grow grid grid-cols-1 lg:grid-cols-2 gap-3 min-h-0">
+        <div class="flex flex-col justify-between space-y-1.5" id="hads-list-col1"></div>
+        <div class="flex flex-col justify-between space-y-1.5" id="hads-list-col2"></div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 6. BDI 貝克憂鬱量表 (3欄整齊排版無捲軸)     -->
+    <!-- ========================================== -->
+    <section id="section-bdi" class="tab-content hidden h-full flex flex-col justify-between space-y-2">
+      <div class="bg-white px-4 py-2.5 rounded-xl border border-slate-200 shadow-2xs flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-3">
+          <span class="px-2.5 py-1 bg-rose-100 text-rose-800 text-xs font-bold rounded">BDI</span>
+          <div>
+            <h2 class="text-base sm:text-lg font-bold text-slate-900">貝克憂鬱量表 (Beck Depression Inventory, 0-63分)</h2>
+            <p class="text-xs text-slate-500">0-10分正常，11-16分輕度，17-20分臨界，21-30分中度，31分以上重度 (第9題為自殺意念警示)</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="text-right">
+            <span class="text-xs text-slate-400">當前得分</span>
+            <div id="score-bdi-badge" class="text-xl font-black text-rose-600 leading-none">0 分</div>
+          </div>
+          <button onclick="resetBDI()" title="重置本量表" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg border border-slate-300 transition flex items-center gap-1">
+            <i class="fa-solid fa-rotate-left text-xs"></i>
+            <span>重置 BDI</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 三欄排版：每欄 7 題，剛好 21 題 -->
+      <div class="bg-white p-3 rounded-xl border border-slate-200 flex-grow grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 min-h-0">
+        <div class="flex flex-col justify-between space-y-1" id="bdi-list-col1"></div>
+        <div class="flex flex-col justify-between space-y-1" id="bdi-list-col2"></div>
+        <div class="flex flex-col justify-between space-y-1" id="bdi-list-col3"></div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 7. 綜合報告儀表板與雷達圖                  -->
+    <!-- ========================================== -->
+    <section id="section-summary" class="tab-content hidden h-full flex flex-col justify-between space-y-3">
+      <div class="bg-white px-4 py-2.5 rounded-xl border border-slate-200 shadow-2xs flex items-center justify-between shrink-0">
+        <div>
+          <h2 class="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-chart-pie text-emerald-600"></i>
+            6 大量表綜合臨床評估總覽
+          </h2>
+          <p class="text-xs text-slate-500">多維度症狀雷達圖與標準化臨床切截判定</p>
+        </div>
+        <button onclick="copySimplifiedScores()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm rounded-lg shadow-sm transition flex items-center gap-2">
+          <i class="fa-regular fa-copy"></i>
+          <span>複製臨床分數</span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 flex-grow min-h-0">
+        <!-- 6 軸雷達圖 -->
+        <div class="lg:col-span-5 bg-white p-4 rounded-xl border border-slate-200 flex flex-col items-center justify-center">
+          <h3 class="text-xs font-bold text-slate-700 mb-1">多維度症狀嚴重度百分比 (%)</h3>
+          <div class="w-full h-72 relative">
             <canvas id="summaryRadarChart"></canvas>
           </div>
         </div>
 
-        <!-- 即時臨床診斷建議與發現 -->
-        <div class="lg:col-span-8 bg-slate-50 p-3.5 rounded-lg border border-slate-200 flex flex-col justify-between">
-          <div>
-            <h4 class="text-xs font-bold text-slate-800 mb-2 flex items-center gap-1.5">
-              <i class="fa-solid fa-stethoscope text-blue-600"></i>
-              即時臨床發現與整合指引
-            </h4>
-            <div id="summary-findings" class="space-y-1.5 text-xs text-slate-600">
-              <!-- 動態渲染即時臨床建議 -->
+        <!-- 評估摘要與建議 -->
+        <div class="lg:col-span-7 bg-white p-4 rounded-xl border border-slate-200 flex flex-col justify-between">
+          <div class="space-y-3">
+            <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
+              <span class="text-xs font-bold text-slate-500 block mb-1">標準臨床字串輸出：</span>
+              <p id="summary-preview-code" class="text-sm font-mono font-bold text-blue-700 select-all">
+                PSQI ( 0 ), ISI ( 0 ), ESS ( 0 ), Y-BOCS ( 0 ), HADS ( 0, A-0, D-0 ), BDI ( 0 )
+              </p>
+            </div>
+
+            <div>
+              <h4 class="text-xs font-bold text-slate-800 mb-2 flex items-center gap-1.5">
+                <i class="fa-solid fa-stethoscope text-blue-600"></i>
+                即時臨床發現摘要
+              </h4>
+              <div id="summary-findings" class="space-y-1.5 text-xs text-slate-600">
+                <!-- 動態注入警訊 -->
+              </div>
             </div>
           </div>
 
-          <div class="mt-3 pt-2.5 border-t border-slate-200 text-[11px] text-slate-400 flex flex-wrap items-center justify-between gap-2">
-            <span>標準化參考文獻：PSQI (1989) ｜ ESS (1991) ｜ ISI (2001) ｜ Y-BOCS (1989) ｜ HADS (1983) ｜ BDI (1961)</span>
-            <span>※ 本系統供專業臨床輔助與自評參考</span>
+          <div class="text-[11px] text-slate-400 pt-2 border-t border-slate-200 flex justify-between">
+            <span>標準量表參考：PSQI (1989) ｜ ESS (1991) ｜ ISI (2001) ｜ Y-BOCS (1989) ｜ HADS (1983) ｜ BDI (1961)</span>
+            <span>※ 本系統供專業臨床診察輔助與自評參考</span>
           </div>
         </div>
       </div>
@@ -451,14 +449,15 @@
 
   </main>
 
-  <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-16 opacity-0 transition-all duration-200 pointer-events-none bg-slate-900 text-white px-3.5 py-2.5 rounded-lg shadow-xl flex items-center gap-2 border border-slate-700 text-xs font-medium">
+  <!-- Toast 訊息反饋 -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-16 opacity-0 transition-all duration-200 pointer-events-none bg-slate-900 text-white px-4 py-2.5 rounded-lg shadow-xl flex items-center gap-2 border border-slate-700 text-xs font-bold">
     <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-400"></i>
-    <span id="toast-msg">已成功處理</span>
+    <span id="toast-msg">已成功複製臨床分數</span>
   </div>
 
   <script>
     // ==========================================
-    // 0. 核心題目資料庫結構
+    // 0. 題目題庫資料結構
     // ==========================================
     const psqiQ5Data = [
       { id: '5a', title: '無法在 30 分鐘內入睡' },
@@ -480,6 +479,16 @@
       { id: '9', name: 'psqi_q9', title: '9. 感到無心完成該做的事', opts: ['0=沒有', '1=有一點', '2=的確有', '3=很嚴重'] }
     ];
 
+    const isiData = [
+      { id: 'isi_1a', num: '1a', title: '入睡困難（躺很久才能入睡）' },
+      { id: 'isi_1b', num: '1b', title: '無法維持睡眠（半夜易醒且難再睡）' },
+      { id: 'isi_1c', num: '1c', title: '太早醒來（清晨過早醒來無法再睡）' },
+      { id: 'isi_2', num: '2', title: '滿意自己最近的睡眠狀態嗎？' },
+      { id: 'isi_3', num: '3', title: '睡眠問題干擾日常功能（工作/專注/情緒）' },
+      { id: 'isi_4', num: '4', title: '他人注意到生活品質因睡眠受影響' },
+      { id: 'isi_5', num: '5', title: '最近的睡眠問題令您感到擔心/困擾' }
+    ];
+
     const essData = [
       { id: 1, title: '坐著閱讀書報時' },
       { id: 2, title: '看電視時' },
@@ -489,16 +498,6 @@
       { id: 6, title: '坐著與別人談話時' },
       { id: 7, title: '午餐後靜坐時（未飲酒）' },
       { id: 8, title: '開車等紅綠燈停頓數分鐘時' }
-    ];
-
-    const isiData = [
-      { id: 'isi_1a', num: '1a', title: '入睡困難（躺很久才能入睡）' },
-      { id: 'isi_1b', num: '1b', title: '無法維持睡眠（半夜易醒且難再睡）' },
-      { id: 'isi_1c', num: '1c', title: '太早醒來（清晨過早醒來無法再睡）' },
-      { id: 'isi_2', num: '2', title: '滿意自己最近的睡眠狀態嗎？' },
-      { id: 'isi_3', num: '3', title: '睡眠問題干擾日常功能（工作/情緒）' },
-      { id: 'isi_4', num: '4', title: '他人注意到生活品質因睡眠受影響' },
-      { id: 'isi_5', num: '5', title: '最近的睡眠問題令您感到擔心/困擾' }
     ];
 
     const ybocsData = [
@@ -535,26 +534,27 @@
       { id: 1, title: '1. 悲傷與情緒低落 (Sadness)' },
       { id: 2, title: '2. 悲觀與未來展望 (Pessimism)' },
       { id: 3, title: '3. 失敗感 (Sense of Failure)' },
-      { id: 4, title: '4. 樂趣與滿足感喪失 (Dissatisfaction)' },
+      { id: 4, title: '4. 樂趣喪失 (Dissatisfaction)' },
       { id: 5, title: '5. 內疚與罪惡感 (Guilt)' },
       { id: 6, title: '6. 懲罰感 (Punishment)' },
-      { id: 7, title: '7. 自我厭惡與失望 (Self-Dislike)' },
+      { id: 7, title: '7. 自我厭惡失望 (Self-Dislike)' },
       { id: 8, title: '8. 自我責備 (Self-Blame)' },
       { id: 9, title: '9. 自殺意念 (Suicidal Thoughts ⚠️)' },
       { id: 10, title: '10. 哭泣傾向 (Crying)' },
-      { id: 11, title: '11. 易怒與煩躁程度 (Irritability)' },
-      { id: 12, title: '12. 社交興趣減退 (Social Withdrawal)' },
+      { id: 11, title: '11. 易怒煩躁 (Irritability)' },
+      { id: 12, title: '12. 社交興趣減退 (Social)' },
       { id: 13, title: '13. 猶豫不決 (Indecisiveness)' },
-      { id: 14, title: '14. 外貌與自我形象改變 (Body Image)' },
-      { id: 15, title: '15. 工作與行動力抑制 (Work Inhibition)' },
-      { id: 16, title: '16. 睡眠障礙 (Sleep Disturbance)' },
+      { id: 14, title: '14. 外貌自我形象 (Body Image)' },
+      { id: 15, title: '15. 工作行動力抑制 (Work)' },
+      { id: 16, title: '16. 睡眠障礙 (Sleep)' },
       { id: 17, title: '17. 易疲勞感 (Fatigability)' },
-      { id: 18, title: '18. 食慾減退 (Loss of Appetite)' },
+      { id: 18, title: '18. 食慾減退 (Appetite)' },
       { id: 19, title: '19. 體重減輕 (Weight Loss)' },
-      { id: 20, title: '20. 身體健康擔憂 (Somatic Concern)' },
-      { id: 21, title: '21. 性慾減退 (Loss of Libido)' }
+      { id: 20, title: '20. 身體健康擔憂 (Somatic)' },
+      { id: 21, title: '21. 性慾減退 (Libido)' }
     ];
 
+    // Tab 鍵順序計數器
     let currentTabIndex = 10;
     function nextTab() {
       return ++currentTabIndex;
@@ -566,18 +566,18 @@
       // 1. PSQI Q5
       const psqiQ5Container = document.getElementById('psqi-q5-list');
       psqiQ5Container.innerHTML = psqiQ5Data.map(item => `
-        <div class="flex items-center justify-between p-1.5 rounded bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-xs">
+        <div class="flex items-center justify-between p-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs sm:text-sm">
           <div class="flex items-center gap-2 flex-grow truncate pr-2">
             <input type="number" id="input_psqi_5_${item.id}" min="0" max="3" value="0" tabindex="${nextTab()}"
               oninput="syncFromInput('psqi_q5_${item.id}', this, 3)"
-              class="quick-input shrink-0" title="輸入 0~3 分並按 Tab 跳下一題">
-            <span class="truncate font-medium text-slate-800">(${item.id}) ${item.title}</span>
+              class="quick-input shrink-0" title="輸入 0~3 分並按 Tab">
+            <span class="truncate font-semibold text-slate-800">(${item.id}) ${item.title}</span>
           </div>
           <div class="flex items-center gap-1 shrink-0">
             ${[0,1,2,3].map(v => `
               <label class="compact-opt cursor-pointer">
                 <input type="radio" name="psqi_q5_${item.id}" value="${v}" ${v===0?'checked':''} class="sr-only" onchange="syncToInput('input_psqi_5_${item.id}', ${v})">
-                <span class="px-1.5 py-0.5 text-[11px] rounded border border-slate-200 bg-white hover:bg-slate-50 transition">${v}</span>
+                <span class="px-2 py-1 text-xs rounded-md border border-slate-200 bg-white hover:bg-slate-50 transition">${v}</span>
               </label>
             `).join('')}
           </div>
@@ -587,60 +587,60 @@
       // 1. PSQI Q6-Q9
       const psqiQ69Container = document.getElementById('psqi-q69-list');
       psqiQ69Container.innerHTML = psqiQ69Data.map(item => `
-        <div class="flex items-center justify-between p-1.5 rounded bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-xs">
+        <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs sm:text-sm">
           <div class="flex items-center gap-2 flex-grow truncate pr-2">
             <input type="number" id="input_psqi_${item.id}" min="0" max="3" value="0" tabindex="${nextTab()}"
               oninput="syncFromInput('${item.name}', this, 3)"
-              class="quick-input shrink-0" title="輸入 0~3 分並按 Tab 跳下一題">
-            <span class="truncate font-medium text-slate-800">${item.title}</span>
+              class="quick-input shrink-0" title="輸入 0~3 分並按 Tab">
+            <span class="truncate font-semibold text-slate-800">${item.title}</span>
           </div>
           <div class="flex items-center gap-1 shrink-0">
             ${[0,1,2,3].map(v => `
               <label class="compact-opt cursor-pointer">
                 <input type="radio" name="${item.name}" value="${v}" ${v===0?'checked':''} class="sr-only" onchange="syncToInput('input_psqi_${item.id}', ${v})">
-                <span class="px-1.5 py-0.5 text-[11px] rounded border border-slate-200 bg-white hover:bg-slate-50 transition">${v}</span>
+                <span class="px-2 py-1 text-xs rounded-md border border-slate-200 bg-white hover:bg-slate-50 transition">${v}</span>
               </label>
             `).join('')}
           </div>
         </div>
       `).join('');
 
-      // 2. ESS
-      const essContainer = document.getElementById('ess-list');
-      essContainer.innerHTML = essData.map(item => `
-        <div class="flex items-center justify-between p-1.5 rounded bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-xs">
-          <div class="flex items-center gap-2 flex-grow truncate pr-2">
-            <input type="number" id="input_ess_${item.id}" min="0" max="3" value="0" tabindex="${nextTab()}"
-              oninput="syncFromInput('ess_q${item.id}', this, 3)"
-              class="quick-input shrink-0" title="輸入 0~3 分並按 Tab 跳下一題">
-            <span class="truncate font-medium text-slate-800">${item.id}. ${item.title}</span>
-          </div>
-          <div class="flex items-center gap-1 shrink-0">
-            ${[0,1,2,3].map(v => `
-              <label class="compact-opt cursor-pointer">
-                <input type="radio" name="ess_q${item.id}" value="${v}" ${v===0?'checked':''} class="sr-only" onchange="syncToInput('input_ess_${item.id}', ${v})">
-                <span class="px-1.5 py-0.5 text-[11px] rounded border border-slate-200 bg-white hover:bg-slate-50 transition">${v}</span>
-              </label>
-            `).join('')}
-          </div>
-        </div>
-      `).join('');
-
-      // 3. ISI
+      // 2. ISI
       const isiContainer = document.getElementById('isi-list');
       isiContainer.innerHTML = isiData.map(item => `
-        <div class="flex items-center justify-between p-1.5 rounded bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-xs">
-          <div class="flex items-center gap-2 flex-grow truncate pr-2">
+        <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-sm">
+          <div class="flex items-center gap-3 flex-grow truncate pr-2">
             <input type="number" id="input_${item.id}" min="0" max="4" value="0" tabindex="${nextTab()}"
               oninput="syncFromInput('${item.id}', this, 4)"
-              class="quick-input shrink-0" title="輸入 0~4 分並按 Tab 跳下一題">
-            <span class="truncate font-medium text-slate-800">${item.num}. ${item.title}</span>
+              class="quick-input shrink-0" title="輸入 0~4 分並按 Tab">
+            <span class="font-bold text-slate-800 truncate">${item.num}. ${item.title}</span>
           </div>
-          <div class="flex items-center gap-1 shrink-0">
+          <div class="flex items-center gap-1.5 shrink-0">
             ${[0,1,2,3,4].map(v => `
               <label class="compact-opt cursor-pointer">
                 <input type="radio" name="${item.id}" value="${v}" ${v===0?'checked':''} class="sr-only" onchange="syncToInput('input_${item.id}', ${v})">
-                <span class="px-1.5 py-0.5 text-[11px] rounded border border-slate-200 bg-white hover:bg-slate-50 transition">${v}</span>
+                <span class="px-2.5 py-1 text-xs sm:text-sm rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition">${v}</span>
+              </label>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+
+      // 3. ESS
+      const essContainer = document.getElementById('ess-list');
+      essContainer.innerHTML = essData.map(item => `
+        <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-sm">
+          <div class="flex items-center gap-3 flex-grow truncate pr-2">
+            <input type="number" id="input_ess_${item.id}" min="0" max="3" value="0" tabindex="${nextTab()}"
+              oninput="syncFromInput('ess_q${item.id}', this, 3)"
+              class="quick-input shrink-0" title="輸入 0~3 分並按 Tab">
+            <span class="font-bold text-slate-800 truncate">${item.id}. ${item.title}</span>
+          </div>
+          <div class="flex items-center gap-1.5 shrink-0">
+            ${[0,1,2,3].map(v => `
+              <label class="compact-opt cursor-pointer">
+                <input type="radio" name="ess_q${item.id}" value="${v}" ${v===0?'checked':''} class="sr-only" onchange="syncToInput('input_ess_${item.id}', ${v})">
+                <span class="px-3 py-1 text-xs sm:text-sm rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition">${v}</span>
               </label>
             `).join('')}
           </div>
@@ -652,18 +652,18 @@
       const ybocsCompContainer = document.getElementById('ybocs-comp-list');
       
       ybocsObsContainer.innerHTML = ybocsData.filter(q => q.type === 'obs').map(item => `
-        <div class="flex items-center justify-between p-1.5 rounded bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-xs">
+        <div class="flex items-center justify-between p-2 rounded-lg bg-white border border-purple-200/80 text-xs sm:text-sm">
           <div class="flex items-center gap-2 flex-grow truncate pr-2">
             <input type="number" id="input_ybocs_${item.id}" min="0" max="4" value="0" tabindex="${nextTab()}"
               oninput="syncFromInput('ybocs_q${item.id}', this, 4)"
-              class="quick-input shrink-0" title="輸入 0~4 分並按 Tab 跳下一題">
-            <span class="truncate font-medium text-slate-800">${item.title}</span>
+              class="quick-input shrink-0 border-purple-300" title="輸入 0~4 分並按 Tab">
+            <span class="font-semibold text-slate-800 truncate">${item.title}</span>
           </div>
           <div class="flex items-center gap-1 shrink-0">
             ${[0,1,2,3,4].map(v => `
               <label class="compact-opt cursor-pointer">
                 <input type="radio" name="ybocs_q${item.id}" value="${v}" ${v===0?'checked':''} class="sr-only" onchange="syncToInput('input_ybocs_${item.id}', ${v})">
-                <span class="px-1.5 py-0.5 text-[11px] rounded border border-slate-200 bg-white hover:bg-slate-50 transition">${v}</span>
+                <span class="px-2 py-1 text-xs rounded-md border border-slate-200 bg-slate-50 hover:bg-purple-50 transition">${v}</span>
               </label>
             `).join('')}
           </div>
@@ -671,67 +671,75 @@
       `).join('');
 
       ybocsCompContainer.innerHTML = ybocsData.filter(q => q.type === 'comp').map(item => `
-        <div class="flex items-center justify-between p-1.5 rounded bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-xs">
+        <div class="flex items-center justify-between p-2 rounded-lg bg-white border border-indigo-200/80 text-xs sm:text-sm">
           <div class="flex items-center gap-2 flex-grow truncate pr-2">
             <input type="number" id="input_ybocs_${item.id}" min="0" max="4" value="0" tabindex="${nextTab()}"
               oninput="syncFromInput('ybocs_q${item.id}', this, 4)"
-              class="quick-input shrink-0" title="輸入 0~4 分並按 Tab 跳下一題">
-            <span class="truncate font-medium text-slate-800">${item.title}</span>
+              class="quick-input shrink-0 border-indigo-300" title="輸入 0~4 分並按 Tab">
+            <span class="font-semibold text-slate-800 truncate">${item.title}</span>
           </div>
           <div class="flex items-center gap-1 shrink-0">
             ${[0,1,2,3,4].map(v => `
               <label class="compact-opt cursor-pointer">
                 <input type="radio" name="ybocs_q${item.id}" value="${v}" ${v===0?'checked':''} class="sr-only" onchange="syncToInput('input_ybocs_${item.id}', ${v})">
-                <span class="px-1.5 py-0.5 text-[11px] rounded border border-slate-200 bg-white hover:bg-slate-50 transition">${v}</span>
+                <span class="px-2 py-1 text-xs rounded-md border border-slate-200 bg-slate-50 hover:bg-indigo-50 transition">${v}</span>
               </label>
             `).join('')}
           </div>
         </div>
       `).join('');
 
-      // 5. HADS
-      const hadsContainer = document.getElementById('hads-list');
-      hadsContainer.innerHTML = hadsData.map(item => `
-        <div class="flex items-center justify-between p-1.5 rounded bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-xs">
+      // 5. HADS (雙欄：前 7 題與後 7 題)
+      const hadsCol1 = document.getElementById('hads-list-col1');
+      const hadsCol2 = document.getElementById('hads-list-col2');
+      const renderHadsItem = item => `
+        <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs sm:text-sm">
           <div class="flex items-center gap-2 flex-grow truncate pr-2">
             <input type="number" id="input_hads_${item.id}" min="0" max="3" value="0" tabindex="${nextTab()}"
               oninput="syncFromInput('hads_q${item.id}', this, 3)"
-              class="quick-input shrink-0" title="輸入 0~3 分並按 Tab 跳下一題">
-            <span class="truncate font-medium text-slate-800">${item.title}</span>
+              class="quick-input shrink-0 ${item.type==='A'?'border-teal-300':'border-blue-300'}" title="輸入 0~3 分並按 Tab">
+            <span class="font-semibold text-slate-800 truncate">${item.title}</span>
           </div>
           <div class="flex items-center gap-1 shrink-0">
             ${[0,1,2,3].map(v => `
               <label class="compact-opt cursor-pointer">
                 <input type="radio" name="hads_q${item.id}" value="${v}" ${v===0?'checked':''} class="sr-only" onchange="syncToInput('input_hads_${item.id}', ${v})">
-                <span class="px-1.5 py-0.5 text-[11px] rounded border border-slate-200 bg-white hover:bg-slate-50 transition">${v}</span>
+                <span class="px-2 py-1 text-xs rounded-md border border-slate-200 bg-white hover:bg-slate-50 transition">${v}</span>
               </label>
             `).join('')}
           </div>
         </div>
-      `).join('');
+      `;
+      hadsCol1.innerHTML = hadsData.slice(0, 7).map(renderHadsItem).join('');
+      hadsCol2.innerHTML = hadsData.slice(7, 14).map(renderHadsItem).join('');
 
-      // 6. BDI
-      const bdiContainer = document.getElementById('bdi-list');
-      bdiContainer.innerHTML = bdiData.map(item => `
-        <div class="flex items-center justify-between p-1.5 rounded bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-xs ${item.id===9?'border-rose-300 bg-rose-50/40':''}">
-          <div class="flex items-center gap-2 flex-grow truncate pr-2">
+      // 6. BDI (三欄：每欄 7 題)
+      const bdiCol1 = document.getElementById('bdi-list-col1');
+      const bdiCol2 = document.getElementById('bdi-list-col2');
+      const bdiCol3 = document.getElementById('bdi-list-col3');
+      const renderBdiItem = item => `
+        <div class="flex items-center justify-between p-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs sm:text-sm ${item.id===9?'border-rose-400 bg-rose-50/50':''}">
+          <div class="flex items-center gap-2 flex-grow truncate pr-1">
             <input type="number" id="input_bdi_${item.id}" min="0" max="3" value="0" tabindex="${nextTab()}"
               oninput="syncFromInput('bdi_q${item.id}', this, 3)"
-              class="quick-input shrink-0 ${item.id===9?'border-rose-400 text-rose-700':''}" title="輸入 0~3 分並按 Tab 跳下一題">
-            <span class="truncate font-medium ${item.id===9?'text-rose-900 font-bold':'text-slate-800'}">${item.title}</span>
+              class="quick-input shrink-0 ${item.id===9?'border-rose-500 text-rose-700 font-black':''}" title="輸入 0~3 分並按 Tab">
+            <span class="truncate font-semibold ${item.id===9?'text-rose-900 font-bold':'text-slate-800'}">${item.title}</span>
           </div>
           <div class="flex items-center gap-1 shrink-0">
             ${[0,1,2,3].map(v => `
               <label class="compact-opt cursor-pointer">
                 <input type="radio" name="bdi_q${item.id}" value="${v}" ${v===0?'checked':''} class="sr-only" onchange="syncToInput('input_bdi_${item.id}', ${v})">
-                <span class="px-1.5 py-0.5 text-[11px] rounded border border-slate-200 bg-white hover:bg-slate-50 transition">${v}</span>
+                <span class="px-1.5 py-0.5 text-xs rounded border border-slate-200 bg-white hover:bg-slate-50 transition">${v}</span>
               </label>
             `).join('')}
           </div>
         </div>
-      `).join('');
+      `;
+      bdiCol1.innerHTML = bdiData.slice(0, 7).map(renderBdiItem).join('');
+      bdiCol2.innerHTML = bdiData.slice(7, 14).map(renderBdiItem).join('');
+      bdiCol3.innerHTML = bdiData.slice(14, 21).map(renderBdiItem).join('');
 
-      // 啟用所有輸入框反白全選體驗
+      // 啟用聚焦反白快速輸入
       document.querySelectorAll('.quick-input').forEach(input => {
         input.addEventListener('focus', function() {
           this.select();
@@ -746,17 +754,13 @@
       inputEl.value = val;
 
       const radio = document.querySelector(`input[name="${radioName}"][value="${val}"]`);
-      if (radio) {
-        radio.checked = true;
-      }
+      if (radio) radio.checked = true;
       calcAll();
     }
 
     function syncToInput(inputId, val) {
       const inputEl = document.getElementById(inputId);
-      if (inputEl) {
-        inputEl.value = val;
-      }
+      if (inputEl) inputEl.value = val;
       calcAll();
     }
 
@@ -765,23 +769,20 @@
       return el ? parseInt(el.value, 10) : 0;
     }
 
-    // ==========================================
-    // 1. 全局整合即時計算
-    // ==========================================
+    // 全局即時評分物件
     let globalScores = {
       psqi: 0,
-      ess: 0,
       isi: 0,
+      ess: 0,
       ybocs: 0,
       hadsA: 0,
       hadsD: 0,
+      hadsTotal: 0,
       bdi: 0
     };
 
-    let psqiDetails = {};
-
     function calcAll() {
-      // 1. PSQI
+      // 1. PSQI 計算
       const bedtimeStr = document.getElementById('psqi_q1').value || '23:30';
       const waketimeStr = document.getElementById('psqi_q3').value || '07:00';
       const latencyMin = parseFloat(document.getElementById('psqi_q2').value) || 0;
@@ -816,36 +817,26 @@
 
       const psqiTotal = c1 + c2 + c3 + c4 + c5 + c6 + c7;
       globalScores.psqi = psqiTotal;
-      psqiDetails = { c1, c2, c3, c4, c5, c6, c7, actualSleep, bedDuration, sleepEfficiency, latencyMin };
 
-      document.getElementById('psqi-calc-stats').innerText = `效率: ${sleepEfficiency.toFixed(1)}% (${actualSleep.toFixed(1)}h/${bedDuration.toFixed(1)}h)`;
+      document.getElementById('psqi-calc-stats').innerText = `效率: ${sleepEfficiency.toFixed(1)}% (${actualSleep.toFixed(1)}h / ${bedDuration.toFixed(1)}h)`;
       document.getElementById('score-psqi-badge').innerText = `${psqiTotal} 分`;
-      document.getElementById('score-psqi-badge').className = `px-2 py-0.5 rounded font-bold text-xs ${psqiTotal>=5?'bg-rose-100 text-rose-700':'bg-blue-50 text-blue-700'}`;
-      document.getElementById('live-psqi').innerHTML = `${psqiTotal} <span class="text-[10px] font-normal text-slate-400">/21</span>`;
-      document.getElementById('tag-psqi').innerText = psqiTotal >= 5 ? '品質不佳' : '正常良好';
-      document.getElementById('tag-psqi').className = `text-[10px] px-1.5 py-0.5 rounded font-semibold ${psqiTotal>=5?'bg-rose-100 text-rose-700':'bg-emerald-100 text-emerald-700'}`;
+      document.getElementById('tab-badge-psqi').innerText = `${psqiTotal}分`;
 
-      // 2. ESS
-      let essTotal = 0;
-      for (let i = 1; i <= 8; i++) essTotal += getRadio(`ess_q${i}`);
-      globalScores.ess = essTotal;
-      document.getElementById('score-ess-badge').innerText = `${essTotal} 分`;
-      document.getElementById('score-ess-badge').className = `px-2 py-0.5 rounded font-bold text-xs ${essTotal>=11?'bg-rose-100 text-rose-700':'bg-indigo-50 text-indigo-700'}`;
-      document.getElementById('live-ess').innerHTML = `${essTotal} <span class="text-[10px] font-normal text-slate-400">/24</span>`;
-      document.getElementById('tag-ess').innerText = essTotal >= 11 ? '過度嗜睡' : '正常低風險';
-      document.getElementById('tag-ess').className = `text-[10px] px-1.5 py-0.5 rounded font-semibold ${essTotal>=11?'bg-rose-100 text-rose-700':'bg-emerald-100 text-emerald-700'}`;
-
-      // 3. ISI
+      // 2. ISI 計算
       let isiTotal = 0;
       isiData.forEach(item => isiTotal += getRadio(item.id));
       globalScores.isi = isiTotal;
       document.getElementById('score-isi-badge').innerText = `${isiTotal} 分`;
-      document.getElementById('score-isi-badge').className = `px-2 py-0.5 rounded font-bold text-xs ${isiTotal>=15?'bg-rose-100 text-rose-700':isiTotal>=8?'bg-amber-100 text-amber-700':'bg-amber-50 text-amber-700'}`;
-      document.getElementById('live-isi').innerHTML = `${isiTotal} <span class="text-[10px] font-normal text-slate-400">/28</span>`;
-      document.getElementById('tag-isi').innerText = isiTotal >= 22 ? '重度失眠' : isiTotal >= 15 ? '中度失眠' : isiTotal >= 8 ? '輕度困擾' : '無明顯失眠';
-      document.getElementById('tag-isi').className = `text-[10px] px-1.5 py-0.5 rounded font-semibold ${isiTotal>=15?'bg-rose-100 text-rose-700':isiTotal>=8?'bg-amber-100 text-amber-700':'bg-emerald-100 text-emerald-700'}`;
+      document.getElementById('tab-badge-isi').innerText = `${isiTotal}分`;
 
-      // 4. Y-BOCS
+      // 3. ESS 計算
+      let essTotal = 0;
+      for (let i = 1; i <= 8; i++) essTotal += getRadio(`ess_q${i}`);
+      globalScores.ess = essTotal;
+      document.getElementById('score-ess-badge').innerText = `${essTotal} 分`;
+      document.getElementById('tab-badge-ess').innerText = `${essTotal}分`;
+
+      // 4. Y-BOCS 計算
       let yObs = 0;
       let yComp = 0;
       for (let i = 1; i <= 5; i++) yObs += getRadio(`ybocs_q${i}`);
@@ -855,12 +846,9 @@
       document.getElementById('ybocs-obs-sub').innerText = `${yObs} / 20 分`;
       document.getElementById('ybocs-comp-sub').innerText = `${yComp} / 20 分`;
       document.getElementById('score-ybocs-badge').innerText = `${yTotal} 分`;
-      document.getElementById('score-ybocs-badge').className = `px-2 py-0.5 rounded font-bold text-xs ${yTotal>=16?'bg-rose-100 text-rose-700':'bg-purple-50 text-purple-700'}`;
-      document.getElementById('live-ybocs').innerHTML = `${yTotal} <span class="text-[10px] font-normal text-slate-400">/40</span>`;
-      document.getElementById('tag-ybocs').innerText = yTotal >= 26 ? '非常嚴重' : yTotal >= 16 ? '中等嚴重' : yTotal >= 6 ? '輕度嚴重' : '無症狀';
-      document.getElementById('tag-ybocs').className = `text-[10px] px-1.5 py-0.5 rounded font-semibold ${yTotal>=16?'bg-rose-100 text-rose-700':'bg-emerald-100 text-emerald-700'}`;
+      document.getElementById('tab-badge-ybocs').innerText = `${yTotal}分`;
 
-      // 5. HADS
+      // 5. HADS 計算
       let hadsA = 0;
       let hadsD = 0;
       hadsData.forEach(item => {
@@ -870,25 +858,48 @@
       });
       globalScores.hadsA = hadsA;
       globalScores.hadsD = hadsD;
+      globalScores.hadsTotal = hadsA + hadsD;
       document.getElementById('score-hads-badge').innerText = `A:${hadsA} D:${hadsD}`;
-      document.getElementById('score-hads-badge').className = `px-2 py-0.5 rounded font-bold text-xs ${(hadsA>=8||hadsD>=8)?'bg-rose-100 text-rose-700':'bg-teal-50 text-teal-700'}`;
-      document.getElementById('live-hads').innerText = `A:${hadsA} D:${hadsD}`;
-      document.getElementById('tag-hads').innerText = (hadsA>=11||hadsD>=11) ? '明顯困擾' : (hadsA>=8||hadsD>=8) ? '臨界狀態' : '正常良好';
-      document.getElementById('tag-hads').className = `text-[10px] px-1.5 py-0.5 rounded font-semibold ${(hadsA>=8||hadsD>=8)?'bg-rose-100 text-rose-700':'bg-emerald-100 text-emerald-700'}`;
+      document.getElementById('tab-badge-hads').innerText = `A:${hadsA} D:${hadsD}`;
 
-      // 6. BDI
+      // 6. BDI 計算
       let bdiTotal = 0;
       for (let i = 1; i <= 21; i++) bdiTotal += getRadio(`bdi_q${i}`);
       globalScores.bdi = bdiTotal;
       const bdiQ9 = getRadio('bdi_q9');
       document.getElementById('score-bdi-badge').innerText = `${bdiTotal} 分`;
-      document.getElementById('score-bdi-badge').className = `px-2 py-0.5 rounded font-bold text-xs ${bdiTotal>=17?'bg-rose-100 text-rose-700':'bg-rose-50 text-rose-700'}`;
-      document.getElementById('live-bdi').innerHTML = `${bdiTotal} <span class="text-[10px] font-normal text-slate-400">/63</span>`;
-      document.getElementById('tag-bdi').innerText = bdiTotal >= 31 ? '重度憂鬱' : bdiTotal >= 21 ? '中度憂鬱' : bdiTotal >= 17 ? '臨界憂鬱' : bdiTotal >= 11 ? '輕度困擾' : '正常';
-      document.getElementById('tag-bdi').className = `text-[10px] px-1.5 py-0.5 rounded font-semibold ${bdiTotal>=17?'bg-rose-100 text-rose-700':'bg-emerald-100 text-emerald-700'}`;
+      document.getElementById('tab-badge-bdi').innerText = `${bdiTotal}分`;
 
+      // 更新精簡字串與圖表
+      updateSimplifiedString();
       updateRadarChart();
       updateFindings(bdiQ9);
+    }
+
+    function getSimplifiedString() {
+      return `PSQI ( ${globalScores.psqi} ), ISI ( ${globalScores.isi} ), ESS ( ${globalScores.ess} ), Y-BOCS ( ${globalScores.ybocs} ), HADS ( ${globalScores.hadsTotal}, A-${globalScores.hadsA}, D-${globalScores.hadsD} ), BDI ( ${globalScores.bdi} )`;
+    }
+
+    function updateSimplifiedString() {
+      const str = getSimplifiedString();
+      const preview1 = document.getElementById('quick-preview-string');
+      const preview2 = document.getElementById('summary-preview-code');
+      if (preview1) preview1.innerText = str;
+      if (preview2) preview2.innerText = str;
+    }
+
+    function copySimplifiedScores() {
+      calcAll();
+      const str = getSimplifiedString();
+
+      const dummy = document.createElement("textarea");
+      document.body.appendChild(dummy);
+      dummy.value = str;
+      dummy.select();
+      document.execCommand("copy");
+      document.body.removeChild(dummy);
+
+      showToast(`已複製：${str}`);
     }
 
     let radarChart = null;
@@ -897,22 +908,22 @@
       if (!ctx) return;
 
       const pVal = (globalScores.psqi / 21) * 100;
-      const eVal = (globalScores.ess / 24) * 100;
       const iVal = (globalScores.isi / 28) * 100;
+      const eVal = (globalScores.ess / 24) * 100;
       const yVal = (globalScores.ybocs / 40) * 100;
       const hAVal = (globalScores.hadsA / 21) * 100;
       const bVal = (globalScores.bdi / 63) * 100;
 
       const data = {
-        labels: ['PSQI 睡眠', 'ESS 嗜睡', 'ISI 失眠', 'Y-BOCS 強迫', 'HADS 焦慮', 'BDI 憂鬱'],
+        labels: ['PSQI 睡眠', 'ISI 失眠', 'ESS 嗜睡', 'Y-BOCS 強迫', 'HADS 焦慮', 'BDI 憂鬱'],
         datasets: [{
           label: '嚴重度負荷 (%)',
-          data: [pVal.toFixed(1), eVal.toFixed(1), iVal.toFixed(1), yVal.toFixed(1), hAVal.toFixed(1), bVal.toFixed(1)],
-          backgroundColor: 'rgba(37, 99, 235, 0.18)',
+          data: [pVal.toFixed(1), iVal.toFixed(1), eVal.toFixed(1), yVal.toFixed(1), hAVal.toFixed(1), bVal.toFixed(1)],
+          backgroundColor: 'rgba(37, 99, 235, 0.2)',
           borderColor: 'rgb(37, 99, 235)',
           pointBackgroundColor: 'rgb(37, 99, 235)',
           pointBorderColor: '#fff',
-          pointRadius: 3.5,
+          pointRadius: 4,
           borderWidth: 2
         }]
       };
@@ -934,7 +945,7 @@
                 suggestedMin: 0,
                 suggestedMax: 100,
                 ticks: { stepSize: 25, font: { size: 9 }, backdropColor: 'transparent' },
-                pointLabels: { font: { size: 10.5, family: "'Noto Sans TC', sans-serif", weight: '600' } }
+                pointLabels: { font: { size: 11, family: "'Noto Sans TC', sans-serif", weight: '700' } }
               }
             },
             plugins: { legend: { display: false } }
@@ -945,40 +956,61 @@
 
     function updateFindings(bdiQ9) {
       const container = document.getElementById('summary-findings');
+      if (!container) return;
       const alerts = [];
 
       if (bdiQ9 > 0) {
-        alerts.push(`<div class="p-2 rounded bg-rose-50 border border-rose-300 text-rose-900 font-bold flex items-center gap-1.5"><i class="fa-solid fa-triangle-exclamation text-rose-600"></i> 【高危險心理警訊】BDI 第 9 題自殺意念檢出非 0 分，請立即提供關懷與專業醫療心理介入（安心專線 1925）。</div>`);
+        alerts.push(`<div class="p-2 rounded bg-rose-50 border border-rose-300 text-rose-900 font-bold flex items-center gap-1.5"><i class="fa-solid fa-triangle-exclamation text-rose-600"></i> 【高危險心理警訊】BDI 第 9 題自殺意念非 0 分，請立即介入評估。</div>`);
       }
       if (globalScores.bdi >= 17) {
-        alerts.push(`<div class="p-1.5 rounded bg-rose-50/70 border-l-2 border-rose-500 text-rose-800"><b>BDI 憂鬱警訊 (${globalScores.bdi}分)：</b>已達臨床中重度憂鬱標準，需評估藥物或心理治療。</div>`);
+        alerts.push(`<div class="p-1.5 rounded bg-rose-50/70 border-l-2 border-rose-500 text-rose-800"><b>BDI 憂鬱警訊 (${globalScores.bdi}分)：</b>已達臨床憂鬱門檻。</div>`);
       }
       if (globalScores.hadsA >= 8 || globalScores.hadsD >= 8) {
-        alerts.push(`<div class="p-1.5 rounded bg-teal-50/70 border-l-2 border-teal-500 text-teal-800"><b>HADS 情緒異常 (焦慮:${globalScores.hadsA}, 抑鬱:${globalScores.hadsD})：</b>情緒維度達臨床臨界/顯著標準。</div>`);
+        alerts.push(`<div class="p-1.5 rounded bg-teal-50/70 border-l-2 border-teal-500 text-teal-800"><b>HADS 情緒異常 (A:${globalScores.hadsA}, D:${globalScores.hadsD})：</b>達臨床臨界或顯著標準。</div>`);
       }
       if (globalScores.isi >= 15) {
-        alerts.push(`<div class="p-1.5 rounded bg-amber-50/70 border-l-2 border-amber-500 text-amber-800"><b>ISI 臨床失眠 (${globalScores.isi}分)：</b>失眠嚴重度顯著，建議介入認知行為治療 (CBT-I)。</div>`);
+        alerts.push(`<div class="p-1.5 rounded bg-amber-50/70 border-l-2 border-amber-500 text-amber-800"><b>ISI 臨床失眠 (${globalScores.isi}分)：</b>失眠嚴重度顯著。</div>`);
       }
       if (globalScores.psqi >= 5) {
-        alerts.push(`<div class="p-1.5 rounded bg-blue-50/70 border-l-2 border-blue-500 text-blue-800"><b>PSQI 睡眠障礙 (${globalScores.psqi}分)：</b>整體睡眠品質不佳，入睡潛伏約 ${psqiDetails.latencyMin}分，效率 ${psqiDetails.sleepEfficiency.toFixed(1)}%。</div>`);
+        alerts.push(`<div class="p-1.5 rounded bg-blue-50/70 border-l-2 border-blue-500 text-blue-800"><b>PSQI 睡眠障礙 (${globalScores.psqi}分)：</b>整體睡眠品質不佳。</div>`);
       }
       if (globalScores.ess >= 11) {
-        alerts.push(`<div class="p-1.5 rounded bg-indigo-50/70 border-l-2 border-indigo-500 text-indigo-800"><b>ESS 日間嗜睡高風險 (${globalScores.ess}分)：</b>可能合併睡眠呼吸中止症 (OSA) 或慢性睡眠剝奪。</div>`);
+        alerts.push(`<div class="p-1.5 rounded bg-indigo-50/70 border-l-2 border-indigo-500 text-indigo-800"><b>ESS 日間嗜睡高風險 (${globalScores.ess}分)：</b>可能合併呼吸中止症或慢性睡眠剝奪。</div>`);
       }
       if (globalScores.ybocs >= 16) {
-        alerts.push(`<div class="p-1.5 rounded bg-purple-50/70 border-l-2 border-purple-500 text-purple-800"><b>Y-BOCS 強迫症狀顯著 (${globalScores.ybocs}分)：</b>強迫思考/行為已達中重度干擾。</div>`);
+        alerts.push(`<div class="p-1.5 rounded bg-purple-50/70 border-l-2 border-purple-500 text-purple-800"><b>Y-BOCS 強迫症狀顯著 (${globalScores.ybocs}分)：</b>強迫思考/行為達中重度干擾。</div>`);
       }
 
       if (alerts.length === 0) {
-        container.innerHTML = `<div class="p-2.5 rounded bg-emerald-50 border border-emerald-200 text-emerald-800"><i class="fa-solid fa-circle-check text-emerald-600 mr-1"></i> 目前所有評估指標均位於正常健康範圍內，請維持規律生活與作息。</div>`;
+        container.innerHTML = `<div class="p-2.5 rounded bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold"><i class="fa-solid fa-circle-check text-emerald-600 mr-1"></i> 目前所有評估指標皆位於正常健康範圍內。</div>`;
       } else {
         container.innerHTML = alerts.join('');
       }
     }
 
-    // ==========================================
-    // 2. 獨立重置與全部重置函式
-    // ==========================================
+    function switchTab(tabKey) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('bg-blue-600', 'text-white', 'shadow');
+        btn.classList.add('text-slate-300');
+      });
+
+      const target = document.getElementById(`section-${tabKey}`);
+      const btn = document.getElementById(`tab-${tabKey}`);
+      if (target) target.classList.remove('hidden');
+      if (btn) {
+        btn.classList.add('bg-blue-600', 'text-white', 'shadow');
+        btn.classList.remove('text-slate-300');
+      }
+
+      if (tabKey === 'summary') {
+        calcAll();
+        if (radarChart) {
+          setTimeout(() => radarChart.resize(), 50);
+        }
+      }
+    }
+
     function resetPSQI() {
       document.getElementById('psqi_q1').value = '23:30';
       document.getElementById('psqi_q2').value = '30';
@@ -999,17 +1031,7 @@
       });
 
       calcAll();
-      showToast('PSQI 量表已重置！');
-    }
-
-    function resetESS() {
-      essData.forEach(item => {
-        syncToInput(`input_ess_${item.id}`, 0);
-        const r = document.querySelector(`input[name="ess_q${item.id}"][value="0"]`);
-        if (r) r.checked = true;
-      });
-      calcAll();
-      showToast('ESS 嗜睡量表已重置！');
+      showToast('PSQI 量表已重置');
     }
 
     function resetISI() {
@@ -1019,7 +1041,17 @@
         if (r) r.checked = true;
       });
       calcAll();
-      showToast('ISI 失眠量表已重置！');
+      showToast('ISI 失眠量表已重置');
+    }
+
+    function resetESS() {
+      essData.forEach(item => {
+        syncToInput(`input_ess_${item.id}`, 0);
+        const r = document.querySelector(`input[name="ess_q${item.id}"][value="0"]`);
+        if (r) r.checked = true;
+      });
+      calcAll();
+      showToast('ESS 嗜睡量表已重置');
     }
 
     function resetYBOCS() {
@@ -1029,7 +1061,7 @@
         if (r) r.checked = true;
       });
       calcAll();
-      showToast('Y-BOCS 強迫量表已重置！');
+      showToast('Y-BOCS 強迫量表已重置');
     }
 
     function resetHADS() {
@@ -1039,7 +1071,7 @@
         if (r) r.checked = true;
       });
       calcAll();
-      showToast('HADS 量表已重置！');
+      showToast('HADS 量表已重置');
     }
 
     function resetBDI() {
@@ -1049,70 +1081,17 @@
         if (r) r.checked = true;
       });
       calcAll();
-      showToast('BDI 憂鬱量表已重置！');
+      showToast('BDI 憂鬱量表已重置');
     }
 
     function resetAllScales() {
       resetPSQI();
-      resetESS();
       resetISI();
+      resetESS();
       resetYBOCS();
       resetHADS();
       resetBDI();
-      showToast('所有量表已全部重置為初始狀態！');
-    }
-
-    function copyComprehensiveReport() {
-      calcAll();
-      const dateStr = new Date().toLocaleDateString('zh-TW');
-
-      const report = 
-`==============================================
-  心理健康與睡眠品質量表評估報告 (Clinical Summary)
-  評估日期：${dateStr}
-==============================================
-
-一、匹茲堡睡眠品質量表 (PSQI)
-- PSQI 總分：${globalScores.psqi} / 21 分 【${globalScores.psqi >= 5 ? '異常 (睡眠障礙)' : '正常 (睡眠良好)'}】
-- 睡眠時數：${psqiDetails.actualSleep.toFixed(1)}h / 躺床 ${psqiDetails.bedDuration.toFixed(1)}h (效率: ${psqiDetails.sleepEfficiency.toFixed(1)}%)
-- 入睡潛伏期：約 ${psqiDetails.latencyMin} 分鐘
-
-二、Epworth 嗜睡量表 (ESS)
-- ESS 總分：${globalScores.ess} / 24 分 【${globalScores.ess >= 11 ? '高風險 (日間過度嗜睡/OSA警訊)' : '正常 (低風險)'}】
-
-三、失眠嚴重度量表 (ISI)
-- ISI 總分：${globalScores.isi} / 28 分 【${globalScores.isi >= 22 ? '重度臨床失眠' : globalScores.isi >= 15 ? '中度臨床失眠' : globalScores.isi >= 8 ? '輕度睡眠困擾' : '無失眠困擾'}】
-
-四、耶魯-布朗強迫量表 (Y-BOCS)
-- Y-BOCS 總分：${globalScores.ybocs} / 40 分
-- 強迫思想 (Q1-5)：${getRadio('ybocs_q1')+getRadio('ybocs_q2')+getRadio('ybocs_q3')+getRadio('ybocs_q4')+getRadio('ybocs_q5')}分 ｜ 強迫行為 (Q6-10)：${getRadio('ybocs_q6')+getRadio('ybocs_q7')+getRadio('ybocs_q8')+getRadio('ybocs_q9')+getRadio('ybocs_q10')}分
-
-五、醫院焦慮抑鬱情緒量表 (HADS)
-- 焦慮總分 (A因子)：${globalScores.hadsA} / 21 分 【${globalScores.hadsA >= 11 ? '明顯焦慮' : globalScores.hadsA >= 8 ? '臨界焦慮' : '正常'}】
-- 抑鬱總分 (D因子)：${globalScores.hadsD} / 21 分 【${globalScores.hadsD >= 11 ? '明顯抑鬱' : globalScores.hadsD >= 8 ? '臨界抑鬱' : '正常'}】
-
-六、貝克憂鬱量表 (BDI)
-- BDI 總分：${globalScores.bdi} / 63 分 【${globalScores.bdi >= 31 ? '重度憂鬱' : globalScores.bdi >= 21 ? '中度憂鬱' : globalScores.bdi >= 17 ? '臨界憂鬱' : globalScores.bdi >= 11 ? '輕度情緒困擾' : '正常'}】
-- 自殺意念題 (Q9)：${getRadio('bdi_q9') > 0 ? `陽性檢出 (${getRadio('bdi_q9')}分，請高度關注介入)` : '陰性 (無自殺念頭)'}
-
-==============================================
-※ 本報告由標準化自評量表產出，供醫療照護與自我健康管理參考。`;
-
-      const dummy = document.createElement("textarea");
-      document.body.appendChild(dummy);
-      dummy.value = report;
-      dummy.select();
-      document.execCommand("copy");
-      document.body.removeChild(dummy);
-
-      showToast('已成功複製完整臨床病歷文字摘要！');
-    }
-
-    function scrollToSection(id) {
-      const el = document.getElementById(id);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
+      showToast('所有量表已全部重置！');
     }
 
     function showToast(msg) {
@@ -1130,19 +1109,19 @@
       }, 2000);
     }
 
-    // 暴露全域給 HTML 按鈕
+    // 暴露全域函式供按鈕呼叫
+    window.switchTab = switchTab;
     window.syncFromInput = syncFromInput;
     window.syncToInput = syncToInput;
     window.calcAll = calcAll;
     window.resetPSQI = resetPSQI;
-    window.resetESS = resetESS;
     window.resetISI = resetISI;
+    window.resetESS = resetESS;
     window.resetYBOCS = resetYBOCS;
     window.resetHADS = resetHADS;
     window.resetBDI = resetBDI;
     window.resetAllScales = resetAllScales;
-    window.copyComprehensiveReport = copyComprehensiveReport;
-    window.scrollToSection = scrollToSection;
+    window.copySimplifiedScores = copySimplifiedScores;
 
     window.addEventListener('DOMContentLoaded', () => {
       initAppDOM();
