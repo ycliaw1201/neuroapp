@@ -3,465 +3,332 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>一般頭痛問卷</title>
+    <title>一般頭痛臨床評估量表</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+        
         body {
             font-family: 'Noto Sans TC', sans-serif;
-            background-color: #f0f4f8;
-        }
-        /* Custom Checkbox Styles */
-        .checkbox-custom:checked + div {
-            background-color: #eff6ff;
-            border-color: #3b82f6;
-            color: #1d4ed8;
-        }
-        .checkbox-custom:checked + div .check-icon {
-            opacity: 1;
-        }
-        /* Button-like Radio Styles */
-        .radio-btn-input:checked + span {
-            background-color: #3b82f6;
-            color: white;
-            border-color: #3b82f6;
-            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
-        }
-        /* Med Card Selection */
-        .med-card-input:checked + div {
-            background-color: #eff6ff;
-            border-color: #3b82f6;
-            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
-        }
-        .med-card-input:checked + div .med-freq-input {
-            display: block;
-        }
-        .med-card-input:checked + div .check-circle {
-            opacity: 1;
+            background-color: #f1f5f9; /* slate-100 */
+            color: #334155; /* slate-700 */
+            overflow: hidden; /* Prevent page scrolling, handled by wizard container */
         }
         
-        /* Smooth fade in */
-        .fade-in {
-            animation: fadeIn 0.3s ease-in-out;
+        h1, h2, h3, .serif-font {
+            font-family: 'Noto Serif TC', serif;
         }
+
+        /* Academic Chip Styles */
+        .chip-input:checked + span {
+            background-color: #1e3a8a; /* blue-900 */
+            color: white;
+            border-color: #1e3a8a;
+        }
+        
+        .chip-input:focus + span {
+            box-shadow: 0 0 0 2px rgba(30, 58, 138, 0.3);
+        }
+
+        /* Subtle Transitions */
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-5px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        
+        .step-container { display: none; }
+        .step-container.active { display: flex; flex-direction: column; animation: fadeIn 0.4s; }
+
+        /* Custom Scrollbar for inner content if small screen */
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
-<body class="text-gray-700">
+<body class="h-screen w-screen flex flex-col items-center justify-center p-4 md:p-6">
 
-    <div class="max-w-4xl mx-auto min-h-screen flex flex-col shadow-xl bg-white my-0 md:my-8 rounded-none md:rounded-xl overflow-hidden">
+    <div class="w-full max-w-5xl h-full max-h-[900px] bg-white rounded-md shadow-lg border border-slate-300 flex flex-col overflow-hidden">
         
         <!-- Header -->
-        <header class="bg-blue-600 text-white p-6 shadow-md">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-2xl font-bold flex items-center gap-2">
-                        <i class="fa-solid fa-notes-medical"></i> 一般頭痛問卷
-                    </h1>
-                    <p class="text-blue-100 text-sm mt-1">請依照您目前的狀況據實回答</p>
-                </div>
-                <div class="hidden md:block text-4xl opacity-20">
-                    <i class="fa-solid fa-brain"></i>
-                </div>
+        <header class="bg-slate-900 text-white p-5 shrink-0 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold tracking-wider flex items-center gap-3">
+                    <i class="fa-solid fa-file-medical text-slate-300"></i>
+                    一般頭痛臨床評估量表
+                </h1>
+                <p class="text-slate-400 text-xs mt-1 tracking-widest">CLINICAL HEADACHE ASSESSMENT TOOL</p>
+            </div>
+            <!-- Progress text -->
+            <div class="text-slate-300 text-sm font-medium">
+                Step <span id="currentStepText">1</span> of 5
             </div>
         </header>
 
-        <form id="headacheForm" class="flex-1 p-6 md:p-10 space-y-8">
+        <!-- Progress Bar -->
+        <div class="w-full bg-slate-200 h-1.5 shrink-0">
+            <div id="progressBar" class="bg-blue-800 h-1.5 transition-all duration-300 w-1/5"></div>
+        </div>
 
-            <!-- Consent Section -->
-            <section class="bg-gray-50 border-l-4 border-blue-400 p-4 rounded shadow-sm">
-                <div class="flex items-start gap-3">
-                    <div class="flex items-center h-6">
-                        <input id="consent" name="consent" type="checkbox" class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer">
-                    </div>
-                    <div class="text-sm">
-                        <label for="consent" class="font-bold text-gray-900 text-base cursor-pointer select-none">
-                            研究用途同意聲明
-                        </label>
-                        <p class="text-gray-600 mt-1">
-                            我同意將本問卷填寫之內容，提供作為醫療研究及統計分析使用。(若不同意仍可填寫問卷，資料僅供本次看診參考)
-                        </p>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Form Content -->
-            <div id="formContent" class="space-y-10">
-
-                <!-- Section 1: History -->
-                <div class="space-y-4">
-                    <h3 class="text-lg font-bold text-gray-800 border-b pb-2 flex items-center gap-2">
-                        發病病史
-                    </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">第一次頭痛是幾歲？</label>
-                            <div class="relative">
-                                <input type="number" name="first_headache_age" min="0" max="120" class="w-full pl-3 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="例如：20">
-                                <span class="absolute right-3 top-2 text-gray-400 text-sm">歲</span>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">頭痛變壞是幾歲開始？</label>
-                            <div class="relative">
-                                <input type="number" name="worse_headache_age" min="0" max="120" class="w-full pl-3 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="例如：35">
-                                <span class="absolute right-3 top-2 text-gray-400 text-sm">歲</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Section 2: Location -->
-                <div class="space-y-4">
-                    <h3 class="text-lg font-bold text-gray-800 border-b pb-2 flex items-center gap-2">
-                        經常頭痛的位置
-                    </h3>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        <script>
-                            const locations = ["前額或眉心", "後腦勺", "鼻子周圍", "耳朵", "太陽穴", "眼眶周圍", "臉頰或下顎", "耳朵後", "頭頂(頭心)", "眼球裡/後方", "耳朵前", "後頸部"];
-                            locations.forEach(loc => {
-                                document.write(`
-                                    <label class="cursor-pointer relative group select-none">
-                                        <input type="checkbox" name="location" value="${loc}" class="checkbox-custom absolute opacity-0 w-0 h-0">
-                                        <div class="border rounded-lg p-3 hover:bg-gray-50 transition-colors flex items-center gap-2 h-full bg-white shadow-sm">
-                                            <i class="fa-solid fa-check check-icon opacity-0 text-blue-600 transition-opacity"></i>
-                                            <span class="text-sm">${loc}</span>
-                                        </div>
-                                    </label>
-                                `);
-                            });
-                        </script>
-                        <label class="cursor-pointer relative group select-none col-span-2">
-                            <input type="checkbox" name="location_other_check" class="checkbox-custom absolute opacity-0 w-0 h-0" onchange="toggleInput('loc_other_container', this.checked)">
-                            <div class="border rounded-lg p-3 hover:bg-gray-50 transition-colors flex items-center gap-3 h-full bg-white shadow-sm">
-                                <div class="flex items-center gap-2 shrink-0">
-                                    <i class="fa-solid fa-check check-icon opacity-0 text-blue-600 transition-opacity"></i>
-                                    <span class="text-sm">其他位置</span>
-                                </div>
-                                <div id="loc_other_container" class="hidden flex-1 fade-in">
-                                    <input type="text" name="location_other" class="w-full border-b border-gray-300 focus:border-blue-500 outline-none text-sm bg-transparent px-1" placeholder="請輸入位置...">
-                                </div>
-                            </div>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Section 3: Side -->
-                <div class="space-y-4">
-                    <h3 class="text-lg font-bold text-gray-800 border-b pb-2 flex items-center gap-2">
-                        頭痛較常位於那一側
-                    </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                         <script>
-                            const sides = ["頭的右半側", "頭的左半側", "整個頭", "開始單側後變全部", "有時左側有時右側", "頭中線", "兩側同時發生", "有時一側有時兩側"];
-                            sides.forEach(s => {
-                                document.write(`
-                                    <label class="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer bg-white shadow-sm select-none">
-                                        <input type="checkbox" name="side" value="${s}" class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500">
-                                        <span class="text-sm text-gray-700">${s}</span>
-                                    </label>
-                                `);
-                            });
-                        </script>
-                        <label class="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer bg-white shadow-sm select-none">
-                            <input type="checkbox" name="side_other_check" class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" onchange="toggleInput('side_other_container', this.checked)">
-                            <div class="flex flex-1 items-center gap-2">
-                                <span class="text-sm text-gray-700 shrink-0">其他</span>
-                                <div id="side_other_container" class="hidden flex-1 fade-in">
-                                    <input type="text" name="side_other" class="w-full border-b border-gray-300 focus:border-blue-500 outline-none text-sm bg-transparent px-1" placeholder="請輸入側別...">
-                                </div>
-                            </div>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Section 4 (Combined): Freq & Severity -->
-                <div class="space-y-6">
-                    <h3 class="text-lg font-bold text-gray-800 border-b pb-2 flex items-center gap-2">
-                        頻率與嚴重度
-                    </h3>
+        <!-- Form Wrapper -->
+        <form id="headacheForm" class="flex-1 flex flex-col min-h-0 relative">
+            
+            <!-- Content Area (Scrollable internally if needed) -->
+            <div class="flex-1 overflow-y-auto p-6 md:p-8 custom-scroll bg-slate-50 relative">
+                
+                <!-- ================= STEP 1: 發病史與同意 ================= -->
+                <div class="step-container active h-full" id="step1">
+                    <h2 class="text-xl font-bold text-slate-800 border-b-2 border-slate-800 pb-2 mb-6 serif-font">基本資料與發病史</h2>
                     
-                    <!-- Frequency Block -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-xl border border-gray-200">
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-2">
-                                <i class="fa-regular fa-calendar-days text-blue-500 mr-1"></i> 平均一個月頭痛幾天？
+                    <div class="space-y-8 max-w-3xl mx-auto w-full">
+                        <section class="bg-white border-l-4 border-slate-400 p-5 rounded shadow-sm">
+                            <label class="flex items-start gap-3 cursor-pointer">
+                                <input id="consent" name="consent" type="checkbox" class="w-5 h-5 mt-0.5 text-blue-800 border-slate-300 rounded focus:ring-blue-800">
+                                <div class="text-sm text-slate-700">
+                                    <span class="font-bold text-base block mb-1">研究用途同意聲明</span>
+                                    我同意將本問卷填寫之內容，提供作為醫療研究及統計分析使用。(若不同意仍可填寫問卷，資料僅供本次看診參考)
+                                </div>
                             </label>
-                            <div class="relative">
-                                <input type="number" name="days_per_month" min="0" max="31" class="w-full pl-3 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-blue-500 shadow-sm" placeholder="天數">
-                                <span class="absolute right-3 top-3 text-gray-400 text-sm">天/月</span>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-2">
-                                <i class="fa-regular fa-clock text-blue-500 mr-1"></i> 不用藥大約持續幾小時？
-                            </label>
-                            <div class="relative">
-                                <input type="number" name="duration" min="0" class="w-full pl-3 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-blue-500 shadow-sm" placeholder="小時">
-                                <span class="absolute right-3 top-3 text-gray-400 text-sm">hr</span>
-                            </div>
-                        </div>
-                    </div>
+                        </section>
 
-                    <!-- Severity Block -->
-                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                        <p class="text-sm font-bold text-gray-700 mb-4">
-                            <i class="fa-solid fa-chart-simple text-red-500 mr-1"></i> 平均頭痛程度 (NRS 0-10)
-                        </p>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div>
-                                <label class="block text-xs text-gray-500 mb-1">平均疼痛程度 (Avg)</label>
-                                <div class="flex items-center gap-3">
-                                    <input type="number" name="pain_level_avg" min="0" max="10" class="w-full text-2xl font-bold text-center p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-blue-600 bg-blue-50" placeholder="0-10">
+                            <div class="bg-white p-5 rounded border border-slate-200 shadow-sm">
+                                <label class="block text-sm font-bold text-slate-800 mb-2">第一次頭痛是幾歲？ (Onset)</label>
+                                <div class="relative">
+                                    <input type="number" name="first_headache_age" min="0" max="120" class="w-full pl-3 pr-10 py-2 border border-slate-300 rounded focus:ring-blue-800 focus:border-blue-800 bg-slate-50" placeholder="輸入年齡...">
+                                    <span class="absolute right-3 top-2.5 text-slate-400 text-sm">歲</span>
                                 </div>
                             </div>
-                            <div>
-                                <label class="block text-xs text-gray-500 mb-1">最嚴重疼痛程度 (Max)</label>
-                                <div class="flex items-center gap-3">
-                                    <input type="number" name="pain_level_max" min="0" max="10" class="w-full text-2xl font-bold text-center p-3 border border-red-200 rounded-lg focus:ring-red-500 focus:border-red-500 text-red-600 bg-red-50" placeholder="0-10">
+                            <div class="bg-white p-5 rounded border border-slate-200 shadow-sm">
+                                <label class="block text-sm font-bold text-slate-800 mb-2">頭痛變壞是幾歲開始？ (Aggra)</label>
+                                <div class="relative">
+                                    <input type="number" name="worse_headache_age" min="0" max="120" class="w-full pl-3 pr-10 py-2 border border-slate-300 rounded focus:ring-blue-800 focus:border-blue-800 bg-slate-50" placeholder="輸入年齡...">
+                                    <span class="absolute right-3 top-2.5 text-slate-400 text-sm">歲</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Section 5: Medication (Standalone) -->
-                <div class="space-y-4">
-                    <h3 class="text-lg font-bold text-gray-800 border-b pb-2 flex items-center gap-2">
-                        用藥習慣
-                    </h3>
-                    <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-                        <label class="block text-sm font-bold text-blue-800 mb-4">使用藥物種類 (點選後輸入每週次數)</label>
-                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                            <script>
-                                const meds = ["Panadol", "Panadol-ES", "EVE", "Ergot", "Triptans", "COX-2", "NSAIDs"];
-                                meds.forEach(m => {
-                                    document.write(`
-                                        <label class="cursor-pointer relative group">
-                                            <input type="checkbox" name="meds_list" value="${m}" class="med-card-input absolute opacity-0 w-0 h-0">
-                                            <div class="border border-gray-200 rounded-xl p-4 hover:border-blue-300 transition-all h-full flex flex-col justify-between">
-                                                <div class="flex justify-between items-start mb-2">
-                                                    <span class="font-bold text-gray-700 text-sm">${m}</span>
-                                                    <i class="fa-solid fa-circle-check text-blue-500 opacity-0 check-circle transition-opacity"></i>
-                                                </div>
-                                                <div class="med-freq-input hidden animate-[fadeIn_0.2s_ease-out]">
-                                                    <input type="number" name="med_freq_${m}" class="w-full text-xs p-2 border rounded bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none" placeholder="每週幾次?">
-                                                </div>
-                                            </div>
-                                        </label>
-                                    `);
-                                });
-                            </script>
-                            <!-- Other Meds -->
-                            <label class="cursor-pointer relative group">
-                                <input type="checkbox" name="meds_other_check" class="med-card-input absolute opacity-0 w-0 h-0">
-                                <div class="border border-gray-200 rounded-xl p-4 hover:border-blue-300 transition-all h-full flex flex-col justify-between">
-                                    <div class="flex justify-between items-start mb-2">
-                                        <span class="font-bold text-gray-700 text-sm">其他</span>
-                                        <i class="fa-solid fa-circle-check text-blue-500 opacity-0 check-circle transition-opacity"></i>
-                                    </div>
-                                    <div class="med-freq-input hidden animate-[fadeIn_0.2s_ease-out] space-y-2">
-                                        <input type="text" name="meds_other_name" class="w-full text-xs p-2 border rounded bg-white focus:border-blue-500 outline-none" placeholder="藥物名稱">
-                                        <input type="number" name="med_freq_other" class="w-full text-xs p-2 border rounded bg-white focus:border-blue-500 outline-none" placeholder="每週幾次?">
-                                    </div>
-                                </div>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Section 7: Nature of Pain (With specific Pulsatile Question) -->
-                <div class="space-y-4">
-                    <h3 class="text-lg font-bold text-gray-800 border-b pb-2 flex items-center gap-2">
-                        頭痛的性質
-                    </h3>
+                <!-- ================= STEP 2: 部位與側別 ================= -->
+                <div class="step-container h-full" id="step2">
+                    <h2 class="text-xl font-bold text-slate-800 border-b-2 border-slate-800 pb-2 mb-6 serif-font">疼痛特徵 (部位與側別)</h2>
                     
-                    <!-- Q7-1 Pulsatile (Yes/No) -->
-                    <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 mb-4 flex items-center justify-between">
-                        <label class="font-bold text-gray-800 flex items-center gap-2">
-                            <i class="fa-solid fa-heart-pulse text-red-500"></i> 是否有像脈搏般跳痛 (丟丟痛) ?
-                        </label>
-                        <div class="flex gap-4">
-                            <label class="cursor-pointer flex items-center gap-2 bg-white px-4 py-2 rounded-lg border hover:border-blue-300">
-                                <input type="radio" name="pulsatile" value="-" class="w-4 h-4 text-blue-600" required>
-                                <span>否</span>
-                            </label>
-                            <label class="cursor-pointer flex items-center gap-2 bg-white px-4 py-2 rounded-lg border hover:border-blue-300">
-                                <input type="radio" name="pulsatile" value="+" class="w-4 h-4 text-blue-600">
-                                <span class="font-bold text-blue-600">是</span>
-                            </label>
+                    <div class="space-y-8 max-w-4xl mx-auto w-full">
+                        
+                        <!-- Location -->
+                        <div class="bg-white p-6 rounded shadow-sm border border-slate-200">
+                            <h3 class="font-bold text-slate-800 mb-4 text-sm tracking-wide">經常頭痛的位置 <span class="text-slate-400 font-normal ml-2">(可複選)</span></h3>
+                            <div class="flex flex-wrap gap-2.5">
+                                <script>
+                                    const locs = ["前額或眉心", "後腦勺", "鼻子周圍", "耳朵", "太陽穴", "眼眶周圍", "臉頰或下顎", "耳朵後", "頭頂(頭心)", "眼球裡/後方", "耳朵前", "後頸部"];
+                                    locs.forEach(l => {
+                                        document.write(`
+                                            <label class="cursor-pointer">
+                                                <input type="checkbox" name="location" value="${l}" class="chip-input sr-only">
+                                                <span class="inline-block px-4 py-2 text-sm border border-slate-300 rounded bg-slate-50 text-slate-700 transition-colors select-none hover:bg-slate-200">${l}</span>
+                                            </label>
+                                        `);
+                                    });
+                                </script>
+                                <label class="cursor-pointer flex items-center group">
+                                    <input type="checkbox" name="location_other_check" class="chip-input sr-only" onchange="toggleInputInline('loc_other_wrap', this.checked)">
+                                    <span class="inline-block px-4 py-2 text-sm border border-slate-300 rounded bg-slate-50 text-slate-700 transition-colors select-none hover:bg-slate-200">其他</span>
+                                </label>
+                                <div id="loc_other_wrap" class="hidden items-center ml-2 fade-in">
+                                    <input type="text" name="location_other" id="loc_other_input" class="px-3 py-1.5 text-sm border border-slate-300 rounded focus:border-blue-800 outline-none bg-slate-50 w-48" placeholder="輸入其他位置...">
+                                </div>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Other Natures -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                         <script>
-                            const natures = ["刺痛", "像冰鑿子鑽的痛", "持續的痛", "擠壓、壓迫或緊縮痛", "撕裂般的痛", "頸部肌肉疼痛", "壓痛", "爆炸般的痛"];
-                            natures.forEach(n => {
-                                document.write(`
-                                    <label class="checkbox-wrapper flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 bg-white shadow-sm select-none">
-                                        <input type="checkbox" name="nature" value="${n}" class="w-4 h-4 text-blue-600 mr-2 rounded focus:ring-blue-500"> 
-                                        <span class="text-sm">${n}</span>
+                        <!-- Side -->
+                        <div class="bg-white p-6 rounded shadow-sm border border-slate-200">
+                            <h3 class="font-bold text-slate-800 mb-4 text-sm tracking-wide">頭痛較常位於那一側 <span class="text-slate-400 font-normal ml-2">(可複選)</span></h3>
+                            <div class="flex flex-wrap gap-2.5">
+                                <script>
+                                    const sides = ["頭的右半側", "頭的左半側", "整個頭", "開始單側後變全部", "有時左側有時右側", "頭中線", "兩側同時發生", "有時一側有時兩側"];
+                                    sides.forEach(s => {
+                                        document.write(`
+                                            <label class="cursor-pointer">
+                                                <input type="checkbox" name="side" value="${s}" class="chip-input sr-only">
+                                                <span class="inline-block px-4 py-2 text-sm border border-slate-300 rounded bg-slate-50 text-slate-700 transition-colors select-none hover:bg-slate-200">${s}</span>
+                                            </label>
+                                        `);
+                                    });
+                                </script>
+                                <label class="cursor-pointer flex items-center group">
+                                    <input type="checkbox" name="side_other_check" class="chip-input sr-only" onchange="toggleInputInline('side_other_wrap', this.checked)">
+                                    <span class="inline-block px-4 py-2 text-sm border border-slate-300 rounded bg-slate-50 text-slate-700 transition-colors select-none hover:bg-slate-200">其他</span>
+                                </label>
+                                <div id="side_other_wrap" class="hidden items-center ml-2 fade-in">
+                                    <input type="text" name="side_other" id="side_other_input" class="px-3 py-1.5 text-sm border border-slate-300 rounded focus:border-blue-800 outline-none bg-slate-50 w-48" placeholder="輸入其他側別...">
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- ================= STEP 3: 頻率、程度與性質 ================= -->
+                <div class="step-container h-full" id="step3">
+                    <h2 class="text-xl font-bold text-slate-800 border-b-2 border-slate-800 pb-2 mb-6 serif-font">疼痛特徵 (頻率、程度與性質)</h2>
+                    
+                    <div class="space-y-6 max-w-4xl mx-auto w-full">
+                        
+                        <!-- NRS & Duration -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div class="bg-white p-4 rounded border border-slate-200 shadow-sm flex flex-col justify-center">
+                                <label class="block text-xs font-bold text-slate-600 mb-2 uppercase">平均一個月頭痛</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="number" name="days_per_month" min="0" max="31" class="w-full text-lg p-2 border border-slate-300 rounded focus:border-blue-800" placeholder="天">
+                                    <span class="text-slate-500 text-sm">天</span>
+                                </div>
+                            </div>
+                            <div class="bg-white p-4 rounded border border-slate-200 shadow-sm flex flex-col justify-center">
+                                <label class="block text-xs font-bold text-slate-600 mb-2 uppercase">不用藥大約持續</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="number" name="duration" min="0" class="w-full text-lg p-2 border border-slate-300 rounded focus:border-blue-800" placeholder="時">
+                                    <span class="text-slate-500 text-sm">hr</span>
+                                </div>
+                            </div>
+                            <div class="bg-white p-4 rounded border border-slate-200 shadow-sm flex flex-col justify-center">
+                                <label class="block text-xs font-bold text-slate-600 mb-2 uppercase">平均疼痛 (Avg 0-10)</label>
+                                <input type="number" name="pain_level_avg" min="0" max="10" class="w-full text-xl font-bold p-2 border border-slate-300 rounded text-center text-blue-800 focus:border-blue-800" placeholder="-">
+                            </div>
+                            <div class="bg-white p-4 rounded border border-slate-200 shadow-sm flex flex-col justify-center">
+                                <label class="block text-xs font-bold text-slate-600 mb-2 uppercase">最嚴重疼痛 (Max 0-10)</label>
+                                <input type="number" name="pain_level_max" min="0" max="10" class="w-full text-xl font-bold p-2 border border-slate-300 rounded text-center text-red-700 focus:border-red-700" placeholder="-">
+                            </div>
+                        </div>
+
+                        <!-- Nature -->
+                        <div class="bg-white p-6 rounded shadow-sm border border-slate-200">
+                            <h3 class="font-bold text-slate-800 mb-4 text-sm tracking-wide flex items-center justify-between">
+                                頭痛的感覺像是？ 
+                            </h3>
+                            
+                            <!-- Mandatory Pulsatile -->
+                            <div class="mb-5 p-3 bg-blue-50 border border-blue-200 rounded flex items-center justify-between">
+                                <span class="font-bold text-slate-800 text-sm">是否有像脈搏般跳痛 (丟丟痛) ? <span class="text-red-500">*必選</span></span>
+                                <div class="flex gap-2">
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="pulsatile" value="-" class="chip-input sr-only" required>
+                                        <span class="inline-block px-4 py-1.5 text-sm border border-slate-300 rounded bg-white text-slate-700 hover:bg-slate-100">否 (-)</span>
                                     </label>
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="pulsatile" value="+" class="chip-input sr-only">
+                                        <span class="inline-block px-4 py-1.5 text-sm border border-slate-300 rounded bg-white text-slate-700 hover:bg-slate-100">是 (+)</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-wrap gap-2.5">
+                                <script>
+                                    const natures = ["刺痛", "像冰鑿子鑽的痛", "持續的痛", "擠壓、壓迫或緊縮痛", "撕裂般的痛", "頸部肌肉疼痛", "壓痛", "爆炸般的痛"];
+                                    natures.forEach(n => {
+                                        document.write(`
+                                            <label class="cursor-pointer">
+                                                <input type="checkbox" name="nature" value="${n}" class="chip-input sr-only">
+                                                <span class="inline-block px-4 py-2 text-sm border border-slate-300 rounded bg-slate-50 text-slate-700 transition-colors select-none hover:bg-slate-200">${n}</span>
+                                            </label>
+                                        `);
+                                    });
+                                </script>
+                                <label class="cursor-pointer flex items-center group">
+                                    <input type="checkbox" name="nature_other_check" class="chip-input sr-only" onchange="toggleInputInline('nature_other_wrap', this.checked)">
+                                    <span class="inline-block px-4 py-2 text-sm border border-slate-300 rounded bg-slate-50 text-slate-700 transition-colors select-none hover:bg-slate-200">其他</span>
+                                </label>
+                                <div id="nature_other_wrap" class="hidden items-center ml-2 fade-in">
+                                    <input type="text" name="nature_other" id="nature_other_input" class="px-3 py-1.5 text-sm border border-slate-300 rounded focus:border-blue-800 outline-none bg-slate-50 w-48" placeholder="輸入其他性質...">
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- ================= STEP 4: 伴隨症狀 ================= -->
+                <div class="step-container h-full" id="step4">
+                    <h2 class="text-xl font-bold text-slate-800 border-b-2 border-slate-800 pb-2 mb-6 serif-font">伴隨症狀 (N, V, L, S, PA)</h2>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto w-full">
+                        <script>
+                            const symps = [
+                                {id: 'nausea', label: '噁心 (N)'},
+                                {id: 'vomiting', label: '嘔吐 (V)'},
+                                {id: 'sound_sens', label: '對聲音敏感 (L)'},
+                                {id: 'light_sens', label: '對光線敏感 (S)'},
+                                {id: 'movement_aggravation', label: '活動讓頭痛加劇 (PA)'}
+                            ];
+                            symps.forEach(s => {
+                                document.write(`
+                                    <div class="bg-white p-5 rounded border border-slate-200 shadow-sm flex flex-col justify-between h-32">
+                                        <p class="font-bold text-slate-800 mb-3 text-sm">${s.label}</p>
+                                        <div class="flex gap-2 w-full">
+                                            <label class="flex-1 cursor-pointer">
+                                                <input type="radio" name="${s.id}" value="-" class="chip-input sr-only" required>
+                                                <span class="block text-center py-2 text-sm border border-slate-300 rounded bg-slate-50 text-slate-700 hover:bg-slate-200 transition-colors">否</span>
+                                            </label>
+                                            <label class="flex-1 cursor-pointer">
+                                                <input type="radio" name="${s.id}" value="+" class="chip-input sr-only">
+                                                <span class="block text-center py-2 text-sm border border-slate-300 rounded bg-slate-50 text-slate-700 hover:bg-slate-200 transition-colors">是</span>
+                                            </label>
+                                        </div>
+                                    </div>
                                 `);
                             });
                         </script>
-                        <label class="checkbox-wrapper flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 bg-white shadow-sm select-none">
-                            <input type="checkbox" name="nature_other_check" class="w-4 h-4 text-blue-600 mr-2 rounded focus:ring-blue-500" onchange="toggleInput('nature_other_container', this.checked)">
-                            <div class="flex-1">
-                                <span class="text-sm whitespace-nowrap">其他:</span>
-                                <div id="nature_other_container" class="hidden mt-1 fade-in">
-                                    <input type="text" name="nature_other" class="w-full border-b border-gray-300 focus:border-blue-500 outline-none text-sm bg-transparent" placeholder="請輸入...">
-                                </div>
-                            </div>
-                        </label>
                     </div>
                 </div>
 
-                <!-- Section 8-11: Symptoms & CAS & Aura (Redesigned) -->
-                <div class="space-y-6">
-                    <h3 class="text-lg font-bold text-gray-800 border-b pb-2 flex items-center gap-2">
-                        伴隨症狀與預兆
-                    </h3>
+                <!-- ================= STEP 5: 自律神經症狀與預兆 ================= -->
+                <div class="step-container h-full" id="step5">
+                    <h2 class="text-xl font-bold text-slate-800 border-b-2 border-slate-800 pb-2 mb-6 serif-font">自律神經症狀 (CAS) 與預兆 (Aura)</h2>
                     
-                    <!-- Symptoms Grid -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="space-y-6 max-w-4xl mx-auto w-full">
                         
-                        <!-- Nausea -->
-                        <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between">
-                            <p class="font-bold text-gray-800 mb-3 flex items-center gap-2 text-sm">
-                                <i class="fa-solid fa-face-dizzy text-green-600"></i> 噁心?
-                            </p>
-                            <div class="flex gap-2">
-                                <label class="flex-1 cursor-pointer text-center">
-                                    <input type="radio" name="nausea" value="-" class="radio-btn-input hidden" required>
-                                    <span class="block py-2 rounded border text-sm hover:bg-gray-50">否</span>
-                                </label>
-                                <label class="flex-1 cursor-pointer text-center">
-                                    <input type="radio" name="nausea" value="+" class="radio-btn-input hidden">
-                                    <span class="block py-2 rounded border text-sm hover:bg-gray-50">是</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <!-- Vomiting -->
-                        <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between">
-                            <p class="font-bold text-gray-800 mb-3 flex items-center gap-2 text-sm">
-                                <i class="fa-solid fa-toilet text-green-600"></i> 嘔吐?
-                            </p>
-                            <div class="flex gap-2">
-                                <label class="flex-1 cursor-pointer text-center">
-                                    <input type="radio" name="vomiting" value="-" class="radio-btn-input hidden" required>
-                                    <span class="block py-2 rounded border text-sm hover:bg-gray-50">否</span>
-                                </label>
-                                <label class="flex-1 cursor-pointer text-center">
-                                    <input type="radio" name="vomiting" value="+" class="radio-btn-input hidden">
-                                    <span class="block py-2 rounded border text-sm hover:bg-gray-50">是</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <!-- Sound Sensitivity -->
-                        <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between">
-                            <p class="font-bold text-gray-800 mb-3 flex items-center gap-2 text-sm">
-                                <i class="fa-solid fa-volume-high text-purple-600"></i> 對聲音敏感?
-                            </p>
-                            <div class="flex gap-2">
-                                <label class="flex-1 cursor-pointer text-center">
-                                    <input type="radio" name="sound_sens" value="-" class="radio-btn-input hidden" required>
-                                    <span class="block py-2 rounded border text-sm hover:bg-gray-50">否</span>
-                                </label>
-                                <label class="flex-1 cursor-pointer text-center">
-                                    <input type="radio" name="sound_sens" value="+" class="radio-btn-input hidden">
-                                    <span class="block py-2 rounded border text-sm hover:bg-gray-50">是</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <!-- Light Sensitivity -->
-                        <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between">
-                            <p class="font-bold text-gray-800 mb-3 flex items-center gap-2 text-sm">
-                                <i class="fa-solid fa-lightbulb text-purple-600"></i> 對光線敏感?
-                            </p>
-                            <div class="flex gap-2">
-                                <label class="flex-1 cursor-pointer text-center">
-                                    <input type="radio" name="light_sens" value="-" class="radio-btn-input hidden" required>
-                                    <span class="block py-2 rounded border text-sm hover:bg-gray-50">否</span>
-                                </label>
-                                <label class="flex-1 cursor-pointer text-center">
-                                    <input type="radio" name="light_sens" value="+" class="radio-btn-input hidden">
-                                    <span class="block py-2 rounded border text-sm hover:bg-gray-50">是</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <!-- Movement Aggravation -->
-                        <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between">
-                            <p class="font-bold text-gray-800 mb-3 flex items-center gap-2 text-sm">
-                                <i class="fa-solid fa-person-walking text-blue-400"></i> 活動讓頭痛加劇?
-                            </p>
-                            <div class="flex gap-2">
-                                <label class="flex-1 cursor-pointer text-center">
-                                    <input type="radio" name="movement_aggravation" value="-" class="radio-btn-input hidden" required>
-                                    <span class="block py-2 rounded border text-sm hover:bg-gray-50">否</span>
-                                </label>
-                                <label class="flex-1 cursor-pointer text-center">
-                                    <input type="radio" name="movement_aggravation" value="+" class="radio-btn-input hidden">
-                                    <span class="block py-2 rounded border text-sm hover:bg-gray-50">是</span>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- CAS & Aura -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        
-                        <!-- CAS (Autonomic Symptoms) -->
-                        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                            <div class="flex items-center justify-between mb-3 border-b pb-2">
-                                <p class="font-bold text-gray-800 flex items-center gap-2">
-                                    <i class="fa-solid fa-droplet text-cyan-600"></i> 伴隨自律神經症狀 (CAS)?
-                                </p>
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" id="cas_toggle" class="sr-only peer" onchange="toggleInput('cas_options', this.checked)">
-                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                                </label>
+                        <!-- CAS -->
+                        <div class="bg-white p-5 rounded shadow-sm border border-slate-200">
+                            <div class="flex items-center gap-4 mb-4">
+                                <h3 class="font-bold text-slate-800 text-sm">伴隨自律神經症狀 (CAS) ?</h3>
+                                <div class="flex gap-2">
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="cas_check" value="no" class="chip-input sr-only" onchange="toggleBlock('cas_details', !this.checked)" checked>
+                                        <span class="inline-block px-4 py-1.5 text-xs border border-slate-300 rounded bg-slate-50 text-slate-700">否</span>
+                                    </label>
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="cas_check" value="yes" class="chip-input sr-only" onchange="toggleBlock('cas_details', this.checked)">
+                                        <span class="inline-block px-4 py-1.5 text-xs border border-slate-300 rounded bg-slate-50 text-slate-700">是</span>
+                                    </label>
+                                </div>
                             </div>
                             
-                            <div id="cas_options" class="hidden space-y-3 fade-in">
-                                <p class="text-xs text-gray-500 mb-2">請勾選症狀並選擇位置：</p>
-                                <div class="grid grid-cols-1 gap-4">
+                            <div id="cas_details" class="hidden pt-4 border-t border-slate-100 fade-in">
+                                <p class="text-xs text-slate-500 mb-3">請勾選症狀，並選擇發生位置：</p>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <script>
                                         const casSymptoms = [
                                             {id: "CI", label: "CI – conjunctival injection/lacrimation"},
                                             {id: "NC", label: "NC – nasal congestion/rhinorrhoea"},
                                             {id: "EE", label: "EE – eyelid oedema"},
-                                            {id: "FS", label: "FS – forehead/facial sweating"},
-                                            {id: "MP", label: "MP – miosis/ptosis"},
-                                            {id: "Rest_Agi", label: "Rest/Agi – restlessness/agitation"}
+                                            {id: "FS", label: "FS – forehead and facial sweating"},
+                                            {id: "MP", label: "MP – miosis and/or ptosis"},
+                                            {id: "Rest_Agi", label: "Rest/Agi – restlessness or agitation"}
                                         ];
 
                                         casSymptoms.forEach(sym => {
                                             document.write(`
-                                                <div class="border-b border-gray-100 pb-2">
-                                                    <label class="flex items-center space-x-2 text-sm p-1 hover:bg-gray-50 rounded cursor-pointer">
-                                                        <input type="checkbox" name="cas_symptoms" value="${sym.id}" class="w-4 h-4 text-blue-600 rounded" onchange="toggleInput('cas_side_${sym.id}', this.checked)">
-                                                        <span class="font-medium">${sym.label}</span>
+                                                <div class="bg-slate-50 p-2.5 rounded border border-slate-200">
+                                                    <label class="flex items-center space-x-2 text-sm font-medium text-slate-800 cursor-pointer">
+                                                        <input type="checkbox" name="cas_symptoms" value="${sym.id}" class="w-4 h-4 text-blue-800 rounded border-slate-300" onchange="toggleInlineFlex('cas_side_${sym.id}', this.checked)">
+                                                        <span>${sym.label}</span>
                                                     </label>
-                                                    <div id="cas_side_${sym.id}" class="hidden mt-2 pl-6 flex gap-2 text-xs">
-                                                        <label class="cursor-pointer bg-gray-50 px-2 py-1 rounded border hover:bg-blue-50">
-                                                            <input type="radio" name="cas_side_${sym.id}" value="Ipsilateral" class="hidden"> <span>同側</span>
-                                                        </label>
-                                                        <label class="cursor-pointer bg-gray-50 px-2 py-1 rounded border hover:bg-blue-50">
-                                                            <input type="radio" name="cas_side_${sym.id}" value="Contralateral" class="hidden"> <span>對側</span>
-                                                        </label>
-                                                        <label class="cursor-pointer bg-gray-50 px-2 py-1 rounded border hover:bg-blue-50">
-                                                            <input type="radio" name="cas_side_${sym.id}" value="Bilateral" class="hidden"> <span>雙側</span>
-                                                        </label>
+                                                    <div id="cas_side_${sym.id}" class="hidden mt-2 flex gap-1 justify-end fade-in">
+                                                        <label class="cursor-pointer"><input type="radio" name="cas_side_${sym.id}" value="i" class="chip-input sr-only"><span class="inline-block px-2 py-1 text-xs border border-slate-300 rounded bg-white text-slate-600">同側</span></label>
+                                                        <label class="cursor-pointer"><input type="radio" name="cas_side_${sym.id}" value="c" class="chip-input sr-only"><span class="inline-block px-2 py-1 text-xs border border-slate-300 rounded bg-white text-slate-600">對側</span></label>
+                                                        <label class="cursor-pointer"><input type="radio" name="cas_side_${sym.id}" value="b" class="chip-input sr-only"><span class="inline-block px-2 py-1 text-xs border border-slate-300 rounded bg-white text-slate-600">雙側</span></label>
                                                     </div>
                                                 </div>
                                             `);
@@ -472,330 +339,422 @@
                         </div>
 
                         <!-- Aura -->
-                        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                            <p class="font-bold text-gray-800 mb-3 flex items-center gap-2 border-b pb-2">
-                                <i class="fa-solid fa-bolt text-yellow-500"></i> 預兆 (Aura)?
-                            </p>
-                            <div class="space-y-4">
-                                <!-- Main Yes/No -->
-                                <div class="flex items-center gap-4">
-                                    <label class="flex-1 cursor-pointer text-center">
-                                        <input type="radio" name="aura_check" value="-" class="radio-btn-input hidden" onclick="toggleInput('aura_details', false)" checked>
-                                        <span class="block py-2 rounded border text-sm hover:bg-gray-50">否</span>
+                        <div class="bg-white p-5 rounded shadow-sm border border-slate-200">
+                            <div class="flex items-center gap-4 mb-4">
+                                <h3 class="font-bold text-slate-800 text-sm">預兆 (Aura) ?</h3>
+                                <div class="flex gap-2">
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="aura_check" value="-" class="chip-input sr-only" onclick="toggleBlock('aura_details', false)" checked>
+                                        <span class="inline-block px-4 py-1.5 text-xs border border-slate-300 rounded bg-slate-50 text-slate-700">否</span>
                                     </label>
-                                    <label class="flex-1 cursor-pointer text-center">
-                                        <input type="radio" name="aura_check" value="+" class="radio-btn-input hidden" onclick="toggleInput('aura_details', true)">
-                                        <span class="block py-2 rounded border text-sm hover:bg-gray-50">是</span>
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="aura_check" value="+" class="chip-input sr-only" onclick="toggleBlock('aura_details', true)">
+                                        <span class="inline-block px-4 py-1.5 text-xs border border-slate-300 rounded bg-slate-50 text-slate-700">是</span>
                                     </label>
-                                </div>
-
-                                <!-- Detail Checkboxes -->
-                                <div id="aura_details" class="hidden space-y-2 fade-in">
-                                    <script>
-                                        const auraTypes = [
-                                            {id: 'visual', label: 'Visual (視覺)'},
-                                            {id: 'sensory', label: 'Sensory (感覺)'},
-                                            {id: 'speech', label: 'Speech/Language (語言)'},
-                                            {id: 'motor', label: 'Motor (運動)'},
-                                            {id: 'brainstem', label: 'Brainstem (腦幹)'},
-                                            {id: 'retinal', label: 'Retinal (視網膜)'}
-                                        ];
-                                        
-                                        function setUncertain(id) {
-                                            const input = document.getElementById(id + '_min');
-                                            input.value = "不確定";
-                                        }
-
-                                        auraTypes.forEach(t => {
-                                            document.write(`
-                                                <div class="bg-gray-50 p-2 rounded-lg border border-gray-100">
-                                                    <label class="flex items-center gap-2 font-bold text-sm text-gray-800 mb-1 cursor-pointer">
-                                                        <input type="checkbox" name="aura_type" value="${t.id}" class="w-4 h-4 text-blue-600 rounded" onchange="toggleInput('${t.id}_input_group', this.checked)">
-                                                        ${t.label}
-                                                    </label>
-                                                    <div id="${t.id}_input_group" class="hidden flex gap-2 items-center mt-1">
-                                                        <input type="text" id="${t.id}_min" class="w-full text-xs p-1.5 border rounded" placeholder="持續分鐘">
-                                                        <button type="button" onclick="setUncertain('${t.id}')" class="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1.5 rounded text-gray-600 whitespace-nowrap">不確定</button>
-                                                    </div>
-                                                </div>
-                                            `);
-                                        });
-                                    </script>
                                 </div>
                             </div>
+
+                            <div id="aura_details" class="hidden pt-4 border-t border-slate-100 fade-in grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <script>
+                                    const auraTypes = ['visual', 'sensory', 'speech and/or language', 'motor', 'brainstem', 'retinal'];
+                                    
+                                    function setUncertain(id) {
+                                        const input = document.getElementById(id + '_min');
+                                        input.value = "不確定";
+                                    }
+
+                                    auraTypes.forEach(t => {
+                                        const tId = t.split(' ')[0]; // short id
+                                        document.write(`
+                                            <div class="bg-slate-50 p-2.5 rounded border border-slate-200">
+                                                <label class="flex items-center gap-2 font-medium text-sm text-slate-800 cursor-pointer">
+                                                    <input type="checkbox" name="aura_type" value="${t}" class="w-4 h-4 text-blue-800 rounded border-slate-300" onchange="toggleInlineFlex('${tId}_input_group', this.checked)">
+                                                    ${t}
+                                                </label>
+                                                <div id="${tId}_input_group" class="hidden mt-2 flex gap-1 fade-in">
+                                                    <div class="relative flex-1">
+                                                        <input type="text" id="${tId}_min" class="w-full text-xs p-1.5 border border-slate-300 rounded" placeholder="持續時間">
+                                                        <span class="absolute right-2 top-1.5 text-xs text-slate-400">min</span>
+                                                    </div>
+                                                    <button type="button" onclick="setUncertain('${tId}')" class="text-xs bg-slate-200 hover:bg-slate-300 px-2 rounded text-slate-700">不確定</button>
+                                                </div>
+                                            </div>
+                                        `);
+                                    });
+                                </script>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- ================= STEP 6: 藥物、警訊與檢查 ================= -->
+                <div class="step-container h-full" id="step6">
+                    <h2 class="text-xl font-bold text-slate-800 border-b-2 border-slate-800 pb-2 mb-6 serif-font">用藥紀錄、警訊與檢查</h2>
+                    
+                    <div class="space-y-6 max-w-4xl mx-auto w-full">
+                        
+                        <!-- Meds -->
+                        <div class="bg-white p-5 rounded border border-slate-200 shadow-sm">
+                            <div class="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-2">
+                                <h3 class="font-bold text-slate-800 text-sm">平均一個月使用止痛藥幾天？ (PK)</h3>
+                                <div class="flex items-center gap-2 md:w-1/3">
+                                    <input type="number" name="meds_per_month" min="0" max="31" class="w-full text-sm p-2 border border-slate-300 rounded focus:border-blue-800" placeholder="輸入天數">
+                                    <span class="text-slate-500 text-sm">天</span>
+                                </div>
+                            </div>
+                            
+                            <p class="text-xs text-slate-500 mb-2">使用藥物種類 (勾選後輸入每週次數)：</p>
+                            <div class="flex flex-wrap gap-2.5">
+                                <script>
+                                    const medsList = ["Panadol", "Panadol-ES", "EVE", "Ergot", "Triptans", "COX-2", "NSAIDs"];
+                                    medsList.forEach(m => {
+                                        document.write(`
+                                            <label class="cursor-pointer group flex-none relative">
+                                                <input type="checkbox" name="meds_list" value="${m}" class="chip-input sr-only" onchange="toggleInputInline('med_freq_${m}', this.checked)">
+                                                <span class="inline-flex items-center px-3 py-1.5 text-sm border border-slate-300 rounded bg-slate-50 text-slate-700 transition-colors select-none hover:bg-slate-200">
+                                                    ${m}
+                                                </span>
+                                            </label>
+                                            <div id="med_freq_${m}" class="hidden items-center fade-in">
+                                                 <input type="number" name="med_freq_${m}_val" class="w-16 px-2 py-1 text-xs border border-slate-300 rounded bg-slate-50 ml-1" placeholder="次/週">
+                                            </div>
+                                        `);
+                                    });
+                                </script>
+                                <label class="cursor-pointer group flex-none relative">
+                                    <input type="checkbox" name="meds_other_check" class="chip-input sr-only" onchange="toggleInputInline('med_other_wrap', this.checked)">
+                                    <span class="inline-flex items-center px-3 py-1.5 text-sm border border-slate-300 rounded bg-slate-50 text-slate-700 transition-colors select-none hover:bg-slate-200">
+                                        其他
+                                    </span>
+                                </label>
+                                <div id="med_other_wrap" class="hidden items-center fade-in gap-1 ml-1">
+                                    <input type="text" name="meds_other_name" class="w-24 px-2 py-1 text-xs border border-slate-300 rounded bg-slate-50" placeholder="藥名">
+                                    <input type="number" name="med_freq_other" class="w-16 px-2 py-1 text-xs border border-slate-300 rounded bg-slate-50" placeholder="次/週">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Red Flags (SNOOP) -->
+                        <div class="bg-white p-5 rounded border border-slate-200 shadow-sm">
+                            <h3 class="font-bold text-slate-800 text-sm mb-3">最近是否有以下症狀 (SNOP 警訊)</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <label class="flex items-center space-x-3 p-3 border border-slate-200 rounded hover:bg-slate-50 cursor-pointer">
+                                    <input type="checkbox" name="snoop_s" value="S" class="w-4 h-4 text-red-700 rounded border-slate-300">
+                                    <span class="text-sm text-slate-700">感冒、發燒、流鼻水、全身倦怠 (Systemic)</span>
+                                </label>
+                                <label class="flex items-center space-x-3 p-3 border border-slate-200 rounded hover:bg-slate-50 cursor-pointer">
+                                    <input type="checkbox" name="snoop_n" value="N" class="w-4 h-4 text-red-700 rounded border-slate-300">
+                                    <span class="text-sm text-slate-700">單側手腳無力等神經學表現 (Neurologic)</span>
+                                </label>
+                                <label class="flex items-center space-x-3 p-3 border border-slate-200 rounded hover:bg-slate-50 cursor-pointer">
+                                    <input type="checkbox" name="snoop_p1" value="P" class="w-4 h-4 text-red-700 rounded border-slate-300">
+                                    <span class="text-sm text-slate-700">頭痛症狀與早期有明顯不同 (Pattern change)</span>
+                                </label>
+                                <label class="flex items-center space-x-3 p-3 border border-slate-200 rounded hover:bg-slate-50 cursor-pointer">
+                                    <input type="checkbox" name="snoop_p2" value="P" class="w-4 h-4 text-red-700 rounded border-slate-300">
+                                    <span class="text-sm text-slate-700">頭痛症狀明顯與姿勢變化有關 (Positional)</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Exams -->
+                        <div class="bg-white p-5 rounded border border-slate-200 shadow-sm">
+                            <h3 class="font-bold text-slate-800 text-sm mb-3">過去檢查紀錄</h3>
+                            <div class="flex flex-wrap gap-2.5 mb-3">
+                                <script>
+                                    const exams = ["MRI", "CT", "EEG", "Sono"];
+                                    exams.forEach(ex => {
+                                        document.write(`
+                                            <label class="cursor-pointer">
+                                                <input type="checkbox" name="exam_${ex.toLowerCase()}" value="${ex}" class="chip-input sr-only">
+                                                <span class="inline-block px-4 py-1.5 text-sm border border-slate-300 rounded bg-slate-50 text-slate-700 transition-colors select-none hover:bg-slate-200">${ex}</span>
+                                            </label>
+                                        `);
+                                    });
+                                </script>
+                            </div>
+                            <input type="text" name="exam_result" class="w-full text-sm p-2 border border-slate-300 rounded focus:border-blue-800" placeholder="檢查結果備註 (選填)...">
                         </div>
                     </div>
                 </div>
 
-                <!-- Section 12: Recent Symptoms (Red Flags) -->
-                <div class="space-y-4">
-                    <h3 class="text-lg font-bold text-gray-800 border-b pb-2 flex items-center gap-2">
-                        最近是否有以下症狀
-                    </h3>
-                    <div class="space-y-2">
-                        <label class="flex items-center space-x-3 p-4 border border-red-100 bg-red-50 rounded-lg hover:bg-red-100 cursor-pointer shadow-sm select-none">
-                            <input type="checkbox" name="snoop_s" value="S" class="w-5 h-5 text-red-600 rounded focus:ring-red-500">
-                            <span class="text-sm text-gray-800 font-medium">感冒、發燒、流鼻水、全身倦怠 (Systemic)</span>
-                        </label>
-                        <label class="flex items-center space-x-3 p-4 border border-red-100 bg-red-50 rounded-lg hover:bg-red-100 cursor-pointer shadow-sm select-none">
-                            <input type="checkbox" name="snoop_n" value="N" class="w-5 h-5 text-red-600 rounded focus:ring-red-500">
-                            <span class="text-sm text-gray-800 font-medium">單側手腳無力等神經學表現 (Neurologic)</span>
-                        </label>
-                        <label class="flex items-center space-x-3 p-4 border border-red-100 bg-red-50 rounded-lg hover:bg-red-100 cursor-pointer shadow-sm select-none">
-                            <input type="checkbox" name="snoop_p1" value="P" class="w-5 h-5 text-red-600 rounded focus:ring-red-500">
-                            <span class="text-sm text-gray-800 font-medium">頭痛症狀與早期有明顯不同 (Pattern change)</span>
-                        </label>
-                        <label class="flex items-center space-x-3 p-4 border border-red-100 bg-red-50 rounded-lg hover:bg-red-100 cursor-pointer shadow-sm select-none">
-                            <input type="checkbox" name="snoop_p2" value="P" class="w-5 h-5 text-red-600 rounded focus:ring-red-500">
-                            <span class="text-sm text-gray-800 font-medium">頭痛症狀明顯與姿勢變化有關 (Positional)</span>
-                        </label>
+                <!-- ================= STEP 7: 臨床摘要 ================= -->
+                <div class="step-container h-full" id="step7">
+                    <h2 class="text-xl font-bold text-slate-800 border-b-2 border-slate-800 pb-2 mb-6 serif-font">臨床摘要 (Summary)</h2>
+                    
+                    <div class="flex-1 flex flex-col items-center justify-center max-w-4xl mx-auto w-full">
+                        <div class="w-full bg-slate-800 rounded-t border-b border-slate-600 p-3 flex justify-between items-center">
+                            <span class="text-white text-sm font-bold"><i class="fa-solid fa-code"></i> Auto-Generated Output</span>
+                            <button type="button" onclick="copySummary()" id="copyBtn" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-1.5 px-3 rounded flex items-center gap-1 transition-colors">
+                                <i class="fa-regular fa-copy"></i> 複製摘要
+                            </button>
+                        </div>
+                        <div id="summaryContent" class="w-full bg-white p-6 rounded-b border border-slate-300 shadow-inner text-sm font-mono text-slate-800 leading-relaxed min-h-[200px] whitespace-pre-wrap break-words">
+                            <!-- JS injected string -->
+                        </div>
+                        <textarea id="hiddenClipboard" class="hidden"></textarea>
                     </div>
-                </div>
-
-                <!-- Section 13: Exams -->
-                <div class="space-y-4">
-                    <h3 class="text-lg font-bold text-gray-800 border-b pb-2 flex items-center gap-2">
-                        過去檢查紀錄
-                    </h3>
-                    <div class="flex flex-wrap gap-4 mb-3">
-                        <label class="inline-flex items-center cursor-pointer select-none px-3 py-2 bg-gray-50 rounded-lg border hover:bg-gray-100">
-                            <input type="checkbox" name="exam_mri" value="MRI" class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500">
-                            <span class="ml-2 text-sm">磁振造影 (MRI)</span>
-                        </label>
-                        <label class="inline-flex items-center cursor-pointer select-none px-3 py-2 bg-gray-50 rounded-lg border hover:bg-gray-100">
-                            <input type="checkbox" name="exam_ct" value="CT" class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500">
-                            <span class="ml-2 text-sm">電腦斷層 (CT)</span>
-                        </label>
-                        <label class="inline-flex items-center cursor-pointer select-none px-3 py-2 bg-gray-50 rounded-lg border hover:bg-gray-100">
-                            <input type="checkbox" name="exam_eeg" value="EEG" class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500">
-                            <span class="ml-2 text-sm">腦波 (EEG)</span>
-                        </label>
-                        <label class="inline-flex items-center cursor-pointer select-none px-3 py-2 bg-gray-50 rounded-lg border hover:bg-gray-100">
-                            <input type="checkbox" name="exam_sono" value="Sono" class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500">
-                            <span class="ml-2 text-sm">腦血管超音波 (Sono)</span>
-                        </label>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">檢查結果備註：</label>
-                        <textarea name="exam_result" rows="2" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 shadow-sm" placeholder="請填寫結果..."></textarea>
-                    </div>
-                </div>
-                
-                 <!-- Real-time Summary Section -->
-                <div class="mt-8 border-t-2 border-dashed border-gray-300 pt-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
-                            <i class="fa-solid fa-user-doctor text-blue-600"></i> 醫師專用摘要
-                        </h3>
-                         <button type="button" onclick="copySummary()" id="copyBtn" class="bg-gray-800 hover:bg-black text-white font-bold py-2 px-4 rounded-lg text-sm transition-colors flex items-center gap-2">
-                            <i class="fa-regular fa-copy"></i> 複製摘要
-                        </button>
-                    </div>
-                    <!-- The output area -->
-                    <div id="summaryContent" class="bg-white p-6 rounded-xl border-2 border-gray-800 text-base font-mono text-gray-900 shadow-lg leading-relaxed break-words">
-                        <p class="text-gray-400 text-center italic">摘要將於填寫後自動生成...</p>
-                    </div>
-                    <textarea id="hiddenClipboard" class="hidden"></textarea>
                 </div>
 
             </div>
+
+            <!-- Footer / Controls -->
+            <footer class="bg-white border-t border-slate-200 p-4 shrink-0 flex justify-between items-center z-10">
+                <button type="button" id="prevBtn" onclick="nextPrev(-1)" class="px-5 py-2 text-sm font-bold text-slate-600 bg-slate-100 border border-slate-300 rounded hover:bg-slate-200 transition-colors hidden">
+                    <i class="fa-solid fa-chevron-left mr-1"></i> 上一步
+                </button>
+                
+                <div class="flex-1 flex justify-center">
+                    <span class="text-xs text-slate-400 font-medium">Headache Questionnaire</span>
+                </div>
+
+                <button type="button" id="nextBtn" onclick="nextPrev(1)" class="px-5 py-2 text-sm font-bold text-white bg-blue-800 rounded shadow-md hover:bg-blue-700 transition-colors">
+                    下一步 <i class="fa-solid fa-chevron-right ml-1"></i>
+                </button>
+            </footer>
         </form>
     </div>
 
     <script>
-        const form = document.getElementById('headacheForm');
-        const summaryContent = document.getElementById('summaryContent');
+        /* --- Wizard Logic --- */
+        let currentTab = 0; 
+        const tabs = document.getElementsByClassName("step-container");
+        
+        function showTab(n) {
+            for(let i=0; i<tabs.length; i++) {
+                tabs[i].classList.remove("active");
+            }
+            tabs[n].classList.add("active");
+            
+            // Update buttons
+            document.getElementById("prevBtn").style.display = (n === 0) ? "none" : "block";
+            
+            if (n === (tabs.length - 1)) {
+                document.getElementById("nextBtn").style.display = "none";
+                updateSummary(); // Generate summary on last step
+            } else {
+                document.getElementById("nextBtn").style.display = "block";
+                document.getElementById("nextBtn").innerHTML = '下一步 <i class="fa-solid fa-chevron-right ml-1"></i>';
+            }
+            
+            // Update Progress
+            document.getElementById("currentStepText").innerText = (n + 1);
+            const progress = ((n + 1) / tabs.length) * 100;
+            document.getElementById("progressBar").style.width = progress + "%";
+        }
 
-        function toggleInput(id, show) {
+        function nextPrev(n) {
+            // Basic validation if needed goes here
+            if(n === 1 && currentTab === 2) {
+                // Example check: Pulsatile is mandatory
+                const p = document.querySelector('input[name="pulsatile"]:checked');
+                if(!p) {
+                    alert("請選擇「是否有像脈搏般跳痛」");
+                    return;
+                }
+            }
+            if (n === 1 && currentTab === 3) {
+                 const req = ['nausea', 'vomiting', 'sound_sens', 'light_sens', 'movement_aggravation'];
+                 for(let id of req) {
+                     if(!document.querySelector(`input[name="${id}"]:checked`)) {
+                         alert("請完成所有伴隨症狀的評估 (是/否)");
+                         return;
+                     }
+                 }
+            }
+
+            currentTab = currentTab + n;
+            if (currentTab >= tabs.length) {
+                currentTab = tabs.length - 1;
+            }
+            if (currentTab < 0) currentTab = 0;
+            
+            showTab(currentTab);
+        }
+
+        // Initialize Wizard
+        showTab(currentTab);
+
+
+        /* --- UI Toggles --- */
+        function toggleInputInline(id, show) {
             const el = document.getElementById(id);
             if(show) {
                 el.classList.remove('hidden');
-                // Auto focus input inside if exists
+                el.classList.add('flex');
                 const input = el.querySelector('input');
                 if(input) input.focus();
             } else {
+                el.classList.remove('flex');
                 el.classList.add('hidden');
-                // Uncheck radio buttons inside if hidden to clean up data
-                const radios = el.querySelectorAll('input[type="radio"]');
-                radios.forEach(r => r.checked = false);
+                const inputs = el.querySelectorAll('input');
+                inputs.forEach(i => i.value = '');
             }
             updateSummary();
         }
 
-        // Make functions global available
-        window.toggleInput = toggleInput;
-        window.setUncertain = function(id) {
-            const input = document.getElementById(id + '_min');
-            input.value = "不確定";
-            updateSummary();
-        };
-
-        // Add event listeners to CAS side radios dynamically
-        document.addEventListener('change', function(e) {
-            if(e.target.name && e.target.name.startsWith('cas_side_')) {
-                updateSummary();
+        function toggleBlock(id, show) {
+            const el = document.getElementById(id);
+            if(show) {
+                el.classList.remove('hidden');
+            } else {
+                el.classList.add('hidden');
+                // Clean up children
+                const checkboxes = el.querySelectorAll('input[type="checkbox"], input[type="radio"]');
+                checkboxes.forEach(c => c.checked = false);
+                const texts = el.querySelectorAll('input[type="text"]');
+                texts.forEach(t => t.value = "");
+                // Hide sub-blocks dynamically
+                const divs = el.querySelectorAll('div[id]');
+                divs.forEach(d => { if(d.id.includes('input_group') || d.id.includes('cas_side')) d.classList.add('hidden'); });
             }
-        });
+            updateSummary();
+        }
 
+        function toggleInlineFlex(id, show) {
+             const el = document.getElementById(id);
+             if(show) {
+                 el.classList.remove('hidden');
+             } else {
+                 el.classList.add('hidden');
+                 const radios = el.querySelectorAll('input[type="radio"]');
+                 radios.forEach(r => r.checked = false);
+                 const texts = el.querySelectorAll('input[type="text"]');
+                 texts.forEach(t => t.value = "");
+             }
+        }
+
+
+        /* --- Summary Generation --- */
         function updateSummary() {
+            if(currentTab !== tabs.length - 1) return; // Only update on final tab
+
+            const form = document.getElementById('headacheForm');
             const formData = new FormData(form);
             
-            // Helper to get multiple values
-            const getAll = (name) => {
-                const inputs = document.querySelectorAll(`input[name="${name}"]:checked`);
-                return Array.from(inputs).map(input => input.value);
-            };
+            const getAll = (name) => Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(i => i.value);
+            const getValue = (name, def = '') => formData.get(name) || def;
 
-            const getValue = (name, defaultVal = '') => {
-                return formData.get(name) || defaultVal;
-            }
-
-            // --- Logic Construction ---
-
-            // Basic Info
-            const permit = document.getElementById('consent').checked ? 'Yes' : 'No';
-            const onset = getValue('first_headache_age');
-            const aggra = getValue('worse_headache_age');
+            // 1. Basic Info
+            const permit = document.getElementById('consent').checked ? '已同意' : '未同意';
+            const onset = getValue('first_headache_age', '-');
+            const aggra = getValue('worse_headache_age', '-');
             
-            // Location (+Other)
+            // 2. Location & Side
             let locs = getAll('location');
             if(formData.get('location_other_check')) {
                 const other = getValue('location_other');
                 if(other) locs.push(other);
             }
-            const locStr = locs.join('/');
+            const locStr = locs.join('/') || '-';
 
-            // Side (+Other)
             let sides = getAll('side');
             if(formData.get('side_other_check')) {
                 const other = getValue('side_other');
                 if(other) sides.push(other);
             }
-            const latStr = sides.join('/');
+            const latStr = sides.join('/') || '-';
 
-            // Nature (+Other)
+            // 3. Nature, NRS, Dur
             let natures = getAll('nature');
             if(formData.get('nature_other_check')) {
                 const other = getValue('nature_other');
                 if(other) natures.push(other);
             }
-            const qualStr = natures.join('/');
-            
-            // Pulsatile status
+            const qualStr = natures.join('/') || '-';
             const pulsatile = getValue('pulsatile', '-');
-
-            // Severity (Avg/Max) & Duration
-            const nrsAvg = getValue('pain_level_avg');
-            const nrsMax = getValue('pain_level_max');
-            const dur = getValue('duration');
+            const nrsAvg = getValue('pain_level_avg', '-');
+            const nrsMax = getValue('pain_level_max', '-');
+            const dur = getValue('duration', '-');
             
-            // Symptoms Yes/No (+/-)
+            // 4. Symptoms
             const n_sym = getValue('nausea', '-');
             const v_sym = getValue('vomiting', '-');
             const l_sym = getValue('sound_sens', '-');
             const s_sym = getValue('light_sens', '-');
             const pa_sym = getValue('movement_aggravation', '-');
             
-            // CAS Logic Updated
-            let casStr = "";
-            const casToggle = document.getElementById('cas_toggle').checked;
-            if (casToggle) {
+            // 5. CAS
+            let casStr = "CAS(-)";
+            const casCheck = formData.get('cas_check');
+            if (casCheck === 'yes') {
                 const casList = getAll('cas_symptoms');
-                
-                if (casList.length > 0) {
-                    const casDetails = casList.map(sym => {
-                        // Get side for this specific symptom
-                        const sideVal = document.querySelector(`input[name="cas_side_${sym}"]:checked`)?.value;
-                        const sideMap = {
-                            'Ipsilateral': 'i',
-                            'Contralateral': 'c',
-                            'Bilateral': 'b'
-                        };
-                        return `${sym}${sideVal ? '(' + sideMap[sideVal] + ')' : ''}`;
-                    });
-                    casStr = `, CAS(${casDetails.join('; ')})`;
-                } else {
-                    casStr = `, CAS(+)`; 
-                }
+                let casDetails = [];
+                casList.forEach(sym => {
+                    const side = document.querySelector(`input[name="cas_side_${sym}"]:checked`)?.value;
+                    casDetails.push(`${sym}${side ? '('+side+')' : ''}`);
+                });
+                casStr = casDetails.length > 0 ? `CAS(${casDetails.join(', ')})` : `CAS(+)`;
             }
 
-            // Aura
+            // 6. Aura
             const aura_check = getValue('aura_check', '-');
             let auraStr = `Aura(${aura_check})`;
             if(aura_check === '+'){
                 const types = getAll('aura_type');
                 if(types.length > 0) {
                     const details = types.map(t => {
-                        const dur = document.getElementById(t + '_min').value;
-                        return `${t}${dur ? ':' + dur + 'min' : ''}`;
+                        const tId = t.split(' ')[0];
+                        const d = document.getElementById(`${tId}_min`)?.value;
+                        return `${t}${d ? ':' + d + 'min' : ''}`;
                     });
-                    auraStr = `Aura(${details.join(',')})`;
+                    auraStr = `Aura(${details.join(', ')})`;
                 }
             }
 
-            // Freq & Meds
-            const freq = getValue('days_per_month');
+            // 7. Freq & Meds
+            const freq = getValue('days_per_month', '-');
+            const pk_days = getValue('meds_per_month', '-');
             
-            // Meds Detailed
             let medSummary = [];
-            const selectedMeds = getAll('meds_list');
-            selectedMeds.forEach(m => {
-                const freq = formData.get(`med_freq_${m}`);
-                medSummary.push(`${m}(${freq || '?'}次/週)`);
+            getAll('meds_list').forEach(m => {
+                const f = formData.get(`med_freq_${m}_val`);
+                medSummary.push(`${m}${f ? '('+f+'次/週)' : ''}`);
             });
-            // Other meds
             if(formData.get('meds_other_check')) {
                 const name = formData.get('meds_other_name');
-                const freq = formData.get('med_freq_other');
-                if(name) medSummary.push(`${name}(${freq || '?'}次/週)`);
+                const f = formData.get('med_freq_other');
+                if(name) medSummary.push(`${name}${f ? '('+f+'次/週)' : ''}`);
             }
-            const medStr = medSummary.length > 0 ? medSummary.join(', ') : 'None';
+            const medStr = medSummary.length > 0 ? medSummary.join('/') : '-';
             
-            // Red Flags (SNOOP)
+            // 8. SNOOP
             const snoop_s = formData.get('snoop_s') ? '+' : '-';
             const snoop_n = formData.get('snoop_n') ? '+' : '-';
-            const onset_val = parseInt(onset) || 0;
-            const snoop_o_age = onset_val > 40 ? '+' : '-';
-            const snoop_o_thunder = '-';
-            const p1 = formData.get('snoop_p1');
-            const p2 = formData.get('snoop_p2');
-            const snoop_p = (p1 || p2) ? '+' : '-';
-            const redFlagStr = `RedFlags: S(${snoop_s}) N(${snoop_n}) O(${snoop_o_age}) O(${snoop_o_thunder}) P(${snoop_p})`;
+            const snoop_o_age = (parseInt(onset) > 40) ? '+' : '-';
+            const snoop_o_thunder = '-'; // By default logic
+            const snoop_p = (formData.get('snoop_p1') || formData.get('snoop_p2')) ? '+' : '-';
 
-            // Exams Logic
+            // 9. Exams
             const mri = formData.get('exam_mri') ? '(+)' : '(-)';
             const ct = formData.get('exam_ct') ? '(+)' : '(-)';
             const eeg = formData.get('exam_eeg') ? '(+)' : '(-)';
             const sono = formData.get('exam_sono') ? '(+)' : '(-)';
             const exam_note = getValue('exam_result');
-            const examStr = `Exams: MRI${mri}, CT${ct}, EEG${eeg}, Sono${sono} ${exam_note ? `[${exam_note}]` : ''}`;
+            const examStr = `MRI${mri} CT${ct} EEG${eeg} Sono${sono}${exam_note ? ' ['+exam_note+']' : ''}`;
 
-            // --- Generate Single String Summary ---
-            // Format: HA(permit=Yes), Onset=20, Aggra=30, Loc=..., Lat=..., Qual=..., Pulsatile(+), NRS=Avg/Max, Dur=4hr, N(-) V(-) L(-) S(-) PA(-), CAS(...), Aura(...), Freq=10/m, Meds=..., RedFlags..., Exams...
-            
-            const summaryText = `HA(permit=${permit}), Onset=${onset}, Aggra=${aggra}, Loc=${locStr||'-'}, Lat=${latStr||'-'}, Pulsatile(${pulsatile}), Qual=${qualStr||'-'}, NRS=${nrsAvg}/${nrsMax}, Dur=${dur}hr, N(${n_sym}) V(${v_sym}) L(${l_sym}) S(${s_sym}) PA(${pa_sym})${casStr}, ${auraStr}, Freq=${freq}/m, Meds=[${medStr}], ${redFlagStr}, ${examStr}`;
+            // BUILD STRING (Comma separated as requested)
+            const summaryText = `HA (permit = ${permit}), Onset = ${onset}, Aggra = ${aggra}, Loc=${locStr}, Lat=${latStr}, Qual=${qualStr}, Pulsatile(${pulsatile}), NRS = ${nrsAvg}/${nrsMax}, Dur=${dur} hr, N(${n_sym}), V(${v_sym}), L(${l_sym}), S(${s_sym}), PA(${pa_sym}), ${casStr}, ${auraStr}, Freq=${freq}/month, PK=${pk_days}/month(${medStr}), RedFlags: S(${snoop_s}) N(${snoop_n}) O(${snoop_o_age}) O(${snoop_o_thunder}) P(${snoop_p}), Exams: ${examStr}`;
 
-            summaryContent.innerText = summaryText;
+            document.getElementById('summaryContent').innerText = summaryText;
             document.getElementById('hiddenClipboard').value = summaryText;
         }
 
+        /* --- Copy --- */
         function copySummary() {
             const copyText = document.getElementById("hiddenClipboard");
-            
-            // Mobile safe copy
             copyText.select();
-            copyText.setSelectionRange(0, 99999); /* For mobile devices */
+            copyText.setSelectionRange(0, 99999);
             
             try {
-                navigator.clipboard.writeText(summaryContent.innerText).then(() => {
+                navigator.clipboard.writeText(copyText.value).then(() => {
                     showCopyFeedback();
                 }).catch(err => {
-                    // Fallback
                     document.execCommand("copy");
                     showCopyFeedback();
                 });
             } catch (err) {
-                 // Fallback for older browsers
                  document.execCommand("copy");
                  showCopyFeedback();
             }
@@ -805,19 +764,14 @@
             const btn = document.getElementById('copyBtn');
             const originalHTML = btn.innerHTML;
             btn.innerHTML = '<i class="fa-solid fa-check"></i> 已複製';
-            btn.classList.remove('bg-gray-800');
+            btn.classList.remove('bg-blue-600');
             btn.classList.add('bg-green-600');
-            
             setTimeout(() => {
                 btn.innerHTML = originalHTML;
                 btn.classList.remove('bg-green-600');
-                btn.classList.add('bg-gray-800');
+                btn.classList.add('bg-blue-600');
             }, 2000);
         }
-
-        // Listen for changes
-        form.addEventListener('input', updateSummary);
-        form.addEventListener('change', updateSummary);
         
     </script>
 </body>
