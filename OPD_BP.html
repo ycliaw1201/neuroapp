@@ -19,11 +19,16 @@
             margin: 2rem auto;
             background: white;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            padding: 20mm;
+            padding: 10mm;
             border-radius: 0.5rem;
         }
 
-        /* 列印專用樣式 */
+        /* 列印專用樣式設定，最大化空間利用 */
+        @page {
+            size: A4;
+            margin: 10mm; /* 縮小邊距以容納更多內容 */
+        }
+
         @media print {
             body {
                 background-color: white;
@@ -41,6 +46,7 @@
                 border-radius: 0;
             }
             .page-break-before {
+                page-break-before: always; /* 強制換頁 */
                 break-before: page;
             }
             /* 確保表格框線在列印時清晰可見 */
@@ -63,9 +69,9 @@
             }
         }
 
-        /* 表格輸入區塊高度設定，確保手寫空間 */
+        /* 濃縮表格輸入區塊高度，剛好能寫字即可 (約能塞入30列=15天) */
         .write-cell {
-            height: 32px;
+            height: 27px;
         }
     </style>
 </head>
@@ -115,79 +121,79 @@
 
     <div class="doc-container">
         
-        <!-- 頁面 1: 血壓紀錄單 -->
-        <div id="logPage">
-            <div class="text-center mb-6">
-                <h1 class="text-3xl font-bold mb-2 tracking-widest">居家血壓紀錄單</h1>
-                <p class="text-gray-600">請在回診時攜帶此紀錄單與您的主治醫師討論</p>
-            </div>
+        <!-- JavaScript 會在這裡動態插入分好頁的表格 -->
+        <div id="tablesContainer"></div>
 
-            <div class="flex justify-between items-end mb-4 text-lg border-b-2 border-gray-800 pb-2">
-                <div class="flex gap-6">
-                    <p><strong>姓名：</strong><span class="inline-block w-32 border-b border-gray-400"></span></p>
-                    <p><strong>病歷號：</strong><span class="inline-block w-32 border-b border-gray-400"></span></p>
-                </div>
-            </div>
-
-            <table class="w-full border-collapse border border-black text-center text-sm">
-                <thead>
-                    <tr class="print-bg-gray bg-gray-100">
-                        <th class="border border-black p-2 w-24">日期</th>
-                        <th class="border border-black p-2 w-16">星期</th>
-                        <th class="border border-black p-2 w-16">時段</th>
-                        <th class="border border-black p-2 w-24">收縮壓 (高)<br><span class="text-xs font-normal">mmHg</span></th>
-                        <th class="border border-black p-2 w-24">舒張壓 (低)<br><span class="text-xs font-normal">mmHg</span></th>
-                        <th class="border border-black p-2 w-24">脈搏 (心跳)<br><span class="text-xs font-normal">次/分</span></th>
-                        <th class="border border-black p-2">備註<br><span class="text-xs font-normal">(用藥、不適症狀等)</span></th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody">
-                    <!-- JavaScript 會在這裡動態插入資料列 -->
-                </tbody>
-            </table>
-        </div>
-
-        <!-- 頁面 2: 722 衛教資訊 (列印時強制換頁) -->
-        <div class="page-break-before mt-12 pt-8" id="educationPage">
+        <!-- 頁面 2: 722 衛教資訊 (列印時絕對獨立一張 A4) -->
+        <div class="page-break-before py-4" id="educationPage">
             
-            <div class="text-center mb-8">
+            <div class="text-center mb-6">
                 <h2 class="text-3xl font-bold mb-2 border-b-4 border-blue-600 inline-block pb-2">居家血壓量測「722」守則</h2>
             </div>
 
-            <div class="space-y-6 text-gray-800 text-lg leading-relaxed">
+            <div class="space-y-5 text-gray-800 text-lg leading-relaxed">
                 
-                <section class="bg-blue-50 print-bg-gray p-6 rounded-lg border border-blue-100">
-                    <h3 class="text-xl font-bold text-blue-800 flex items-center gap-2 mb-3">
-                        <span class="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center">?</span>
+                <section class="bg-blue-50 print-bg-gray p-5 rounded-lg border border-blue-100">
+                    <h3 class="text-xl font-bold text-blue-800 flex items-center gap-2 mb-2">
+                        <span class="bg-blue-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm">?</span>
                         為什麼要在家量血壓？
                     </h3>
-                    <p>在醫院量血壓常因緊張而偏高（即所謂的「白袍高血壓」）。居家血壓更能真實反映您平時放鬆狀態下的血壓狀況，是醫師評估病情、調整藥物最重要的依據。</p>
+                    <p class="text-base">在醫院量血壓常因緊張而偏高（即所謂的「白袍高血壓」）。居家血壓更能真實反映您平時放鬆狀態下的血壓狀況，是醫師評估病情、調整藥物最重要的依據。</p>
                 </section>
 
                 <section>
                     <h3 class="text-2xl font-bold text-gray-900 border-l-4 border-blue-600 pl-3 mb-4">什麼是「722」守則？</h3>
-                    <p class="mb-4">中華民國心臟學會與台灣高血壓學會強烈建議，居家血壓量測應遵循「722」原則：</p>
+                    <p class="mb-3 text-base">中華民國心臟學會與台灣高血壓學會強烈建議，居家血壓量測應遵循「722」原則：</p>
                     
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="border-2 border-gray-200 p-4 rounded-xl text-center shadow-sm">
-                            <div class="text-4xl font-black text-blue-600 mb-2">7</div>
-                            <h4 class="font-bold text-lg mb-2">連續量測 7 天</h4>
-                            <p class="text-base text-gray-600">建議每次回診前，至少連續量測一週 (7天)。</p>
+                        <div class="border-2 border-gray-200 p-3 rounded-xl text-center shadow-sm">
+                            <div class="text-3xl font-black text-blue-600 mb-1">7</div>
+                            <h4 class="font-bold text-lg mb-1">連續量測 7 天</h4>
+                            <p class="text-sm text-gray-600">建議每次回診前，至少連續量測一週 (7天)。</p>
                         </div>
-                        <div class="border-2 border-gray-200 p-4 rounded-xl text-center shadow-sm">
-                            <div class="text-4xl font-black text-blue-600 mb-2">2</div>
-                            <h4 class="font-bold text-lg mb-2">每天量 2 回</h4>
-                            <ul class="text-base text-gray-600 text-left list-disc list-inside">
-                                <li><strong>早晨：</strong> 起床後1小時內、排尿後、吃早餐前、服降血壓藥前。</li>
+                        <div class="border-2 border-gray-200 p-3 rounded-xl text-center shadow-sm">
+                            <div class="text-3xl font-black text-blue-600 mb-1">2</div>
+                            <h4 class="font-bold text-lg mb-1">每天量 2 回</h4>
+                            <ul class="text-sm text-gray-600 text-left list-disc list-inside">
+                                <li><strong>早晨：</strong> 起床後1小時內、排尿後、吃早餐及服藥前。</li>
                                 <li><strong>晚上：</strong> 睡覺前1小時內。</li>
                             </ul>
                         </div>
-                        <div class="border-2 border-gray-200 p-4 rounded-xl text-center shadow-sm">
-                            <div class="text-4xl font-black text-blue-600 mb-2">2</div>
-                            <h4 class="font-bold text-lg mb-2">每回量 2 次</h4>
-                            <p class="text-base text-gray-600">每次量測2遍，兩次間隔1到2分鐘，取兩次的<strong>平均值</strong>記錄。</p>
+                        <div class="border-2 border-gray-200 p-3 rounded-xl text-center shadow-sm">
+                            <div class="text-3xl font-black text-blue-600 mb-1">2</div>
+                            <h4 class="font-bold text-lg mb-1">每回量 2 次</h4>
+                            <p class="text-sm text-gray-600">每次量測2遍，間隔1到2分鐘，取兩次<strong>平均值</strong>記錄。</p>
                         </div>
                     </div>
+                </section>
+
+                <section class="mt-6">
+                    <h3 class="text-2xl font-bold text-gray-900 border-l-4 border-blue-600 pl-3 mb-3">正確姿勢與注意事項</h3>
+                    <ol class="list-decimal list-inside space-y-2 ml-2 text-base">
+                        <li><strong>休息準備：</strong> 測量前安靜休息 5 分鐘。前 30 分鐘請勿運動、抽菸、洗澡或喝咖啡/茶。</li>
+                        <li><strong>姿勢正確：</strong> 坐在有靠背的椅子上，雙腳平放地板，<strong>勿交叉翹腳</strong>。手心向上，平放桌面。</li>
+                        <li><strong>同高原則：</strong> <strong>壓脈帶中心應與心臟同高</strong>。</li>
+                        <li><strong>壓脈帶位置：</strong> 綁在上臂，下緣距手肘彎曲處約 2 指寬。鬆緊度以能塞入兩根手指為宜。</li>
+                        <li><strong>量測中：</strong> 保持心情平靜，請勿說話或移動身體。</li>
+                        <li><strong>選擇手臂：</strong> 第一次建議雙手都量，之後以血壓較高的一側作為固定量測的手臂。</li>
+                    </ol>
+                </section>
+
+                <section class="bg-red-50 print-bg-gray p-4 rounded-lg mt-6 border border-red-100">
+                    <h3 class="text-xl font-bold text-red-800 mb-2">血壓標準參考與警語</h3>
+                    <p class="text-gray-800 mb-2">最新高血壓標準 (居家量測)：<strong>收縮壓 ≥ 130 mmHg 或 舒張壓 ≥ 80 mmHg</strong></p>
+                    <p class="text-red-700 font-bold text-sm">※ 溫馨提醒：若血壓突然異常飆高，或伴隨胸悶、劇烈頭痛、暈眩、單側無力等症狀，請立刻就醫！<br><span class="text-gray-500 font-normal">* 實際個人目標血壓，請依主治醫師建議為準。</span></p>
+                </section>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const startDateInput = document.getElementById('startDate');
+            const durationSelect = document.getElementById('duration');
+            const tablesContainer = document.getElementById('tablesContainer');
                 </section>
 
                 <section class="mt-8">
@@ -265,51 +271,102 @@
                 const startDateStr = startDateInput.value;
                 const daysToGenerate = parseInt(durationSelect.value, 10);
                 
-                if (!startDateStr) return; // 防呆機制
+                if (!startDateStr) return; 
 
                 const startDate = new Date(startDateStr);
-                tableBody.innerHTML = ''; // 清空現有表格
+                tablesContainer.innerHTML = ''; // 清空現有表格容器
 
-                for (let i = 0; i < daysToGenerate; i++) {
-                    const currentDate = new Date(startDate);
-                    currentDate.setDate(currentDate.getDate() + i);
-                    
-                    const dateDisplay = formatDateDisplay(currentDate);
-                    const weekDay = weekDays[currentDate.getDay()];
-                    
-                    // 判斷是否為週末，給予不同底色以便辨識
-                    const isWeekend = (currentDate.getDay() === 0 || currentDate.getDay() === 6);
-                    const rowClass = isWeekend ? 'bg-orange-50 print-bg-gray' : '';
+                // 設定每頁 A4 最多顯示的天數 (15天=30列，剛好完美填滿一頁 A4 且不會讓 30 天斷頁)
+                const DAYS_PER_PAGE = 15; 
+                const totalPages = Math.ceil(daysToGenerate / DAYS_PER_PAGE);
 
-                    // 每一天產生兩列（早、晚）
-                    // 為了美觀，日期和星期使用 rowspan=2 合併儲存格
+                for (let page = 0; page < totalPages; page++) {
                     
-                    // 第一列：早
-                    const trMorning = document.createElement('tr');
-                    if (rowClass) trMorning.className = rowClass;
-                    trMorning.innerHTML = `
-                        <td rowspan="2" class="border border-black p-1 font-medium">${dateDisplay}</td>
-                        <td rowspan="2" class="border border-black p-1">${weekDay}</td>
-                        <td class="border border-black p-1 write-cell">早</td>
-                        <td class="border border-black p-1"></td>
-                        <td class="border border-black p-1"></td>
-                        <td class="border border-black p-1"></td>
-                        <td class="border border-black p-1 text-left px-2"></td>
+                    // 建立單一頁面的容器
+                    const pageWrapper = document.createElement('div');
+                    // 如果不是第一頁，就加入強制換頁的 class
+                    if (page > 0) {
+                        pageWrapper.classList.add('page-break-before', 'pt-6');
+                    }
+
+                    // 每一頁都有獨立的標題與姓名欄位
+                    pageWrapper.innerHTML = `
+                        <div class="text-center mb-4">
+                            <h1 class="text-2xl font-bold mb-1 tracking-widest">居家血壓紀錄單</h1>
+                            <p class="text-gray-600 text-sm">請在回診時攜帶此紀錄單與您的主治醫師討論</p>
+                        </div>
+
+                        <div class="flex justify-between items-end mb-2 text-base border-b-2 border-gray-800 pb-1">
+                            <div class="flex gap-6">
+                                <p><strong>姓名：</strong><span class="inline-block w-32 border-b border-gray-400"></span></p>
+                                <p><strong>病歷號：</strong><span class="inline-block w-32 border-b border-gray-400"></span></p>
+                            </div>
+                            <div class="text-sm text-gray-500 font-medium">
+                                第 ${page + 1} 頁 / 共 ${totalPages} 頁
+                            </div>
+                        </div>
+
+                        <table class="w-full border-collapse border border-black text-center text-sm mb-6">
+                            <thead>
+                                <tr class="print-bg-gray bg-gray-100">
+                                    <th class="border border-black p-1 w-20">日期</th>
+                                    <th class="border border-black p-1 w-12">星期</th>
+                                    <th class="border border-black p-1 w-12">時段</th>
+                                    <th class="border border-black p-1 w-24">收縮壓 (高)<br><span class="text-xs font-normal">mmHg</span></th>
+                                    <th class="border border-black p-1 w-24">舒張壓 (低)<br><span class="text-xs font-normal">mmHg</span></th>
+                                    <th class="border border-black p-1 w-24">脈搏 (心跳)<br><span class="text-xs font-normal">次/分</span></th>
+                                    <th class="border border-black p-1">備註<br><span class="text-xs font-normal">(用藥、不適等)</span></th>
+                                </tr>
+                            </thead>
+                            <tbody class="table-body">
+                            </tbody>
+                        </table>
                     `;
-                    
-                    // 第二列：晚
-                    const trEvening = document.createElement('tr');
-                    if (rowClass) trEvening.className = rowClass;
-                    trEvening.innerHTML = `
-                        <td class="border border-black p-1 write-cell">晚</td>
-                        <td class="border border-black p-1"></td>
-                        <td class="border border-black p-1"></td>
-                        <td class="border border-black p-1"></td>
-                        <td class="border border-black p-1 text-left px-2"></td>
-                    `;
 
-                    tableBody.appendChild(trMorning);
-                    tableBody.appendChild(trEvening);
+                    const tbody = pageWrapper.querySelector('.table-body');
+                    const startDayIndex = page * DAYS_PER_PAGE;
+                    const endDayIndex = Math.min(startDayIndex + DAYS_PER_PAGE, daysToGenerate);
+
+                    // 產生這一頁的天數資料
+                    for (let i = startDayIndex; i < endDayIndex; i++) {
+                        const currentDate = new Date(startDate);
+                        currentDate.setDate(currentDate.getDate() + i);
+                        
+                        const dateDisplay = formatDateDisplay(currentDate);
+                        const weekDay = weekDays[currentDate.getDay()];
+                        
+                        const isWeekend = (currentDate.getDay() === 0 || currentDate.getDay() === 6);
+                        const rowClass = isWeekend ? 'bg-orange-50 print-bg-gray' : '';
+
+                        // 第一列：早
+                        const trMorning = document.createElement('tr');
+                        if (rowClass) trMorning.className = rowClass;
+                        trMorning.innerHTML = `
+                            <td rowspan="2" class="border border-black p-0 font-medium">${dateDisplay}</td>
+                            <td rowspan="2" class="border border-black p-0">${weekDay}</td>
+                            <td class="border border-black p-0 write-cell text-blue-700">早</td>
+                            <td class="border border-black p-0"></td>
+                            <td class="border border-black p-0"></td>
+                            <td class="border border-black p-0"></td>
+                            <td class="border border-black p-0 text-left px-2"></td>
+                        `;
+                        
+                        // 第二列：晚
+                        const trEvening = document.createElement('tr');
+                        if (rowClass) trEvening.className = rowClass;
+                        trEvening.innerHTML = `
+                            <td class="border border-black p-0 write-cell text-indigo-700">晚</td>
+                            <td class="border border-black p-0"></td>
+                            <td class="border border-black p-0"></td>
+                            <td class="border border-black p-0"></td>
+                            <td class="border border-black p-0 text-left px-2"></td>
+                        `;
+
+                        tbody.appendChild(trMorning);
+                        tbody.appendChild(trEvening);
+                    }
+
+                    tablesContainer.appendChild(pageWrapper);
                 }
             }
 
