@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>神經內科看診進度</title>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 20px; background: #f5f5f5; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; margin-top: 16px; }
+    .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .doctor { font-size: 1.2rem; font-weight: bold; margin-bottom: 8px; }
+    .number { font-size: 2rem; color: #0056b3; font-weight: bold; }
+    .meta { color: #666; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+
+  <h2>神經內科看診看板</h2>
+  <div id="update-time" class="meta">載入中...</div>
+  <div id="dashboard" class="grid"></div>
+
+  <script>
+    async function fetchClinicData() {
+      // 透過 CORS Proxy 繞過跨網域限制
+      const targetUrl = encodeURIComponent('https://www.hosp.nycu.edu.tw/component/regist/index.php?option=com_regist&task=regist.realtime&cmd=init');
+      const proxyUrl = `https://corsproxy.io/?${targetUrl}`;
+      
+      // 建立 POST 表單資料
+      const formData = new FormData();
+      formData.append("secno", "12"); // 12=神經內科
+      formData.append("time", "0");   // 0=上午, 1=下午, 2=晚上
+
+      try {
+        const res = await fetch(proxyUrl, {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        renderDashboard(data);
+      } catch (error) {
+        document.getElementById('update-time').innerText = '資料連線失敗，請檢查網路或 Proxy 狀態';
+      }
+    }
+
+    function renderDashboard(data) {
+      document.getElementById('update-time').innerText = `最後更新時間：${data.updated}`;
+      const container = document.getElementById('dashboard');
+      container.innerHTML = ''; 
+
+      if (!data.rooms || data.rooms.length === 0) {
+        container.innerHTML = '<div>目前無看診資料</div>';
+        return;
+      }
+
+      data.rooms.forEach(room => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div class="doctor">${room.number}診 - ${room.docName} 醫師</div>
+          <div>目前叫號：<span class="number">${room.curNum || '-'}</span></div>
+          <div class="meta">預約人數：${room.reserveNum}</div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // 網頁載入時執行，隨後每 60 秒更新一次
+    fetchClinicData();
+    setInterval(fetchClinicData, 60000);
+  </script>
+</body>
+</html>
