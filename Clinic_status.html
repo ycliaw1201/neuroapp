@@ -1,71 +1,333 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <title>神經內科看診進度</title>
-  <style>
-    body { font-family: system-ui, sans-serif; padding: 20px; background: #f5f5f5; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; margin-top: 16px; }
-    .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    .doctor { font-size: 1.2rem; font-weight: bold; margin-bottom: 8px; }
-    .number { font-size: 2rem; color: #0056b3; font-weight: bold; }
-    .meta { color: #666; font-size: 0.9rem; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>陽大醫院 - 獨立看診進度看板</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #0f172a; /* 深色背景，適合當作看板 */
+            color: #f8fafc;
+        }
+        
+        /* 隱藏捲軸但保持可滾動 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b; 
+        }
+
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* 脈衝動畫 (用於載入中或更新提示) */
+        @keyframes pulse-border {
+            0% { border-color: rgba(59, 130, 246, 0.5); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+            70% { border-color: rgba(59, 130, 246, 0); box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+            100% { border-color: rgba(59, 130, 246, 0); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+        .updating {
+            animation: pulse-border 1.5s infinite;
+        }
+    </style>
 </head>
-<body>
+<body class="min-h-screen flex flex-col">
 
-  <h2>神經內科看診看板</h2>
-  <div id="update-time" class="meta">載入中...</div>
-  <div id="dashboard" class="grid"></div>
+    <!-- 頂部控制列 -->
+    <header class="glass-panel sticky top-0 z-50 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                
+                <!-- 標題與時鐘 -->
+                <div class="flex items-center gap-3">
+                    <div class="bg-blue-600 p-2 rounded-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-white tracking-wider">即時看診看板</h1>
+                        <p id="clockDisplay" class="text-sm text-blue-300 font-mono"></p>
+                    </div>
+                </div>
 
-  <script>
-    async function fetchClinicData() {
-      // 透過 CORS Proxy 繞過跨網域限制
-      const targetUrl = encodeURIComponent('https://www.hosp.nycu.edu.tw/component/regist/index.php?option=com_regist&task=regist.realtime&cmd=init');
-      const proxyUrl = `https://corsproxy.io/?${targetUrl}`;
-      
-      // 建立 POST 表單資料
-      const formData = new FormData();
-      formData.append("secno", "12"); // 12=神經內科
-      formData.append("time", "0");   // 0=上午, 1=下午, 2=晚上
+                <!-- 選擇器 -->
+                <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                    <select id="secnoSelect" class="bg-slate-800 border border-slate-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5">
+                        <option value="12" selected>神經內科</option>
+                        <option value="A1">心臟內科</option>
+                        <option value="A2">肝膽胃腸科</option>
+                        <option value="A4">新陳代謝科</option>
+                        <option value="03">外科</option>
+                        <option value="06">骨科</option>
+                        <option value="08">泌尿科</option>
+                        <option value="04">小兒科</option>
+                        <option value="05">婦產科</option>
+                        <option value="10">眼科</option>
+                        <option value="09">耳鼻喉科</option>
+                    </select>
 
-      try {
-        const res = await fetch(proxyUrl, {
-          method: 'POST',
-          body: formData
-        });
-        const data = await res.json();
-        renderDashboard(data);
-      } catch (error) {
-        document.getElementById('update-time').innerText = '資料連線失敗，請檢查網路或 Proxy 狀態';
-      }
-    }
+                    <select id="timeSelect" class="bg-slate-800 border border-slate-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5">
+                        <option value="0">上午 (09:00-12:00)</option>
+                        <option value="1">下午 (13:30-16:30)</option>
+                        <option value="2">晚上 (18:30-20:30)</option>
+                    </select>
 
-    function renderDashboard(data) {
-      document.getElementById('update-time').innerText = `最後更新時間：${data.updated}`;
-      const container = document.getElementById('dashboard');
-      container.innerHTML = ''; 
+                    <button id="refreshBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-lg transition-colors flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        <span>更新</span>
+                    </button>
 
-      if (!data.rooms || data.rooms.length === 0) {
-        container.innerHTML = '<div>目前無看診資料</div>';
-        return;
-      }
+                    <!-- 自動更新開關 -->
+                    <label class="relative inline-flex items-center cursor-pointer ml-2">
+                        <input type="checkbox" id="autoRefreshToggle" class="sr-only peer" checked>
+                        <div class="w-11 h-6 bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                        <span class="ml-3 text-sm font-medium text-slate-300">自動更新</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </header>
 
-      data.rooms.forEach(room => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-          <div class="doctor">${room.number}診 - ${room.docName} 醫師</div>
-          <div>目前叫號：<span class="number">${room.curNum || '-'}</span></div>
-          <div class="meta">預約人數：${room.reserveNum}</div>
-        `;
-        container.appendChild(card);
-      });
-    }
+    <!-- 主要看板區域 -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        
+        <!-- 狀態提示列 -->
+        <div class="flex justify-between items-center mb-6">
+            <h2 id="currentDeptTitle" class="text-2xl font-bold text-white border-l-4 border-blue-500 pl-3">載入中...</h2>
+            <div id="lastUpdateTime" class="text-slate-400 text-sm">最後更新：--:--:--</div>
+        </div>
 
-    // 網頁載入時執行，隨後每 60 秒更新一次
-    fetchClinicData();
-    setInterval(fetchClinicData, 60000);
-  </script>
+        <!-- 錯誤訊息容器 -->
+        <div id="errorContainer" class="hidden mb-6 bg-red-900/50 border border-red-500 text-red-200 p-4 rounded-lg flex items-center gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <span id="errorMessage">發生錯誤，無法取得資料。</span>
+        </div>
+
+        <!-- 卡片網格容器 -->
+        <div id="dashboardGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- 卡片將由 JavaScript 動態生成 -->
+        </div>
+
+    </main>
+
+    <!-- 頁腳 -->
+    <footer class="glass-panel py-4 mt-auto">
+        <div class="text-center text-slate-500 text-sm">
+            資料來源：國立陽明交通大學附設醫院網路掛號系統 | 此為第三方獨立看板介面
+        </div>
+    </footer>
+
+    <script>
+        const secnoSelect = document.getElementById('secnoSelect');
+        const timeSelect = document.getElementById('timeSelect');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const autoRefreshToggle = document.getElementById('autoRefreshToggle');
+        const dashboardGrid = document.getElementById('dashboardGrid');
+        const currentDeptTitle = document.getElementById('currentDeptTitle');
+        const lastUpdateTime = document.getElementById('lastUpdateTime');
+        const errorContainer = document.getElementById('errorContainer');
+        const errorMessage = document.getElementById('errorMessage');
+        const clockDisplay = document.getElementById('clockDisplay');
+
+        let autoRefreshInterval = null;
+
+        // 更新右上角時鐘
+        function updateClock() {
+            const now = new Date();
+            clockDisplay.textContent = now.toLocaleTimeString('zh-TW', { hour12: false });
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // 根據時間自動選擇預設的「時段」
+        function autoSelectTimeSession() {
+            const hour = new Date().getHours();
+            if (hour >= 18) timeSelect.value = "2"; // 晚上
+            else if (hour >= 13) timeSelect.value = "1"; // 下午
+            else timeSelect.value = "0"; // 上午
+        }
+
+        // 獲取並解析 API 資料
+        async function fetchRealtimeData() {
+            const secno = secnoSelect.value;
+            const time = timeSelect.value;
+            const deptName = secnoSelect.options[secnoSelect.selectedIndex].text;
+            const timeName = timeSelect.options[timeSelect.selectedIndex].text.split(' ')[0];
+
+            currentDeptTitle.textContent = `${deptName} (${timeName}) 看診進度`;
+            
+            // 視覺提示正在更新
+            refreshBtn.classList.add('updating');
+            refreshBtn.disabled = true;
+            errorContainer.classList.add('hidden');
+
+            try {
+                // 目標 API 網址
+                const targetUrl = 'https://www.hosp.nycu.edu.tw/component/regist/index.php?option=com_regist&task=regist.realtime&cmd=init';
+                
+                // 使用 corsproxy.io 繞過跨網域限制 (CORS)
+                // 這是純前端擷取其他網站 API 的必要手段
+                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
+
+                // 準備 POST 表單資料
+                const formData = new FormData();
+                formData.append('secno', secno);
+                formData.append('time', time);
+
+                const response = await fetch(proxyUrl, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`網路回應異常 (狀態碼: ${response.status})`);
+                }
+
+                const data = await response.json();
+                renderDashboard(data);
+
+            } catch (error) {
+                console.error("Fetch Error:", error);
+                showError(`無法取得資料。可能是醫院伺服器阻擋或 Proxy 服務暫時無法使用。(${error.message})`);
+                dashboardGrid.innerHTML = '';
+            } finally {
+                refreshBtn.classList.remove('updating');
+                refreshBtn.disabled = false;
+            }
+        }
+
+        // 渲染看板畫面
+        function renderDashboard(data) {
+            dashboardGrid.innerHTML = ''; // 清空現有卡片
+            
+            const now = new Date();
+            lastUpdateTime.textContent = `最後更新：${now.toLocaleTimeString('zh-TW', { hour12: false })} (系統時間: ${data.updated || '未知'})`;
+
+            // 如果沒有診間資料
+            if (!data.rooms || data.rooms.length === 0) {
+                dashboardGrid.innerHTML = `
+                    <div class="col-span-full flex flex-col items-center justify-center py-16 text-slate-400 bg-slate-800/50 rounded-2xl border border-slate-700 border-dashed">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                        </svg>
+                        <p class="text-xl">目前時段查無看診資料或尚未開始看診</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // 遍歷所有診間並建立卡片
+            data.rooms.forEach(room => {
+                // 解析號碼，若為 null 顯示橫線
+                let displayNum = room.curNum ? room.curNum : "---";
+                let nextNumText = "";
+                
+                // 檢查是否有下一位號碼的資訊
+                if (room.roomQuery && room.roomQuery.length > 0) {
+                    const rq = room.roomQuery[0];
+                    if (rq.NEXT_NUMBER && rq.NEXT_NUMBER !== "0") {
+                        nextNumText = `準備號碼：${rq.NEXT_NUMBER}`;
+                        if (rq.NEXT2_NUMBER && rq.NEXT2_NUMBER !== "0") {
+                            nextNumText += `、${rq.NEXT2_NUMBER}`;
+                        }
+                    }
+                }
+
+                // 處理特殊狀態字串 (如初診、轉診)
+                let numColorClass = "text-emerald-400"; // 預設號碼顏色
+                if (typeof displayNum === 'string' && (displayNum.includes("初診") || displayNum.includes("轉診"))) {
+                    numColorClass = "text-amber-400"; // 特殊號碼用黃色
+                } else if (displayNum === "---") {
+                    numColorClass = "text-slate-600";
+                }
+
+                // 建立卡片 HTML
+                const card = document.createElement('div');
+                card.className = "bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden shadow-xl hover:border-slate-500 transition-colors flex flex-col";
+                
+                // 判斷是否有公告
+                const announcementHtml = room.billboard 
+                    ? `<div class="bg-red-900/60 text-red-200 text-sm px-4 py-2 border-b border-red-800 font-medium">公告：${room.billboard}</div>` 
+                    : '';
+
+                card.innerHTML = `
+                    ${announcementHtml}
+                    <!-- 頂部：診間與醫師 -->
+                    <div class="bg-slate-900/50 px-6 py-4 flex justify-between items-center border-b border-slate-700">
+                        <div class="text-3xl font-black text-white tracking-wider">${room.number} 診</div>
+                        <div class="text-xl font-bold text-blue-300">${room.docName} 醫師</div>
+                    </div>
+                    
+                    <!-- 中部：巨大叫號顯示 -->
+                    <div class="flex-grow flex flex-col items-center justify-center py-10 px-6 bg-gradient-to-b from-slate-800 to-slate-900 relative">
+                        <div class="text-slate-400 text-lg mb-2 font-medium tracking-widest">目前叫號</div>
+                        <div class="text-7xl sm:text-8xl md:text-9xl font-black ${numColorClass} drop-shadow-[0_0_15px_rgba(52,211,153,0.2)]">
+                            ${displayNum}
+                        </div>
+                    </div>
+                    
+                    <!-- 底部：次要資訊 -->
+                    <div class="bg-slate-900 px-6 py-4 flex justify-between items-center text-sm font-medium border-t border-slate-700">
+                        <div class="text-amber-400/90">${nextNumText}</div>
+                        <div class="text-slate-400 bg-slate-800 px-3 py-1 rounded-full border border-slate-700">
+                            預約人數：<span class="text-white">${room.reserveNum}</span>
+                        </div>
+                    </div>
+                `;
+                dashboardGrid.appendChild(card);
+            });
+        }
+
+        // 顯示錯誤訊息
+        function showError(msg) {
+            errorMessage.textContent = msg;
+            errorContainer.classList.remove('hidden');
+        }
+
+        // 管理自動更新邏輯
+        function setupAutoRefresh() {
+            // 清除現有的計時器
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+            }
+            
+            // 如果開關開啟，設定每 60 秒 (60000 毫秒) 更新一次
+            if (autoRefreshToggle.checked) {
+                autoRefreshInterval = setInterval(fetchRealtimeData, 60000);
+            }
+        }
+
+        // 事件監聽器綁定
+        refreshBtn.addEventListener('click', fetchRealtimeData);
+        secnoSelect.addEventListener('change', fetchRealtimeData);
+        timeSelect.addEventListener('change', fetchRealtimeData);
+        autoRefreshToggle.addEventListener('change', setupAutoRefresh);
+
+        // 初始執行
+        autoSelectTimeSession();
+        fetchRealtimeData();
+        setupAutoRefresh();
+
+    </script>
 </body>
 </html>
