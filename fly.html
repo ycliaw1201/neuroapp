@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>果蠅 CPG 步態 3D Web 模擬器</title>
+  <style>
+    body { margin: 0; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #1a1a1a; color: #fff; }
+    #canvas-container { width: 100vw; height: 100vh; }
+    #ui-panel {
+      position: absolute; top: 20px; left: 20px;
+      background: rgba(20, 20, 20, 0.85); backdrop-filter: blur(8px);
+      padding: 20px; border-radius: 12px; border: 1px solid #333;
+      width: 280px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+    h2 { font-size: 1.1rem; margin-top: 0; margin-bottom: 12px; color: #4fc3f7; }
+    .control-group { margin-bottom: 14px; }
+    label { display: block; font-size: 0.85rem; margin-bottom: 4px; color: #aaa; }
+    input[type="range"] { width: 100%; accent-color: #4fc3f7; }
+    select, button {
+      width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #444;
+      background: #2a2a2a; color: #fff; font-size: 0.9rem; cursor: pointer;
+    }
+    .status { font-size: 0.8rem; color: #888; margin-top: 8px; }
+  </style>
+  <!-- 引入 Three.js 與 OrbitControls -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+  <div id="ui-panel">
+    <h2>果蠅 CPG 神經控制台</h2>
+    <div class="control-group">
+      <label for="freq-slider">步頻 (Frequency): <span id="freq-val">10</span> Hz</label>
+      <input type="range" id="freq-slider" min="1" max="25" step="0.5" value="10">
+    </div>
+    <div class="control-group">
+      <label for="gait-select">步態模式 (Gait Pattern)</label>
+      <select id="gait-select">
+        <option value="tripod">三腳架步態 (Tripod Gait)</option>
+        <option value="wave">波狀步態 (Wave Gait)</option>
+      </select>
+    </div>
+    <div class="status" id="cpg-status">CPG 狀態: 正常運行</div>
+  </div>
+  <div id="canvas-container"></div>
+
+  <script>
+    // --- 1. Three.js 場景設置 ---
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x121212);
+
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(0, 8, 12);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    container.appendChild(renderer.domElement);
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+
+    // 光源與網格地面
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    dirLight.position.set(5, 10, 7);
+    scene.add(dirLight);
+
+    const gridHelper = new THREE.GridHelper(20, 20, 0x444444, 0x222222);
+    gridHelper.position.y = -1.5;
+    scene.add(gridHelper);
+
+    // --- 2. 建立果蠅簡化生物力學 3D 模型 ---
+    const flyGroup = new THREE.Group();
+    scene.add(flyGroup);
+
+    // 軀幹 (Thorax & Abdomen)
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x8d5524, roughness: 0.5 });
+    const thorax = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 16), bodyMat);
+    thorax.scale.set(0.8, 0.6, 1.4);
+    flyGroup.add(thorax);
+
+    // 六足結構 (L1, L2, L3, R1, R2, R3)
+    const legMat = new THREE.MeshStandardMaterial({ color: 0x333333 });
+    const legs = [];
+    const legOffsets = [
+      { x: -0.8, z: 0.7, signX: -1 },  // L1 前左
+      { x: -0.9, z: 0.0, signX: -1 },  // L2 中左
+      { x: -0.8, z: -0.7, signX: -1 }, // L3 後左
+      { x: 0.8,  z: 0.7, signX: 1 },   // R1 前右
+      { x: 0.9,  z: 0.0, signX: 1 },   // R2 中右
+      { x: 0.8,  z: -0.7, signX: 1 }   // R3 後右
+    ];
+
+    legOffsets.forEach((cfg, idx) => {
+      const legRoot = new THREE.Group();
+      legRoot.position.set(cfg.x, 0, cfg.z);
+
+      // 股節 (Femur)
+      const femur = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 1.2), legMat);
+      femur.position.set(cfg.signX * 0.5, -0.2, 0);
+      femur.rotation.z = cfg.signX * Math.PI / 4;
+      legRoot.add(femur);
+
+      // 脛節 (Tibia)
+      const tibia = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.4), legMat);
+      tibia.position.set(cfg.signX * 1.0, -1.0, 0);
+      tibia.rotation.z = -cfg.signX * Math.PI / 6;
+      legRoot.add(tibia);
+
+      flyGroup.add(legRoot);
+      legs.push({ root: legRoot, baseRotX: 0, cfg: cfg });
+    });
+
+    // --- 3. CPG 相位振盪器核心演算法 ---
+    const cpg = {
+      phases: new Float32Array(6),
+      freq: 10.0,
+      mode: 'tripod',
+      step: function(dt) {
+        const omega = 2 * Math.PI * this.freq;
+        for (let i = 0; i < 6; i++) {
+          this.phases[i] = (this.phases[i] + omega * dt) % (2 * Math.PI);
+        }
+      },
+      getPhase: function(i) {
+        // 根據步態賦予相位偏移
+        if (this.mode === 'tripod') {
+          // 三腳架步態: L1, R2, L3 (0,4,2) vs R1, L2, R3 (3,1,5) 反相 pi
+          const isGroup1 = (i === 0 || i === 4 || i === 2);
+          return (this.phases[0] + (isGroup1 ? 0 : Math.PI)) % (2 * Math.PI);
+        } else {
+          // 波狀步態: 依序傳遞延遲 (Wave gait)
+          const delays = [0, 1/3, 2/3, 1/2, 5/6, 1/6];
+          return (this.phases[0] + delays[i] * 2 * Math.PI) % (2 * Math.PI);
+        }
+      }
+    };
+
+    // --- 4. 運動學映射與動畫循環 ---
+    let clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const dt = clock.getDelta();
+
+      // CPG 更新
+      cpg.step(dt);
+
+      // 驅動 6 足擺動 (Swing & Stance)
+      legs.forEach((leg, i) => {
+        const theta = cpg.getPhase(i);
+        // 擺動與支撐相前後擺動角度 (-0.3 ~ 0.3 rad)
+        const forwardBackAngle = 0.35 * Math.sin(theta);
+        // 提起足部 (擺動相抬起，支撐相著地)
+        const liftAngle = Math.max(0, 0.25 * Math.sin(theta - Math.PI / 4));
+
+        leg.root.rotation.y = forwardBackAngle * leg.cfg.signX;
+        leg.root.rotation.z = -liftAngle * leg.cfg.signX;
+      });
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    // --- 5. UI 事件監聽 ---
+    document.getElementById('freq-slider').addEventListener('input', (e) => {
+      cpg.freq = parseFloat(e.target.value);
+      document.getElementById('freq-val').innerText = cpg.freq;
+    });
+
+    document.getElementById('gait-select').addEventListener('change', (e) => {
+      cpg.mode = e.target.value;
+    });
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
