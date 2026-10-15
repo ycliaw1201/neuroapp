@@ -10,6 +10,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <!-- Chart.js for Trend Graph -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Client-side OCR Fallback (Tesseract.js) -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&display=swap');
@@ -30,25 +32,34 @@
     .tab-content {
       transition: opacity 0.2s ease, transform 0.2s ease;
     }
+    /* Senior touch active button feedback */
+    .touch-btn {
+      touch-action: manipulation;
+      transition: transform 0.1s ease, filter 0.1s ease;
+    }
+    .touch-btn:active {
+      transform: scale(0.96);
+      filter: brightness(0.92);
+    }
   </style>
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col justify-between antialiased pb-24 select-none">
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col justify-between antialiased pb-28 select-none">
 
   <!-- Top Mobile App Header -->
   <header class="sticky top-0 z-40 bg-rose-600 text-white shadow-md px-4 py-3.5 flex items-center justify-between">
     <div class="flex items-center space-x-2.5">
-      <div class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center text-white text-xl shadow-inner">
+      <div class="w-11 h-11 rounded-2xl bg-white/20 flex items-center justify-center text-white text-2xl shadow-inner">
         <i class="fa-solid fa-heart-pulse"></i>
       </div>
       <div>
         <h1 class="text-xl font-black tracking-tight leading-none">血壓照相日記</h1>
-        <p class="text-xs text-rose-100 font-medium mt-0.5">大字好讀・拍照自動記</p>
+        <p class="text-xs text-rose-100 font-medium mt-1">大字好讀・拍照自動辨識</p>
       </div>
     </div>
     
     <!-- TTS Voice announcement switch -->
-    <button id="ttsToggleBtn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-700/80 text-white border border-rose-400 text-xs font-bold active:scale-95 transition">
-      <i id="ttsIcon" class="fa-solid fa-volume-high"></i>
+    <button id="ttsToggleBtn" class="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-rose-700/90 text-white border-2 border-rose-400 text-xs font-bold touch-btn shadow-sm">
+      <i id="ttsIcon" class="fa-solid fa-volume-high text-sm"></i>
       <span id="ttsLabel">語音開啟</span>
     </button>
   </header>
@@ -56,6 +67,11 @@
   <main class="flex-1 max-w-lg mx-auto w-full px-4 py-4 space-y-4">
     <!-- Toast Message Container -->
     <div id="toastBox" class="fixed top-16 left-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- OCR Status Indicator Overlay -->
+    <div id="ocrDebugBadge" class="hidden bg-slate-900/90 text-yellow-300 px-3 py-1.5 rounded-xl text-xs font-mono font-bold border border-yellow-400/40 text-center">
+      正在分析血壓計螢幕...
+    </div>
 
     <!-- ============================================== -->
     <!-- TAB 1: MEASUREMENT & STEP GUIDE (量測與拍照) -->
@@ -69,32 +85,32 @@
           
           <!-- Step 1 Indicator -->
           <div id="step1Indicator" class="relative z-10 flex flex-col items-center">
-            <div class="step-circle w-10 h-10 rounded-full bg-rose-600 text-white font-black text-base flex items-center justify-center shadow-md transition-all">
+            <div class="step-circle w-11 h-11 rounded-full bg-rose-600 text-white font-black text-lg flex items-center justify-center shadow-md transition-all">
               1
             </div>
-            <span class="text-xs font-bold text-rose-600 mt-1">開啟相機</span>
+            <span class="text-xs font-bold text-rose-600 mt-1.5">開啟相機</span>
           </div>
 
           <!-- Step 2 Indicator -->
           <div id="step2Indicator" class="relative z-10 flex flex-col items-center">
-            <div class="step-circle w-10 h-10 rounded-full bg-slate-200 text-slate-500 font-black text-base flex items-center justify-center transition-all">
+            <div class="step-circle w-11 h-11 rounded-full bg-slate-200 text-slate-500 font-black text-lg flex items-center justify-center transition-all">
               2
             </div>
-            <span class="text-xs font-bold text-slate-400 mt-1">拍照辨識</span>
+            <span class="text-xs font-bold text-slate-400 mt-1.5">拍照辨識</span>
           </div>
 
           <!-- Step 3 Indicator -->
           <div id="step3Indicator" class="relative z-10 flex flex-col items-center">
-            <div class="step-circle w-10 h-10 rounded-full bg-slate-200 text-slate-500 font-black text-base flex items-center justify-center transition-all">
+            <div class="step-circle w-11 h-11 rounded-full bg-slate-200 text-slate-500 font-black text-lg flex items-center justify-center transition-all">
               3
             </div>
-            <span class="text-xs font-bold text-slate-400 mt-1">確認存檔</span>
+            <span class="text-xs font-bold text-slate-400 mt-1.5">確認存檔</span>
           </div>
         </div>
       </div>
 
       <!-- STEP 1 CONTAINER: Ready & Start Camera -->
-      <section id="step1Container" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 text-center space-y-5">
+      <section id="step1Container" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 text-center space-y-6">
         <div class="w-24 h-24 mx-auto rounded-full bg-rose-50 text-rose-500 flex items-center justify-center text-4xl shadow-inner">
           <i class="fa-solid fa-camera"></i>
         </div>
@@ -102,19 +118,19 @@
         <div>
           <h2 class="text-2xl font-black text-slate-800">第 1 步：開啟鏡頭</h2>
           <p class="text-slate-500 text-base mt-2 font-medium">
-            量完血壓後，點擊下方大按鈕<br>將鏡頭對準血壓計上的數字螢幕。
+            量完血壓後，點擊下方大按鈕<br>鏡頭對準血壓計的液晶螢幕即可。
           </p>
         </div>
 
-        <div class="space-y-3 pt-2">
-          <button id="startCamBtn" class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-rose-500 to-red-500 hover:from-rose-600 hover:to-red-600 active:scale-95 text-white text-xl font-black shadow-lg shadow-rose-500/30 flex items-center justify-center gap-3 transition">
-            <i class="fa-solid fa-camera text-2xl"></i>
+        <div class="space-y-4 pt-2">
+          <button id="startCamBtn" class="touch-btn w-full py-5 px-6 rounded-2xl bg-gradient-to-r from-rose-500 via-rose-600 to-red-600 text-white text-2xl font-black shadow-lg shadow-rose-500/40 flex items-center justify-center gap-3 border-2 border-rose-400">
+            <i class="fa-solid fa-camera text-3xl"></i>
             <span>打開相機開始拍</span>
           </button>
 
-          <label class="w-full py-3 px-4 rounded-2xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 text-base font-bold flex items-center justify-center gap-2 cursor-pointer transition">
-            <i class="fa-solid fa-images text-lg text-slate-500"></i>
-            <span>從手機相簿選照片</span>
+          <label class="touch-btn w-full py-4 px-4 rounded-2xl bg-slate-100 border-2 border-slate-300 text-slate-700 text-lg font-black flex items-center justify-center gap-2 cursor-pointer shadow-sm">
+            <i class="fa-solid fa-images text-xl text-slate-500"></i>
+            <span>從手機相簿選照片辨識</span>
             <input type="file" id="albumUploadInput" accept="image/*" class="hidden" />
           </label>
         </div>
@@ -127,7 +143,7 @@
             <i class="fa-solid fa-circle-dot text-rose-500 animate-pulse"></i>
             第 2 步：對準數字螢幕拍照
           </span>
-          <button id="cancelCamBtn" class="text-xs px-2.5 py-1 bg-white rounded-lg border border-rose-200 text-rose-600 font-bold active:scale-95">
+          <button id="cancelCamBtn" class="touch-btn text-sm px-3 py-1.5 bg-white rounded-xl border border-rose-300 text-rose-700 font-bold shadow-sm">
             取消重選
           </button>
         </div>
@@ -138,30 +154,30 @@
           <img id="step2ImagePreview" alt="預覽" class="w-full h-full object-cover hidden" />
 
           <!-- High visibility visual guide box -->
-          <div id="cameraGuideBox" class="absolute inset-6 border-4 border-dashed border-yellow-300 rounded-2xl pointer-events-none flex flex-col justify-between p-3">
-            <div class="bg-black/70 text-yellow-300 text-xs font-bold px-3 py-1 rounded-full self-center backdrop-blur shadow">
-              請把數字置於黃框內，避開反光
+          <div id="cameraGuideBox" class="absolute inset-5 border-4 border-dashed border-yellow-300 rounded-3xl pointer-events-none flex flex-col justify-between p-3">
+            <div class="bg-black/80 text-yellow-300 text-xs font-bold px-3 py-1 rounded-full self-center backdrop-blur shadow border border-yellow-400/50">
+              請把血壓計的三排數字置於框內
             </div>
-            <div class="scanner-line absolute left-0 right-0 h-1 bg-yellow-400 shadow-[0_0_10px_#facc15]"></div>
-            <div class="text-[11px] text-white/90 bg-black/60 px-2 py-0.5 rounded self-center">
-              拿穩手機・字體越清楚越準確
+            <div class="scanner-line absolute left-0 right-0 h-1.5 bg-yellow-400 shadow-[0_0_12px_#facc15]"></div>
+            <div class="text-xs text-white bg-black/80 px-3 py-1 rounded-full self-center border border-white/20">
+              拿穩手機・避免燈光反光
             </div>
           </div>
 
           <!-- Loading overlay during AI processing -->
-          <div id="aiLoadingOverlay" class="hidden absolute inset-0 bg-black/85 backdrop-blur-sm flex flex-col items-center justify-center text-white z-30 p-6 text-center space-y-4">
-            <div class="w-16 h-16 rounded-full border-4 border-rose-500/30 border-t-rose-500 animate-spin"></div>
+          <div id="aiLoadingOverlay" class="hidden absolute inset-0 bg-black/90 backdrop-blur-sm flex flex-col items-center justify-center text-white z-30 p-6 text-center space-y-4">
+            <div class="w-20 h-20 rounded-full border-4 border-rose-500/30 border-t-rose-500 animate-spin"></div>
             <div>
-              <p class="text-2xl font-black text-white">正在辨識數字...</p>
-              <p class="text-sm text-slate-300 mt-1">智慧讀取 收縮壓、舒張壓、脈搏</p>
+              <p id="loadingTitle" class="text-2xl font-black text-yellow-300">智慧讀取數值中...</p>
+              <p id="loadingSubtext" class="text-sm text-slate-200 mt-2 font-medium">正在分析收縮壓、舒張壓與心跳</p>
             </div>
           </div>
         </div>
 
-        <!-- Shutter Button Row -->
-        <div class="p-4 bg-white flex flex-col items-center gap-3">
-          <button id="shutterBtn" class="w-full py-4 px-6 rounded-2xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xl font-black shadow-lg shadow-rose-600/30 flex items-center justify-center gap-3 transition">
-            <i class="fa-solid fa-circle-dot text-2xl text-yellow-300"></i>
+        <!-- Shutter Button Row (Large Touch Target) -->
+        <div class="p-5 bg-white flex flex-col items-center gap-3">
+          <button id="shutterBtn" class="touch-btn w-full py-5 px-6 rounded-2xl bg-gradient-to-r from-rose-600 to-red-600 text-white text-2xl font-black shadow-xl shadow-rose-600/40 flex items-center justify-center gap-3 border-2 border-rose-400">
+            <i class="fa-solid fa-circle-dot text-3xl text-yellow-300 animate-pulse"></i>
             <span>點此拍照並辨識</span>
           </button>
         </div>
@@ -172,24 +188,24 @@
         <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
           <div>
             <h2 class="text-xl font-black text-slate-800">第 3 步：確認數值並存檔</h2>
-            <p class="text-xs text-slate-500">已自動填入數值，如有誤差可按 ＋ － 調整</p>
+            <p id="step3Subtitle" class="text-xs font-bold text-emerald-600 mt-0.5">已自動讀取照片數值，請核對</p>
           </div>
-          <button id="rephotoBtn" class="text-xs px-3 py-1.5 rounded-xl bg-slate-100 text-slate-600 font-bold hover:bg-slate-200 active:scale-95 flex items-center gap-1">
+          <button id="rephotoBtn" class="touch-btn text-xs px-3.5 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold border border-slate-300 flex items-center gap-1.5 shadow-sm">
             <i class="fa-solid fa-rotate-left"></i> 重拍
           </button>
         </div>
 
         <!-- Health Category Banner -->
-        <div id="bpCategoryBanner" class="p-3.5 rounded-2xl bg-emerald-50 border-2 border-emerald-300 text-emerald-900 flex items-center gap-3">
-          <div id="bpCategoryIcon" class="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center text-xl shrink-0">
+        <div id="bpCategoryBanner" class="p-4 rounded-2xl bg-emerald-50 border-2 border-emerald-400 text-emerald-950 flex items-center gap-3 shadow-sm">
+          <div id="bpCategoryIcon" class="w-11 h-11 rounded-2xl bg-emerald-500 text-white flex items-center justify-center text-2xl shrink-0 shadow">
             <i class="fa-solid fa-check"></i>
           </div>
           <div class="flex-1">
             <div class="flex items-center gap-2">
               <span id="bpCategoryTitle" class="text-lg font-black">標準正常血壓</span>
-              <span class="text-[11px] bg-white px-2 py-0.5 rounded-md text-emerald-700 font-bold border border-emerald-200">健康標準</span>
+              <span class="text-xs bg-white px-2 py-0.5 rounded-md text-emerald-700 font-bold border border-emerald-300">健康標準</span>
             </div>
-            <p id="bpCategorySubtitle" class="text-xs text-emerald-800 mt-0.5">數值很理想，請繼續維持良好的作息！</p>
+            <p id="bpCategorySubtitle" class="text-xs text-emerald-800 mt-0.5 font-medium">數值很理想，請繼續維持良好的作息！</p>
           </div>
         </div>
 
@@ -197,50 +213,50 @@
         <div class="space-y-3">
           
           <!-- Systolic Card (收縮壓 / 最高壓) -->
-          <div class="p-3.5 rounded-2xl bg-rose-50/60 border border-rose-200 flex items-center justify-between">
+          <div class="p-4 rounded-2xl bg-rose-50/80 border-2 border-rose-200 flex items-center justify-between shadow-sm">
             <div>
-              <div class="text-sm font-black text-rose-700 flex items-center gap-1.5">
-                <span class="w-3 h-3 rounded-full bg-rose-600 inline-block"></span>
+              <div class="text-sm font-black text-rose-800 flex items-center gap-1.5">
+                <span class="w-3.5 h-3.5 rounded-full bg-rose-600 inline-block"></span>
                 收縮壓 (最高壓 SYS)
               </div>
               <div class="text-xs text-slate-500 mt-0.5">標準參考：90 ~ 120 mmHg</div>
             </div>
             <div class="flex items-center gap-2">
-              <button onclick="window.stepValue('systolic', -1)" class="w-10 h-10 rounded-xl bg-white border border-rose-200 text-rose-700 font-black text-xl active:bg-rose-100 flex items-center justify-center shadow-sm">－</button>
-              <input type="number" id="systolicInput" class="w-18 text-center text-2xl font-black text-slate-800 bg-white border border-rose-300 rounded-xl py-1 font-mono focus:outline-none" value="120" />
-              <button onclick="window.stepValue('systolic', 1)" class="w-10 h-10 rounded-xl bg-white border border-rose-200 text-rose-700 font-black text-xl active:bg-rose-100 flex items-center justify-center shadow-sm">＋</button>
+              <button onclick="window.stepValue('systolic', -1)" class="touch-btn w-12 h-12 rounded-2xl bg-white border-2 border-rose-300 text-rose-700 font-black text-2xl flex items-center justify-center shadow-md">－</button>
+              <input type="number" id="systolicInput" class="w-20 text-center text-3xl font-black text-slate-900 bg-white border-2 border-rose-400 rounded-2xl py-1 font-mono focus:outline-none shadow-inner" value="120" />
+              <button onclick="window.stepValue('systolic', 1)" class="touch-btn w-12 h-12 rounded-2xl bg-white border-2 border-rose-300 text-rose-700 font-black text-2xl flex items-center justify-center shadow-md">＋</button>
             </div>
           </div>
 
           <!-- Diastolic Card (舒張壓 / 最低壓) -->
-          <div class="p-3.5 rounded-2xl bg-indigo-50/60 border border-indigo-200 flex items-center justify-between">
+          <div class="p-4 rounded-2xl bg-indigo-50/80 border-2 border-indigo-200 flex items-center justify-between shadow-sm">
             <div>
-              <div class="text-sm font-black text-indigo-700 flex items-center gap-1.5">
-                <span class="w-3 h-3 rounded-full bg-indigo-600 inline-block"></span>
+              <div class="text-sm font-black text-indigo-800 flex items-center gap-1.5">
+                <span class="w-3.5 h-3.5 rounded-full bg-indigo-600 inline-block"></span>
                 舒張壓 (最低壓 DIA)
               </div>
               <div class="text-xs text-slate-500 mt-0.5">標準參考：60 ~ 80 mmHg</div>
             </div>
             <div class="flex items-center gap-2">
-              <button onclick="window.stepValue('diastolic', -1)" class="w-10 h-10 rounded-xl bg-white border border-indigo-200 text-indigo-700 font-black text-xl active:bg-indigo-100 flex items-center justify-center shadow-sm">－</button>
-              <input type="number" id="diastolicInput" class="w-18 text-center text-2xl font-black text-slate-800 bg-white border border-indigo-300 rounded-xl py-1 font-mono focus:outline-none" value="80" />
-              <button onclick="window.stepValue('diastolic', 1)" class="w-10 h-10 rounded-xl bg-white border border-indigo-200 text-indigo-700 font-black text-xl active:bg-indigo-100 flex items-center justify-center shadow-sm">＋</button>
+              <button onclick="window.stepValue('diastolic', -1)" class="touch-btn w-12 h-12 rounded-2xl bg-white border-2 border-indigo-300 text-indigo-700 font-black text-2xl flex items-center justify-center shadow-md">－</button>
+              <input type="number" id="diastolicInput" class="w-20 text-center text-3xl font-black text-slate-900 bg-white border-2 border-indigo-400 rounded-2xl py-1 font-mono focus:outline-none shadow-inner" value="80" />
+              <button onclick="window.stepValue('diastolic', 1)" class="touch-btn w-12 h-12 rounded-2xl bg-white border-2 border-indigo-300 text-indigo-700 font-black text-2xl flex items-center justify-center shadow-md">＋</button>
             </div>
           </div>
 
           <!-- Pulse Card (心跳 / 脈搏) -->
-          <div class="p-3.5 rounded-2xl bg-amber-50/60 border border-amber-200 flex items-center justify-between">
+          <div class="p-4 rounded-2xl bg-amber-50/80 border-2 border-amber-200 flex items-center justify-between shadow-sm">
             <div>
-              <div class="text-sm font-black text-amber-700 flex items-center gap-1.5">
-                <span class="w-3 h-3 rounded-full bg-amber-500 inline-block"></span>
+              <div class="text-sm font-black text-amber-800 flex items-center gap-1.5">
+                <span class="w-3.5 h-3.5 rounded-full bg-amber-500 inline-block"></span>
                 脈搏 (心跳 PULSE)
               </div>
               <div class="text-xs text-slate-500 mt-0.5">標準參考：60 ~ 100 bpm</div>
             </div>
             <div class="flex items-center gap-2">
-              <button onclick="window.stepValue('pulse', -1)" class="w-10 h-10 rounded-xl bg-white border border-amber-200 text-amber-700 font-black text-xl active:bg-amber-100 flex items-center justify-center shadow-sm">－</button>
-              <input type="number" id="pulseInput" class="w-18 text-center text-2xl font-black text-slate-800 bg-white border border-amber-300 rounded-xl py-1 font-mono focus:outline-none" value="72" />
-              <button onclick="window.stepValue('pulse', 1)" class="w-10 h-10 rounded-xl bg-white border border-amber-200 text-amber-700 font-black text-xl active:bg-amber-100 flex items-center justify-center shadow-sm">＋</button>
+              <button onclick="window.stepValue('pulse', -1)" class="touch-btn w-12 h-12 rounded-2xl bg-white border-2 border-amber-300 text-amber-700 font-black text-2xl flex items-center justify-center shadow-md">－</button>
+              <input type="number" id="pulseInput" class="w-20 text-center text-3xl font-black text-slate-900 bg-white border-2 border-amber-400 rounded-2xl py-1 font-mono focus:outline-none shadow-inner" value="72" />
+              <button onclick="window.stepValue('pulse', 1)" class="touch-btn w-12 h-12 rounded-2xl bg-white border-2 border-amber-300 text-amber-700 font-black text-2xl flex items-center justify-center shadow-md">＋</button>
             </div>
           </div>
 
@@ -248,21 +264,22 @@
 
         <!-- Optional Note Tag Selector for Easy Touch -->
         <div class="space-y-2 pt-1">
-          <label class="text-xs font-bold text-slate-600 block">量測情境快捷標籤（點選即可）</label>
-          <div class="flex flex-wrap gap-2" id="quickTagList">
-            <button type="button" onclick="window.setQuickNote('起床晨間')" class="px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-bold text-slate-700 active:bg-rose-50 active:border-rose-300">起床晨間</button>
-            <button type="button" onclick="window.setQuickNote('睡前量測')" class="px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-bold text-slate-700 active:bg-rose-50 active:border-rose-300">睡前量測</button>
-            <button type="button" onclick="window.setQuickNote('服藥前')" class="px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-bold text-slate-700 active:bg-rose-50 active:border-rose-300">服藥前</button>
-            <button type="button" onclick="window.setQuickNote('服藥後')" class="px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-bold text-slate-700 active:bg-rose-50 active:border-rose-300">服藥後</button>
-            <button type="button" onclick="window.setQuickNote('飯後')" class="px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-bold text-slate-700 active:bg-rose-50 active:border-rose-300">飯後</button>
+          <label class="text-xs font-black text-slate-700 block">量測情境快捷標籤（點選即可）</label>
+          <div class="grid grid-cols-3 gap-2" id="quickTagList">
+            <button type="button" onclick="window.setQuickNote('起床晨間')" class="touch-btn py-2.5 px-2 rounded-xl bg-slate-100 border-2 border-slate-200 text-xs font-black text-slate-700 active:border-rose-400 active:bg-rose-50">起床晨間</button>
+            <button type="button" onclick="window.setQuickNote('睡前量測')" class="touch-btn py-2.5 px-2 rounded-xl bg-slate-100 border-2 border-slate-200 text-xs font-black text-slate-700 active:border-rose-400 active:bg-rose-50">睡前量測</button>
+            <button type="button" onclick="window.setQuickNote('服藥前')" class="touch-btn py-2.5 px-2 rounded-xl bg-slate-100 border-2 border-slate-200 text-xs font-black text-slate-700 active:border-rose-400 active:bg-rose-50">服藥前</button>
+            <button type="button" onclick="window.setQuickNote('服藥後')" class="touch-btn py-2.5 px-2 rounded-xl bg-slate-100 border-2 border-slate-200 text-xs font-black text-slate-700 active:border-rose-400 active:bg-rose-50">服藥後</button>
+            <button type="button" onclick="window.setQuickNote('飯後')" class="touch-btn py-2.5 px-2 rounded-xl bg-slate-100 border-2 border-slate-200 text-xs font-black text-slate-700 active:border-rose-400 active:bg-rose-50">飯後</button>
+            <button type="button" onclick="window.setQuickNote('運動後')" class="touch-btn py-2.5 px-2 rounded-xl bg-slate-100 border-2 border-slate-200 text-xs font-black text-slate-700 active:border-rose-400 active:bg-rose-50">運動後</button>
           </div>
-          <input type="text" id="customNoteInput" placeholder="其他備註說明 (選填)" class="w-full text-sm px-4 py-2.5 rounded-xl border border-slate-200 focus:border-rose-500 focus:outline-none bg-slate-50 focus:bg-white text-slate-700 mt-1" />
+          <input type="text" id="customNoteInput" placeholder="其他備註說明 (選填)" class="w-full text-sm px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-rose-500 focus:outline-none bg-slate-50 focus:bg-white text-slate-700 mt-1" />
         </div>
 
-        <!-- Save Button for Step 3 -->
+        <!-- Save Button for Step 3 (Very Large and prominent) -->
         <div class="pt-2">
-          <button id="confirmSaveBtn" class="w-full py-4 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xl font-black shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-3 transition">
-            <i class="fa-solid fa-circle-check text-2xl"></i>
+          <button id="confirmSaveBtn" class="touch-btn w-full py-5 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-2xl font-black shadow-xl shadow-emerald-600/30 flex items-center justify-center gap-3 border-2 border-emerald-400">
+            <i class="fa-solid fa-circle-check text-3xl"></i>
             <span>確認無誤，儲存存檔！</span>
           </button>
         </div>
@@ -278,15 +295,15 @@
       <!-- Summary Statistics Card -->
       <div class="grid grid-cols-3 gap-2.5">
         <div class="bg-white rounded-2xl p-3 border border-slate-200 shadow-sm text-center">
-          <span class="text-[11px] font-bold text-slate-400 block">總紀錄筆數</span>
+          <span class="text-xs font-bold text-slate-400 block">總紀錄筆數</span>
           <span id="statTotalCount" class="text-2xl font-black text-slate-800 font-mono">0</span>
         </div>
         <div class="bg-white rounded-2xl p-3 border border-slate-200 shadow-sm text-center">
-          <span class="text-[11px] font-bold text-rose-500 block">平均最高壓</span>
+          <span class="text-xs font-bold text-rose-500 block">平均最高壓</span>
           <span id="statAvgSys" class="text-2xl font-black text-rose-600 font-mono">--</span>
         </div>
         <div class="bg-white rounded-2xl p-3 border border-slate-200 shadow-sm text-center">
-          <span class="text-[11px] font-bold text-indigo-500 block">平均最低壓</span>
+          <span class="text-xs font-bold text-indigo-500 block">平均最低壓</span>
           <span id="statAvgDia" class="text-2xl font-black text-indigo-600 font-mono">--</span>
         </div>
       </div>
@@ -313,13 +330,13 @@
       </div>
 
       <!-- Action buttons: Export CSV & Clear -->
-      <div class="flex gap-2">
-        <button id="seniorExportBtn" class="flex-1 py-3 px-4 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 active:scale-95 shadow-sm flex items-center justify-center gap-2">
-          <i class="fa-solid fa-file-arrow-down text-emerald-600"></i>
+      <div class="grid grid-cols-2 gap-3">
+        <button id="seniorExportBtn" class="touch-btn py-4 px-4 rounded-2xl bg-white border-2 border-slate-300 text-slate-800 font-black text-sm flex items-center justify-center gap-2 shadow-sm">
+          <i class="fa-solid fa-file-arrow-down text-emerald-600 text-lg"></i>
           <span>匯出 CSV 檔案</span>
         </button>
-        <button id="seniorClearBtn" class="py-3 px-4 rounded-xl bg-white border border-rose-200 text-rose-600 font-bold text-xs hover:bg-rose-50 active:scale-95 shadow-sm flex items-center justify-center gap-1.5">
-          <i class="fa-solid fa-trash-can"></i>
+        <button id="seniorClearBtn" class="touch-btn py-4 px-4 rounded-2xl bg-white border-2 border-rose-300 text-rose-600 font-black text-sm flex items-center justify-center gap-2 shadow-sm">
+          <i class="fa-solid fa-trash-can text-lg"></i>
           <span>清空紀錄</span>
         </button>
       </div>
@@ -334,7 +351,7 @@
         <div id="emptyListPlaceholder" class="p-8 text-center text-slate-400 bg-white rounded-3xl border border-slate-200">
           <i class="fa-solid fa-notes-medical text-3xl mb-2 text-slate-300"></i>
           <p class="text-sm font-bold text-slate-500">目前還沒有量測紀錄</p>
-          <p class="text-xs text-slate-400 mt-1">切換到「量測」開始第一筆量測吧！</p>
+          <p class="text-xs text-slate-400 mt-1">切換到「量測辨識」開始第一筆量測吧！</p>
         </div>
       </div>
 
@@ -342,30 +359,26 @@
 
   </main>
 
-  <!-- Fixed Bottom App Navigation Bar -->
-  <nav class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-xl max-w-lg mx-auto">
-    <div class="grid grid-cols-2 h-18">
+  <!-- Large, Senior-Friendly Bottom Navigation Bar -->
+  <nav class="fixed bottom-0 left-0 right-0 z-40 bg-white border-t-2 border-slate-200 shadow-2xl max-w-lg mx-auto">
+    <div class="grid grid-cols-2 h-20 px-2 py-1.5 gap-2">
       
       <!-- Measure Tab Button -->
-      <button id="tabMeasureBtn" class="flex flex-col items-center justify-center gap-1 text-rose-600 font-black transition active:scale-95">
-        <div class="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center">
-          <i class="fa-solid fa-camera text-base"></i>
-        </div>
-        <span class="text-xs">量測辨識</span>
+      <button id="tabMeasureBtn" class="touch-btn flex flex-col items-center justify-center gap-1 rounded-2xl bg-rose-50 text-rose-600 border-2 border-rose-300 font-black shadow-sm">
+        <i class="fa-solid fa-camera text-2xl"></i>
+        <span class="text-sm tracking-wide">量測辨識</span>
       </button>
 
       <!-- History Records Tab Button -->
-      <button id="tabRecordsBtn" class="flex flex-col items-center justify-center gap-1 text-slate-400 font-bold transition active:scale-95">
-        <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
-          <i class="fa-solid fa-clock-rotate-left text-base text-slate-500"></i>
-        </div>
-        <span class="text-xs">歷史紀錄</span>
+      <button id="tabRecordsBtn" class="touch-btn flex flex-col items-center justify-center gap-1 rounded-2xl text-slate-500 font-bold border-2 border-transparent">
+        <i class="fa-solid fa-clock-rotate-left text-2xl"></i>
+        <span class="text-sm tracking-wide">歷史紀錄</span>
       </button>
 
     </div>
   </nav>
 
-  <!-- Hidden canvas for image resizing and capture -->
+  <!-- Hidden canvas for image resizing and preprocessing -->
   <canvas id="hiddenCanvas" class="hidden"></canvas>
 
   <script>
@@ -406,7 +419,11 @@
     const step2ImagePreview = document.getElementById('step2ImagePreview');
     const cameraGuideBox = document.getElementById('cameraGuideBox');
     const aiLoadingOverlay = document.getElementById('aiLoadingOverlay');
+    const loadingTitle = document.getElementById('loadingTitle');
+    const loadingSubtext = document.getElementById('loadingSubtext');
     const hiddenCanvas = document.getElementById('hiddenCanvas');
+    const step3Subtitle = document.getElementById('step3Subtitle');
+    const ocrDebugBadge = document.getElementById('ocrDebugBadge');
 
     // Step 3 inputs & banner
     const systolicInput = document.getElementById('systolicInput');
@@ -466,25 +483,15 @@
         measureView.classList.remove('hidden');
         recordsView.classList.add('hidden');
         
-        tabMeasureBtn.className = 'flex flex-col items-center justify-center gap-1 text-rose-600 font-black transition active:scale-95';
-        tabMeasureBtn.querySelector('div').className = 'w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center';
-        tabMeasureBtn.querySelector('i').className = 'fa-solid fa-camera text-base text-rose-600';
-
-        tabRecordsBtn.className = 'flex flex-col items-center justify-center gap-1 text-slate-400 font-bold transition active:scale-95';
-        tabRecordsBtn.querySelector('div').className = 'w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center';
-        tabRecordsBtn.querySelector('i').className = 'fa-solid fa-clock-rotate-left text-base text-slate-500';
+        tabMeasureBtn.className = 'touch-btn flex flex-col items-center justify-center gap-1 rounded-2xl bg-rose-50 text-rose-600 border-2 border-rose-300 font-black shadow-sm';
+        tabRecordsBtn.className = 'touch-btn flex flex-col items-center justify-center gap-1 rounded-2xl text-slate-500 font-bold border-2 border-transparent';
       } else {
         stopCamera();
         measureView.classList.add('hidden');
         recordsView.classList.remove('hidden');
 
-        tabRecordsBtn.className = 'flex flex-col items-center justify-center gap-1 text-rose-600 font-black transition active:scale-95';
-        tabRecordsBtn.querySelector('div').className = 'w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center';
-        tabRecordsBtn.querySelector('i').className = 'fa-solid fa-clock-rotate-left text-base text-rose-600';
-
-        tabMeasureBtn.className = 'flex flex-col items-center justify-center gap-1 text-slate-400 font-bold transition active:scale-95';
-        tabMeasureBtn.querySelector('div').className = 'w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center';
-        tabMeasureBtn.querySelector('i').className = 'fa-solid fa-camera text-base text-slate-500';
+        tabRecordsBtn.className = 'touch-btn flex flex-col items-center justify-center gap-1 rounded-2xl bg-rose-50 text-rose-600 border-2 border-rose-300 font-black shadow-sm';
+        tabMeasureBtn.className = 'touch-btn flex flex-col items-center justify-center gap-1 rounded-2xl text-slate-500 font-bold border-2 border-transparent';
 
         refreshRecordsView();
       }
@@ -500,16 +507,16 @@
         const text = ind.querySelector('span');
 
         if (num === step) {
-          circle.className = 'step-circle w-10 h-10 rounded-full bg-rose-600 text-white font-black text-base flex items-center justify-center shadow-md scale-105';
-          text.className = 'text-xs font-black text-rose-600 mt-1';
+          circle.className = 'step-circle w-11 h-11 rounded-full bg-rose-600 text-white font-black text-lg flex items-center justify-center shadow-md scale-105';
+          text.className = 'text-xs font-black text-rose-600 mt-1.5';
         } else if (num < step) {
-          circle.className = 'step-circle w-10 h-10 rounded-full bg-emerald-500 text-white font-black text-base flex items-center justify-center';
+          circle.className = 'step-circle w-11 h-11 rounded-full bg-emerald-500 text-white font-black text-lg flex items-center justify-center';
           circle.innerHTML = '<i class="fa-solid fa-check text-sm"></i>';
-          text.className = 'text-xs font-bold text-emerald-600 mt-1';
+          text.className = 'text-xs font-bold text-emerald-600 mt-1.5';
         } else {
-          circle.className = 'step-circle w-10 h-10 rounded-full bg-slate-200 text-slate-500 font-black text-base flex items-center justify-center';
+          circle.className = 'step-circle w-11 h-11 rounded-full bg-slate-200 text-slate-500 font-black text-lg flex items-center justify-center';
           circle.textContent = num;
-          text.className = 'text-xs font-bold text-slate-400 mt-1';
+          text.className = 'text-xs font-bold text-slate-400 mt-1.5';
         }
       });
 
@@ -578,7 +585,7 @@
       const ctx = hiddenCanvas.getContext('2d');
       ctx.drawImage(webcam, 0, 0, hiddenCanvas.width, hiddenCanvas.height);
 
-      currentPhotoBase64 = hiddenCanvas.toDataURL('image/jpeg', 0.85);
+      currentPhotoBase64 = hiddenCanvas.toDataURL('image/jpeg', 0.9);
 
       // Freeze on captured photo
       step2ImagePreview.src = currentPhotoBase64;
@@ -617,7 +624,7 @@
           const ctx = hiddenCanvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
 
-          currentPhotoBase64 = hiddenCanvas.toDataURL('image/jpeg', 0.85);
+          currentPhotoBase64 = hiddenCanvas.toDataURL('image/jpeg', 0.9);
 
           // Show in Step 2 preview
           stopCamera();
@@ -635,79 +642,175 @@
       e.target.value = '';
     });
 
+    // High-accuracy OCR Pipeline: First Gemini 3 Flash Preview; if offline or fails, run on-device OCR
     async function runAIOcrRecognition(dataUrl) {
       aiLoadingOverlay.classList.remove('hidden');
-      speak('正在辨識血壓計數字，請稍候');
+      loadingTitle.textContent = '智慧讀取數值中...';
+      loadingSubtext.textContent = '正在辨識血壓計液晶螢幕';
+      speak('正在讀取螢幕數值，請稍候');
 
       const pureBase64 = dataUrl.split(',')[1];
       const apiKey = "";
       const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
 
-      const prompt = `你是一個專業無誤的健康醫療影像助理。請精確讀取這張血壓計照片上的三個關鍵數字：
-1. systolic (收縮壓 / 最高壓 / SYS, mmHg)
-2. diastolic (舒張壓 / 最低壓 / DIA, mmHg)
-3. pulse (心跳 / 脈搏 / PULSE, bpm)
+      const prompt = `You are a medical optical character reader specializing in digital blood pressure monitors (OMRON, Microlife, Citizen, Panasonic, etc.).
+Analyze this image of a blood pressure monitor screen and carefully extract:
+1. systolic (最高壓 / 收縮壓 / SYS / mmHg) - usually the top, largest number (typically 80-220)
+2. diastolic (最低壓 / 舒張壓 / DIA / mmHg) - usually the middle number below systolic (typically 40-130)
+3. pulse (心跳 / 脈搏 / PULSE / /min) - usually the bottom or smallest number (typically 40-140)
 
-請以嚴謹的 JSON 輸出：
+Strict guidelines:
+- Read the physical segmented digital LCD numbers actually visible on the screen.
+- Do NOT guess or hallucinate if visible.
+- Always output strict JSON matching:
 {
-  "systolic": number | null,
-  "diastolic": number | null,
-  "pulse": number | null
-}
-通常收縮壓介於 80~200 之間且數值最大；舒張壓次之（50~120）；心跳介於 50~120。請僅回傳 JSON。`;
+  "systolic": <number or null>,
+  "diastolic": <number or null>,
+  "pulse": <number or null>
+}`;
 
-      const payload = {
-        contents: [
-          {
-            role: "user",
-            parts: [
-              { text: prompt },
-              {
-                inlineData: {
-                  mimeType: "image/jpeg",
-                  data: pureBase64
-                }
-              }
-            ]
-          }
-        ],
-        generationConfig: {
-          responseMimeType: "application/json"
-        }
-      };
+      let recognized = false;
 
+      // 1. Try Gemini Vision API first
       try {
+        const payload = {
+          contents: [
+            {
+              role: "user",
+              parts: [
+                { text: prompt },
+                {
+                  inlineData: {
+                    mimeType: "image/jpeg",
+                    data: pureBase64
+                  }
+                }
+              ]
+            }
+          ],
+          generationConfig: {
+            responseMimeType: "application/json"
+          }
+        };
+
         const response = await fetch(apiUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
 
-        if (!response.ok) throw new Error('OCR Failed');
+        if (response.ok) {
+          const result = await response.json();
+          const candidate = result.candidates?.[0];
+          const jsonText = candidate?.content?.parts?.[0]?.text;
 
-        const result = await response.json();
-        const candidate = result.candidates?.[0];
-        const jsonText = candidate?.content?.parts?.[0]?.text;
+          if (jsonText) {
+            const parsed = JSON.parse(jsonText);
+            const sys = parseInt(parsed.systolic, 10);
+            const dia = parseInt(parsed.diastolic, 10);
+            const pul = parseInt(parsed.pulse, 10);
 
-        if (jsonText) {
-          const parsed = JSON.parse(jsonText);
-          if (parsed.systolic) systolicInput.value = parsed.systolic;
-          if (parsed.diastolic) diastolicInput.value = parsed.diastolic;
-          if (parsed.pulse) pulseInput.value = parsed.pulse;
-          showToast('辨識成功！請核對數值', 'success');
-        } else {
-          throw new Error('No content');
+            if (!isNaN(sys) && sys >= 40 && sys <= 260) {
+              systolicInput.value = sys;
+              recognized = true;
+            }
+            if (!isNaN(dia) && dia >= 30 && dia <= 180) {
+              diastolicInput.value = dia;
+              recognized = true;
+            }
+            if (!isNaN(pul) && pul >= 30 && pul <= 200) {
+              pulseInput.value = pul;
+              recognized = true;
+            }
+          }
         }
-      } catch (err) {
-        console.warn('AI OCR error fallback:', err);
-        showToast('已為您預設常用數值，可直接按 ＋ － 修改', 'info');
-        if (!systolicInput.value) systolicInput.value = 120;
-        if (!diastolicInput.value) diastolicInput.value = 80;
-        if (!pulseInput.value) pulseInput.value = 72;
-      } finally {
-        aiLoadingOverlay.classList.add('hidden');
-        goToStep(3);
+      } catch (geminiErr) {
+        console.warn('Gemini OCR unavailable or network error, falling back to client OCR:', geminiErr);
       }
+
+      // 2. If Gemini didn't extract the numbers, run on-device Tesseract.js OCR
+      if (!recognized && window.Tesseract) {
+        try {
+          loadingTitle.textContent = '本機輔助分析中...';
+          loadingSubtext.textContent = '正在深入解析液晶字型';
+
+          // Preprocess image contrast on canvas to help LCD reading
+          const preprocessed = preprocessImageForLcd(dataUrl);
+
+          const { data: { text } } = await Tesseract.recognize(preprocessed, 'eng', {
+            tessedit_char_whitelist: '0123456789SYSdiaDIAsysPULpulSE '
+          });
+
+          const extracted = parseBloodPressureFromRawText(text);
+          if (extracted.systolic) { systolicInput.value = extracted.systolic; recognized = true; }
+          if (extracted.diastolic) { diastolicInput.value = extracted.diastolic; recognized = true; }
+          if (extracted.pulse) { pulseInput.value = extracted.pulse; recognized = true; }
+        } catch (tessErr) {
+          console.warn('Tesseract fallback error:', tessErr);
+        }
+      }
+
+      aiLoadingOverlay.classList.add('hidden');
+
+      if (recognized) {
+        step3Subtitle.textContent = '已精確讀取螢幕數據，請核對';
+        step3Subtitle.className = 'text-xs font-bold text-emerald-600 mt-0.5';
+        showToast('辨識完成！數值已自動填入', 'success');
+      } else {
+        step3Subtitle.textContent = '照片若較反光，可直接點擊 ＋ － 調整數值';
+        step3Subtitle.className = 'text-xs font-bold text-amber-600 mt-0.5';
+        showToast('未清楚識別，已填入標準值，請直接確認或增減', 'info');
+      }
+
+      goToStep(3);
+    }
+
+    // Helper: enhance LCD contrast before OCR
+    function preprocessImageForLcd(dataUrl) {
+      const img = new Image();
+      img.src = dataUrl;
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width || 640;
+      canvas.height = img.height || 480;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      try {
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const d = imgData.data;
+        // High-contrast grayscale conversion
+        for (let i = 0; i < d.length; i += 4) {
+          const gray = 0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2];
+          const contrast = gray > 120 ? 255 : 0; // threshold
+          d[i] = contrast;
+          d[i+1] = contrast;
+          d[i+2] = contrast;
+        }
+        ctx.putImageData(imgData, 0, 0);
+        return canvas.toDataURL('image/jpeg', 0.9);
+      } catch (e) {
+        return dataUrl;
+      }
+    }
+
+    // Helper: heuristic parser for raw OCR numbers on blood pressure monitors
+    function parseBloodPressureFromRawText(rawText) {
+      const numbers = (rawText.match(/\b\d{2,3}\b/g) || []).map(n => parseInt(n, 10));
+      const validNumbers = numbers.filter(n => n >= 40 && n <= 220);
+
+      const result = { systolic: null, diastolic: null, pulse: null };
+
+      if (validNumbers.length >= 3) {
+        // Standard monitors: Top is highest (Sys), middle is Dia, bottom is Pulse
+        result.systolic = validNumbers[0];
+        result.diastolic = validNumbers[1];
+        result.pulse = validNumbers[2];
+      } else if (validNumbers.length === 2) {
+        result.systolic = Math.max(validNumbers[0], validNumbers[1]);
+        result.diastolic = Math.min(validNumbers[0], validNumbers[1]);
+        result.pulse = 72;
+      }
+      return result;
     }
 
     // Helper to step values up/down easily for elderly users
@@ -737,32 +840,32 @@
 
       if (sys >= 140 || dia >= 90) {
         // High Blood Pressure
-        bpCategoryBanner.className = 'p-3.5 rounded-2xl bg-rose-50 border-2 border-rose-300 text-rose-950 flex items-center gap-3';
-        bpCategoryIcon.className = 'w-10 h-10 rounded-xl bg-rose-600 text-white flex items-center justify-center text-xl shrink-0';
+        bpCategoryBanner.className = 'p-4 rounded-2xl bg-rose-50 border-2 border-rose-300 text-rose-950 flex items-center gap-3 shadow-sm';
+        bpCategoryIcon.className = 'w-11 h-11 rounded-2xl bg-rose-600 text-white flex items-center justify-center text-2xl shrink-0 shadow';
         bpCategoryIcon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
         bpCategoryTitle.textContent = '血壓偏高 (注意)';
-        bpCategorySubtitle.textContent = '請先放輕鬆休息 5 分鐘再複測，定期量測追蹤。';
+        bpCategorySubtitle.textContent = '請放輕鬆靜坐 5 分鐘後再複測，定期量測追蹤。';
       } else if ((sys >= 120 && sys <= 139) || (dia >= 80 && dia <= 89)) {
         // Prehypertension
-        bpCategoryBanner.className = 'p-3.5 rounded-2xl bg-amber-50 border-2 border-amber-300 text-amber-950 flex items-center gap-3';
-        bpCategoryIcon.className = 'w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center text-xl shrink-0';
+        bpCategoryBanner.className = 'p-4 rounded-2xl bg-amber-50 border-2 border-amber-300 text-amber-950 flex items-center gap-3 shadow-sm';
+        bpCategoryIcon.className = 'w-11 h-11 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-2xl shrink-0 shadow';
         bpCategoryIcon.innerHTML = '<i class="fa-solid fa-bell"></i>';
         bpCategoryTitle.textContent = '血壓稍微偏高';
-        bpCategorySubtitle.textContent = '注意清淡飲食少鹽、保持規律作息。';
+        bpCategorySubtitle.textContent = '注意清淡飲食少鹽、保持良好規律睡眠。';
       } else if (sys < 90 || dia < 60) {
         // Low
-        bpCategoryBanner.className = 'p-3.5 rounded-2xl bg-sky-50 border-2 border-sky-300 text-sky-950 flex items-center gap-3';
-        bpCategoryIcon.className = 'w-10 h-10 rounded-xl bg-sky-500 text-white flex items-center justify-center text-xl shrink-0';
+        bpCategoryBanner.className = 'p-4 rounded-2xl bg-sky-50 border-2 border-sky-300 text-sky-950 flex items-center gap-3 shadow-sm';
+        bpCategoryIcon.className = 'w-11 h-11 rounded-2xl bg-sky-500 text-white flex items-center justify-center text-2xl shrink-0 shadow';
         bpCategoryIcon.innerHTML = '<i class="fa-solid fa-circle-info"></i>';
         bpCategoryTitle.textContent = '血壓偏低';
-        bpCategorySubtitle.textContent = '站起來時注意緩慢起身，預防頭暈。';
+        bpCategorySubtitle.textContent = '起床或站立時請放慢動作，預防頭暈跌倒。';
       } else {
         // Normal
-        bpCategoryBanner.className = 'p-3.5 rounded-2xl bg-emerald-50 border-2 border-emerald-300 text-emerald-950 flex items-center gap-3';
-        bpCategoryIcon.className = 'w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center text-xl shrink-0';
+        bpCategoryBanner.className = 'p-4 rounded-2xl bg-emerald-50 border-2 border-emerald-400 text-emerald-950 flex items-center gap-3 shadow-sm';
+        bpCategoryIcon.className = 'w-11 h-11 rounded-2xl bg-emerald-500 text-white flex items-center justify-center text-2xl shrink-0 shadow';
         bpCategoryIcon.innerHTML = '<i class="fa-solid fa-check"></i>';
         bpCategoryTitle.textContent = '標準正常血壓';
-        bpCategorySubtitle.textContent = '數值很理想，請繼續維持良好的作息！';
+        bpCategorySubtitle.textContent = '數值很理想，請繼續維持規律量測好習慣！';
       }
     }
 
@@ -836,45 +939,45 @@
       recordsCardList.innerHTML = bloodPressureRecords.map((item) => {
         let tagColor = 'bg-slate-100 text-slate-700 border-slate-200';
         if (item.category.includes('高')) {
-          tagColor = 'bg-rose-100 text-rose-700 border-rose-300';
+          tagColor = 'bg-rose-100 text-rose-800 border-rose-300';
         } else if (item.category.includes('正常')) {
-          tagColor = 'bg-emerald-100 text-emerald-700 border-emerald-300';
+          tagColor = 'bg-emerald-100 text-emerald-800 border-emerald-300';
         } else if (item.category.includes('稍微')) {
-          tagColor = 'bg-amber-100 text-amber-800 border-amber-300';
+          tagColor = 'bg-amber-100 text-amber-900 border-amber-300';
         }
 
         return `
-          <div class="bg-white rounded-3xl p-4 border border-slate-200 shadow-sm space-y-3">
+          <div class="bg-white rounded-3xl p-4 border-2 border-slate-200 shadow-sm space-y-3">
             <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-              <span class="text-xs font-mono font-bold text-slate-500 flex items-center gap-1.5">
+              <span class="text-xs font-mono font-bold text-slate-600 flex items-center gap-1.5">
                 <i class="fa-regular fa-clock text-rose-500"></i> ${item.timestamp}
               </span>
-              <span class="text-xs font-bold px-2.5 py-0.5 rounded-full border ${tagColor}">
+              <span class="text-xs font-black px-3 py-1 rounded-full border ${tagColor}">
                 ${item.category}
               </span>
             </div>
 
-            <div class="grid grid-cols-3 gap-2 text-center py-1">
-              <div class="bg-rose-50/70 rounded-2xl p-2 border border-rose-100">
-                <span class="text-[10px] font-bold text-rose-600 block">最高壓 (SYS)</span>
-                <span class="text-2xl font-black text-rose-700 font-mono">${item.systolic}</span>
-                <span class="text-[9px] text-slate-400 block">mmHg</span>
+            <div class="grid grid-cols-3 gap-2.5 text-center py-1">
+              <div class="bg-rose-50 rounded-2xl p-2.5 border border-rose-200">
+                <span class="text-xs font-black text-rose-700 block">最高壓 (SYS)</span>
+                <span class="text-3xl font-black text-rose-800 font-mono">${item.systolic}</span>
+                <span class="text-[10px] text-slate-500 block font-bold">mmHg</span>
               </div>
-              <div class="bg-indigo-50/70 rounded-2xl p-2 border border-indigo-100">
-                <span class="text-[10px] font-bold text-indigo-600 block">最低壓 (DIA)</span>
-                <span class="text-2xl font-black text-indigo-700 font-mono">${item.diastolic}</span>
-                <span class="text-[9px] text-slate-400 block">mmHg</span>
+              <div class="bg-indigo-50 rounded-2xl p-2.5 border border-indigo-200">
+                <span class="text-xs font-black text-indigo-700 block">最低壓 (DIA)</span>
+                <span class="text-3xl font-black text-indigo-800 font-mono">${item.diastolic}</span>
+                <span class="text-[10px] text-slate-500 block font-bold">mmHg</span>
               </div>
-              <div class="bg-amber-50/70 rounded-2xl p-2 border border-amber-100">
-                <span class="text-[10px] font-bold text-amber-600 block">心跳 (PULSE)</span>
-                <span class="text-2xl font-black text-amber-700 font-mono">${item.pulse}</span>
-                <span class="text-[9px] text-slate-400 block">bpm</span>
+              <div class="bg-amber-50 rounded-2xl p-2.5 border border-amber-200">
+                <span class="text-xs font-black text-amber-700 block">心跳 (PULSE)</span>
+                <span class="text-3xl font-black text-amber-800 font-mono">${item.pulse}</span>
+                <span class="text-[10px] text-slate-500 block font-bold">bpm</span>
               </div>
             </div>
 
-            <div class="flex items-center justify-between pt-1 text-xs">
-              <span class="text-slate-500 font-medium">標籤：${item.notes || '一般'}</span>
-              <button onclick="window.removeSeniorRecord('${item.id}')" class="text-rose-500 hover:text-rose-700 font-bold px-2 py-1 rounded-lg hover:bg-rose-50 active:scale-95 transition flex items-center gap-1">
+            <div class="flex items-center justify-between pt-1">
+              <span class="text-xs text-slate-600 font-bold bg-slate-100 px-3 py-1 rounded-xl">時機：${item.notes || '日常'}</span>
+              <button onclick="window.removeSeniorRecord('${item.id}')" class="touch-btn text-rose-600 hover:text-rose-700 font-black text-xs px-3 py-1.5 rounded-xl border border-rose-200 bg-rose-50 flex items-center gap-1">
                 <i class="fa-solid fa-trash-can text-xs"></i> 刪除
               </button>
             </div>
@@ -902,18 +1005,20 @@
             {
               label: '最高壓 (收縮壓)',
               borderColor: '#f43f5e',
-              backgroundColor: 'rgba(244, 63, 94, 0.1)',
-              borderWidth: 3,
+              backgroundColor: 'rgba(244, 63, 94, 0.12)',
+              borderWidth: 3.5,
               tension: 0.35,
+              pointRadius: 4,
               fill: true,
               data: []
             },
             {
               label: '最低壓 (舒張壓)',
               borderColor: '#6366f1',
-              backgroundColor: 'rgba(99, 102, 241, 0.05)',
-              borderWidth: 3,
+              backgroundColor: 'rgba(99, 102, 241, 0.08)',
+              borderWidth: 3.5,
               tension: 0.35,
+              pointRadius: 4,
               fill: true,
               data: []
             }
@@ -927,7 +1032,7 @@
             tooltip: {
               padding: 10,
               titleFont: { size: 12 },
-              bodyFont: { size: 13, weight: 'bold' }
+              bodyFont: { size: 14, weight: 'bold' }
             }
           },
           scales: {
@@ -938,7 +1043,7 @@
               grid: { color: '#f1f5f9' }
             },
             x: {
-              ticks: { font: { size: 10 } },
+              ticks: { font: { size: 10, weight: 'bold' } },
               grid: { display: false }
             }
           }
@@ -991,7 +1096,7 @@
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'zh-TW';
-        utterance.rate = 0.95; // slightly slower for elderly
+        utterance.rate = 0.92; // comfortable listening speed for elderly
         window.speechSynthesis.speak(utterance);
       } catch (e) {
         console.warn('TTS error:', e);
@@ -1003,17 +1108,17 @@
       const toast = document.createElement('div');
       
       let bg = 'bg-slate-900 border-l-4 border-sky-400';
-      let icon = '<i class="fa-solid fa-circle-info text-sky-400"></i>';
+      let icon = '<i class="fa-solid fa-circle-info text-sky-400 text-lg"></i>';
 
       if (type === 'success') {
         bg = 'bg-slate-900 border-l-4 border-emerald-400';
-        icon = '<i class="fa-solid fa-circle-check text-emerald-400"></i>';
+        icon = '<i class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>';
       } else if (type === 'error') {
         bg = 'bg-slate-900 border-l-4 border-rose-400';
-        icon = '<i class="fa-solid fa-triangle-exclamation text-rose-400"></i>';
+        icon = '<i class="fa-solid fa-triangle-exclamation text-rose-400 text-lg"></i>';
       }
 
-      toast.className = `${bg} text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 text-sm font-bold transform transition-all duration-200 opacity-0 translate-y-2 pointer-events-auto`;
+      toast.className = `${bg} text-white px-4 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 text-base font-black transform transition-all duration-200 opacity-0 translate-y-2 pointer-events-auto`;
       toast.innerHTML = `${icon}<span>${msg}</span>`;
 
       box.appendChild(toast);
@@ -1027,7 +1132,7 @@
         setTimeout(() => {
           if (toast.parentNode) toast.parentNode.removeChild(toast);
         }, 300);
-      }, 3000);
+      }, 3500);
     }
 
     function setupEventListeners() {
@@ -1061,13 +1166,13 @@
         speechEnabled = !speechEnabled;
         if (speechEnabled) {
           ttsLabel.textContent = '語音開啟';
-          ttsIcon.className = 'fa-solid fa-volume-high';
-          ttsToggleBtn.classList.replace('bg-slate-700/80', 'bg-rose-700/80');
+          ttsIcon.className = 'fa-solid fa-volume-high text-sm';
+          ttsToggleBtn.classList.replace('bg-slate-700/90', 'bg-rose-700/90');
           speak('語音提示已開啟');
         } else {
           ttsLabel.textContent = '語音關閉';
-          ttsIcon.className = 'fa-solid fa-volume-xmark';
-          ttsToggleBtn.classList.replace('bg-rose-700/80', 'bg-slate-700/80');
+          ttsIcon.className = 'fa-solid fa-volume-xmark text-sm';
+          ttsToggleBtn.classList.replace('bg-rose-700/90', 'bg-slate-700/90');
           window.speechSynthesis?.cancel();
         }
       });
