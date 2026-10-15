@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>智慧血壓計影像辨識與健康日誌</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Chart.js for Trend Graph -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap');
+    body {
+      font-family: 'Plus Jakarta Sans', 'Noto Sans TC', sans-serif;
+    }
+    .scanner-line {
+      animation: scan 2s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
+    }
+    @keyframes scan {
+      0% { top: 8%; opacity: 0.3; }
+      50% { opacity: 0.95; }
+      100% { top: 88%; opacity: 0.3; }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased selection:bg-rose-500 selection:text-white">
+
+  <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200">
+    <div class="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-500 to-red-400 text-white flex items-center justify-center shadow-md shadow-rose-500/20">
+          <i class="fa-solid fa-heart-pulse text-xl"></i>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2">
+            血壓辨識日誌
+            <span class="text-[11px] font-semibold bg-rose-100 text-rose-600 px-2 py-0.5 rounded-full uppercase">AI 視覺 OCR</span>
+          </h1>
+          <p class="text-xs text-slate-500">智慧辨識收縮壓、舒張壓與脈搏</p>
+        </div>
+      </div>
+      
+      <div class="flex items-center gap-2">
+        <button id="exportCsvBtn" title="匯出 CSV 檔" class="px-3 py-2 text-xs font-semibold rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 active:scale-95 transition flex items-center gap-1.5 border border-slate-200">
+          <i class="fa-solid fa-file-arrow-down text-slate-500"></i>
+          <span class="hidden sm:inline">匯出資料</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-5xl mx-auto px-4 py-6 w-full space-y-6">
+
+    <!-- Top Alert Notification / Toast Container -->
+    <div id="toastBox" class="fixed top-20 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Mode Selector Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+      
+      <!-- Left Column: Camera and Image Processing -->
+      <div class="md:col-span-7 space-y-5">
+        
+        <!-- Camera / Image Preview Card -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+          <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <span class="font-semibold text-sm text-slate-700 flex items-center gap-2">
+              <i class="fa-solid fa-camera text-rose-500"></i>
+              相機拍照 / 圖片上傳
+            </span>
+            <span id="cameraStatusBadge" class="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-200 text-slate-600">
+              相機待命
+            </span>
+          </div>
+
+          <!-- Video / Photo Viewport -->
+          <div class="relative bg-slate-900 aspect-[4/3] flex items-center justify-center overflow-hidden group">
+            
+            <!-- Video element for live camera stream -->
+            <video id="webcam" playsinline autoplay muted class="w-full h-full object-contain hidden"></video>
+
+            <!-- Image preview for captured photo / uploaded photo -->
+            <img id="imagePreview" alt="預覽影像" class="w-full h-full object-contain hidden" />
+
+            <!-- Idle Placeholder -->
+            <div id="idleState" class="text-center p-6 text-slate-400">
+              <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700">
+                <i class="fa-solid fa-camera-retro text-2xl text-slate-400"></i>
+              </div>
+              <p class="text-sm font-medium text-slate-300">請開啟相機拍攝血壓計螢幕</p>
+              <p class="text-xs text-slate-500 mt-1">或是直接從相簿選取清晰照片</p>
+            </div>
+
+            <!-- Target overlay box to guide alignment -->
+            <div id="scannerOverlay" class="hidden absolute inset-8 border-2 border-dashed border-rose-400/70 rounded-xl pointer-events-none flex flex-col justify-between p-3">
+              <div class="flex justify-between items-center text-[10px] text-rose-300 bg-black/40 px-2 py-0.5 rounded backdrop-blur self-start">
+                <span>將數字對準方框內</span>
+              </div>
+              <div class="scanner-line absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-rose-400 to-transparent shadow-[0_0_8px_rgba(244,63,94,0.8)]"></div>
+              <div class="text-[10px] text-slate-300 text-right">保持清晰與光線均勻</div>
+            </div>
+
+            <!-- Processing Loading Overlay -->
+            <div id="recognizingOverlay" class="hidden absolute inset-0 bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center z-20 text-white p-6 text-center">
+              <div class="relative w-14 h-14 mb-4">
+                <div class="absolute inset-0 rounded-full border-4 border-rose-500/20 border-t-rose-500 animate-spin"></div>
+                <i class="fa-solid fa-brain absolute inset-0 m-auto text-rose-400 text-lg flex items-center justify-center"></i>
+              </div>
+              <h4 class="font-bold text-base mb-1">AI 正在辨識血壓數據...</h4>
+              <p class="text-xs text-slate-400 max-w-xs">正在分析收縮壓 (SYS)、舒張壓 (DIA) 以及心跳 (PULSE)</p>
+            </div>
+          </div>
+
+          <!-- Controls Bar -->
+          <div class="p-4 bg-white space-y-3">
+            <div class="grid grid-cols-2 gap-2">
+              <button id="toggleCameraBtn" class="py-2.5 px-3 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 active:scale-95 font-semibold text-xs text-slate-700 transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-video"></i>
+                <span id="cameraBtnLabel">啟動鏡頭</span>
+              </button>
+              
+              <label class="py-2.5 px-3 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 active:scale-95 font-semibold text-xs text-slate-700 transition flex items-center justify-center gap-2 cursor-pointer">
+                <i class="fa-solid fa-image"></i>
+                <span>選取照片</span>
+                <input type="file" id="uploadInput" accept="image/*" class="hidden" />
+              </label>
+            </div>
+
+            <!-- Action: Capture or Run OCR -->
+            <div class="flex gap-2">
+              <button id="captureBtn" disabled class="flex-1 py-3 px-4 rounded-xl font-bold text-sm text-white bg-slate-400 cursor-not-allowed shadow transition flex items-center justify-center gap-2 active:scale-95">
+                <i class="fa-solid fa-camera"></i>
+                <span>拍攝並開始辨識</span>
+              </button>
+
+              <button id="reScanBtn" class="hidden py-3 px-4 rounded-xl font-bold text-sm text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition flex items-center justify-center gap-2 active:scale-95">
+                <i class="fa-solid fa-rotate-right"></i>
+                <span>重新拍照</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recognition Guide Tips -->
+        <div class="bg-rose-50/70 border border-rose-100 rounded-xl p-3.5 text-xs text-rose-900 flex items-start gap-3">
+          <i class="fa-solid fa-circle-info text-rose-500 mt-0.5 text-sm"></i>
+          <div class="leading-relaxed">
+            <span class="font-bold">拍照小技巧：</span>
+            請避免螢幕反光，讓數字正對畫面中央。如血壓計上有「SYS/收縮壓」、「DIA/舒張壓」、「PULSE/脈搏」之標示，系統辨識效果更佳！辨識完成後可隨時手動修正。
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Verification & Manual Edit Card -->
+      <div class="md:col-span-5 space-y-5">
+        
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-5">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h2 class="font-bold text-slate-800 text-base flex items-center gap-2">
+              <i class="fa-solid fa-square-check text-rose-500"></i>
+              量測數值確認
+            </h2>
+            <span class="text-[11px] font-medium text-slate-400">支援手動調整</span>
+          </div>
+
+          <form id="recordForm" class="space-y-4" onsubmit="return false;">
+            
+            <!-- Systolic Pressure (收縮壓) -->
+            <div>
+              <div class="flex justify-between items-center mb-1.5">
+                <label for="systolicInput" class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                  <span class="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block"></span>
+                  收縮壓 (SYS)
+                </label>
+                <span class="text-xs text-slate-400 font-mono">mmHg</span>
+              </div>
+              <div class="relative">
+                <input type="number" id="systolicInput" required min="40" max="300" placeholder="例如: 120"
+                  class="w-full text-xl font-bold font-mono px-4 py-2.5 rounded-xl border border-slate-200 focus:border-rose-500 focus:ring-2 focus:ring-rose-200 outline-none transition bg-slate-50/50 focus:bg-white text-slate-800" />
+                <span id="systolicTag" class="hidden absolute right-3 top-2.5 text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-700">正常</span>
+              </div>
+            </div>
+
+            <!-- Diastolic Pressure (舒張壓) -->
+            <div>
+              <div class="flex justify-between items-center mb-1.5">
+                <label for="diastolicInput" class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                  <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 inline-block"></span>
+                  舒張壓 (DIA)
+                </label>
+                <span class="text-xs text-slate-400 font-mono">mmHg</span>
+              </div>
+              <div class="relative">
+                <input type="number" id="diastolicInput" required min="30" max="200" placeholder="例如: 80"
+                  class="w-full text-xl font-bold font-mono px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition bg-slate-50/50 focus:bg-white text-slate-800" />
+                <span id="diastolicTag" class="hidden absolute right-3 top-2.5 text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-700">正常</span>
+              </div>
+            </div>
+
+            <!-- Pulse (心跳/脈搏) -->
+            <div>
+              <div class="flex justify-between items-center mb-1.5">
+                <label for="pulseInput" class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                  <span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span>
+                  心跳 / 脈搏 (PULSE)
+                </label>
+                <span class="text-xs text-slate-400 font-mono">bpm</span>
+              </div>
+              <input type="number" id="pulseInput" required min="30" max="250" placeholder="例如: 72"
+                class="w-full text-xl font-bold font-mono px-4 py-2.5 rounded-xl border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none transition bg-slate-50/50 focus:bg-white text-slate-800" />
+            </div>
+
+            <!-- Record Date & Time -->
+            <div>
+              <label for="timestampInput" class="block text-xs font-bold text-slate-700 mb-1.5">量測時間</label>
+              <input type="datetime-local" id="timestampInput"
+                class="w-full text-xs font-medium px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-rose-500 outline-none bg-slate-50/50 focus:bg-white text-slate-700" />
+            </div>
+
+            <!-- Notes -->
+            <div>
+              <label for="notesInput" class="block text-xs font-bold text-slate-700 mb-1.5">備註說明 (選填)</label>
+              <input type="text" id="notesInput" placeholder="例如：飯後、服藥前、運動後"
+                class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-rose-500 outline-none bg-slate-50/50 focus:bg-white text-slate-700" />
+            </div>
+
+            <!-- Health Status Evaluation -->
+            <div id="healthSummaryCard" class="p-3 rounded-xl bg-slate-100 text-xs text-slate-600 flex items-start gap-2.5">
+              <i class="fa-solid fa-heart text-slate-400 mt-0.5"></i>
+              <div>
+                <p id="bpCategoryText" class="font-bold text-slate-800">請輸入或辨識數值</p>
+                <p id="bpAdviceText" class="text-[11px] text-slate-500 mt-0.5">系統將即時對比衛福部/WHO標準提供參考等級。</p>
+              </div>
+            </div>
+
+            <!-- Save Action Button -->
+            <button type="button" id="saveRecordBtn" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-rose-500 to-red-500 hover:from-rose-600 hover:to-red-600 active:scale-95 font-bold text-sm text-white shadow-md shadow-rose-500/25 transition flex items-center justify-center gap-2">
+              <i class="fa-solid fa-bookmark"></i>
+              <span>儲存至本地端紀錄</span>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Trend Graph and Analysis -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+        <div>
+          <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+            <i class="fa-solid fa-chart-line text-rose-500"></i>
+            近期血壓趨勢圖
+          </h3>
+          <p class="text-xs text-slate-400 mt-0.5">監測近期收縮壓與舒張壓之起伏變化</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="inline-flex items-center gap-1.5 text-xs text-slate-600 mr-2">
+            <span class="w-3 h-1 bg-rose-500 rounded"></span>收縮壓
+            <span class="w-3 h-1 bg-indigo-500 rounded ml-2"></span>舒張壓
+          </span>
+        </div>
+      </div>
+
+      <div class="relative h-64 w-full">
+        <canvas id="trendChart"></canvas>
+        <div id="emptyChartMessage" class="hidden absolute inset-0 flex flex-col items-center justify-center text-slate-400 text-xs">
+          <i class="fa-regular fa-chart-bar text-3xl mb-2 text-slate-300"></i>
+          尚無量測紀錄，完成第一次辨識後即可查看趨勢圖表
+        </div>
+      </div>
+    </div>
+
+    <!-- History Table -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50">
+        <div>
+          <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+            <i class="fa-solid fa-clock-rotate-left text-rose-500"></i>
+            歷史量測紀錄
+            <span id="recordCountBadge" class="text-xs bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full font-mono font-medium">0 筆</span>
+          </h3>
+          <p class="text-xs text-slate-400">資料安全保存在目前裝置瀏覽器的 LocalStorage 中</p>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button id="clearAllRecordsBtn" class="text-xs font-semibold px-3 py-1.5 rounded-lg text-rose-600 hover:bg-rose-50 transition border border-rose-200">
+            <i class="fa-solid fa-trash-can mr-1"></i> 清空全部
+          </button>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr class="bg-slate-100/70 text-slate-500 font-semibold border-b border-slate-200">
+              <th class="py-3 px-4">時間</th>
+              <th class="py-3 px-4">收縮壓 (SYS)</th>
+              <th class="py-3 px-4">舒張壓 (DIA)</th>
+              <th class="py-3 px-4">脈搏 (PULSE)</th>
+              <th class="py-3 px-4">血壓判定</th>
+              <th class="py-3 px-4">備註</th>
+              <th class="py-3 px-4 text-center">操作</th>
+            </tr>
+          </thead>
+          <tbody id="recordsTableBody" class="divide-y divide-slate-100 font-medium text-slate-700">
+            <!-- Dynamically populated rows -->
+          </tbody>
+        </table>
+      </div>
+
+      <div id="noRecordsPlaceholder" class="p-8 text-center text-slate-400">
+        <i class="fa-solid fa-notes-medical text-3xl mb-2 text-slate-300"></i>
+        <p class="text-sm">目前無任何紀錄</p>
+      </div>
+    </div>
+
+    <!-- Hidden canvas for image resizing and capture -->
+    <canvas id="hiddenCanvas" class="hidden"></canvas>
+  </main>
+
+  <script>
+    // State variables
+    let videoStream = null;
+    let currentImageBase64 = null;
+    let bloodPressureRecords = [];
+    let trendChartInstance = null;
+
+    // DOM References
+    const webcam = document.getElementById('webcam');
+    const imagePreview = document.getElementById('imagePreview');
+    const idleState = document.getElementById('idleState');
+    const scannerOverlay = document.getElementById('scannerOverlay');
+    const recognizingOverlay = document.getElementById('recognizingOverlay');
+    const toggleCameraBtn = document.getElementById('toggleCameraBtn');
+    const cameraBtnLabel = document.getElementById('cameraBtnLabel');
+    const cameraStatusBadge = document.getElementById('cameraStatusBadge');
+    const uploadInput = document.getElementById('uploadInput');
+    const captureBtn = document.getElementById('captureBtn');
+    const reScanBtn = document.getElementById('reScanBtn');
+    const hiddenCanvas = document.getElementById('hiddenCanvas');
+
+    // Input fields
+    const systolicInput = document.getElementById('systolicInput');
+    const diastolicInput = document.getElementById('diastolicInput');
+    const pulseInput = document.getElementById('pulseInput');
+    const timestampInput = document.getElementById('timestampInput');
+    const notesInput = document.getElementById('notesInput');
+    const bpCategoryText = document.getElementById('bpCategoryText');
+    const bpAdviceText = document.getElementById('bpAdviceText');
+    const healthSummaryCard = document.getElementById('healthSummaryCard');
+    const saveRecordBtn = document.getElementById('saveRecordBtn');
+    const recordsTableBody = document.getElementById('recordsTableBody');
+    const recordCountBadge = document.getElementById('recordCountBadge');
+    const noRecordsPlaceholder = document.getElementById('noRecordsPlaceholder');
+    const emptyChartMessage = document.getElementById('emptyChartMessage');
+    const exportCsvBtn = document.getElementById('exportCsvBtn');
+    const clearAllRecordsBtn = document.getElementById('clearAllRecordsBtn');
+
+    const STORAGE_KEY = 'health_bp_records_v1';
+
+    function initApp() {
+      // Set current datetime as default
+      const now = new Date();
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      timestampInput.value = now.toISOString().slice(0, 16);
+
+      // Load records from localStorage
+      loadRecords();
+      initChart();
+      setupEventListeners();
+    }
+
+    function loadRecords() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          bloodPressureRecords = JSON.parse(stored);
+        } else {
+          bloodPressureRecords = [];
+        }
+      } catch (err) {
+        console.error('Failed to load records:', err);
+        bloodPressureRecords = [];
+      }
+      renderTable();
+      updateChart();
+    }
+
+    function saveRecordsToStorage() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(bloodPressureRecords));
+      } catch (err) {
+        showToast('儲存失敗：本機儲存空間不足或權限受限', 'error');
+      }
+    }
+
+    async function startCamera() {
+      try {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          showToast('您的瀏覽器不支援相機存取功能', 'error');
+          return;
+        }
+
+        const constraints = {
+          video: {
+            facingMode: { ideal: 'environment' },
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: false
+        };
+
+        videoStream = await navigator.mediaDevices.getUserMedia(constraints);
+        webcam.srcObject = videoStream;
+        
+        webcam.classList.remove('hidden');
+        imagePreview.classList.add('hidden');
+        idleState.classList.add('hidden');
+        scannerOverlay.classList.remove('hidden');
+
+        captureBtn.disabled = false;
+        captureBtn.classList.remove('bg-slate-400', 'cursor-not-allowed');
+        captureBtn.classList.add('bg-rose-500', 'hover:bg-rose-600');
+        
+        cameraBtnLabel.textContent = '關閉鏡頭';
+        cameraStatusBadge.textContent = '拍攝中';
+        cameraStatusBadge.className = 'text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700';
+      } catch (err) {
+        console.error('Camera error:', err);
+        showToast('無法存取相機，請確認已授權權限或改用上傳圖片', 'error');
+      }
+    }
+
+    function stopCamera() {
+      if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+        videoStream = null;
+      }
+      webcam.srcObject = null;
+      webcam.classList.add('hidden');
+      scannerOverlay.classList.add('hidden');
+
+      cameraBtnLabel.textContent = '啟動鏡頭';
+      cameraStatusBadge.textContent = '相機關閉';
+      cameraStatusBadge.className = 'text-xs font-medium px-2 py-0.5 rounded-full bg-slate-200 text-slate-600';
+    }
+
+    function toggleCamera() {
+      if (videoStream) {
+        stopCamera();
+        if (!currentImageBase64) {
+          idleState.classList.remove('hidden');
+          captureBtn.disabled = true;
+          captureBtn.classList.add('bg-slate-400', 'cursor-not-allowed');
+          captureBtn.classList.remove('bg-rose-500', 'hover:bg-rose-600');
+        }
+      } else {
+        startCamera();
+      }
+    }
+
+    function captureSnapshot() {
+      if (!webcam.videoWidth) {
+        showToast('尚未取得相機畫面', 'error');
+        return;
+      }
+
+      hiddenCanvas.width = webcam.videoWidth;
+      hiddenCanvas.height = webcam.videoHeight;
+      const ctx = hiddenCanvas.getContext('2d');
+      ctx.drawImage(webcam, 0, 0, hiddenCanvas.width, hiddenCanvas.height);
+
+      currentImageBase64 = hiddenCanvas.toDataURL('image/jpeg', 0.85);
+
+      // Display captured image
+      imagePreview.src = currentImageBase64;
+      imagePreview.classList.remove('hidden');
+      webcam.classList.add('hidden');
+      scannerOverlay.classList.add('hidden');
+      reScanBtn.classList.remove('hidden');
+
+      // Stop camera feed after photo is taken
+      stopCamera();
+
+      // Trigger AI Recognition
+      performOcrRecognition(currentImageBase64);
+    }
+
+    uploadInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          // Resize image if too large for faster API processing
+          const maxDim = 1280;
+          let width = img.width;
+          let height = img.height;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+
+          hiddenCanvas.width = width;
+          hiddenCanvas.height = height;
+          const ctx = hiddenCanvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          currentImageBase64 = hiddenCanvas.toDataURL('image/jpeg', 0.85);
+
+          // Update Preview
+          stopCamera();
+          idleState.classList.add('hidden');
+          imagePreview.src = currentImageBase64;
+          imagePreview.classList.remove('hidden');
+          scannerOverlay.classList.add('hidden');
+          reScanBtn.classList.remove('hidden');
+
+          captureBtn.disabled = false;
+          captureBtn.classList.remove('bg-slate-400', 'cursor-not-allowed');
+          captureBtn.classList.add('bg-rose-500', 'hover:bg-rose-600');
+
+          // Trigger AI Recognition
+          performOcrRecognition(currentImageBase64);
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+      e.target.value = ''; // Reset input
+    });
+
+    async function performOcrRecognition(base64DataUrl) {
+      recognizingOverlay.classList.remove('hidden');
+
+      // Strip "data:image/jpeg;base64," prefix for Gemini inlineData
+      const base64Pure = base64DataUrl.split(',')[1];
+
+      const apiKey = "";
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+      const promptText = `你是一個專業的醫療影像分析助理。這是一張電子血壓計螢幕或顯示器的照片。
+請仔細辨識照片中的三個數值：
+1. systolic (收縮壓 / SYS / 最高壓, mmHg)
+2. diastolic (舒張壓 / DIA / 最低壓, mmHg)
+3. pulse (心跳 / 脈搏 / PULSE / 心率, bpm)
+
+請以嚴格的 JSON 格式回答，若某個欄位無法辨識請填 null。
+若辨識到了多組數字，通常數值較大者(如 90~180)是收縮壓(SYS)，數值居中者(如 50~100)是舒張壓(DIA)，心跳(PULSE)通常標有心臟圖示或文字 PULSE (如 50~110)。
+JSON 格式必須符合:
+{
+  "systolic": number | null,
+  "diastolic": number | null,
+  "pulse": number | null,
+  "confidence": "high" | "medium" | "low",
+  "comment": "說明"
+}`;
+
+      const payload = {
+        contents: [
+          {
+            role: "user",
+            parts: [
+              { text: promptText },
+              {
+                inlineData: {
+                  mimeType: "image/jpeg",
+                  data: base64Pure
+                }
+              }
+            ]
+          }
+        ],
+        generationConfig: {
+          responseMimeType: "application/json"
+        }
+      };
+
+      try {
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          throw new Error(`API HTTP Error ${response.status}`);
+        }
+
+        const data = await response.json();
+        const candidate = data.candidates?.[0];
+        const rawJson = candidate?.content?.parts?.[0]?.text;
+
+        if (rawJson) {
+          const parsed = JSON.parse(rawJson);
+          applyRecognizedData(parsed);
+          showToast('辨識完成！請確認數字是否正確', 'success');
+        } else {
+          throw new Error('未取得辨識內容');
+        }
+      } catch (error) {
+        console.warn('Gemini OCR API error or offline, fallback to simulation/guidance:', error);
+        fallbackLocalHeuristics();
+      } finally {
+        recognizingOverlay.classList.add('hidden');
+      }
+    }
+
+    function applyRecognizedData(result) {
+      if (result.systolic !== null && result.systolic !== undefined) {
+        systolicInput.value = result.systolic;
+      }
+      if (result.diastolic !== null && result.diastolic !== undefined) {
+        diastolicInput.value = result.diastolic;
+      }
+      if (result.pulse !== null && result.pulse !== undefined) {
+        pulseInput.value = result.pulse;
+      }
+      evaluateBloodPressure();
+    }
+
+    function fallbackLocalHeuristics() {
+      showToast('雲端辨識連線不穩，已載入參考範例或可直接手動輸入', 'info');
+      if (!systolicInput.value) systolicInput.value = 120;
+      if (!diastolicInput.value) diastolicInput.value = 80;
+      if (!pulseInput.value) pulseInput.value = 72;
+      evaluateBloodPressure();
+    }
+
+    function evaluateBloodPressure() {
+      const sys = parseInt(systolicInput.value, 10);
+      const dia = parseInt(diastolicInput.value, 10);
+
+      if (isNaN(sys) || isNaN(dia)) {
+        bpCategoryText.textContent = "請輸入完整收縮壓與舒張壓";
+        bpAdviceText.textContent = "系統將即時對比標準提供參考等級。";
+        healthSummaryCard.className = "p-3 rounded-xl bg-slate-100 text-xs text-slate-600 flex items-start gap-2.5";
+        return;
+      }
+
+      let category = "";
+      let advice = "";
+      let styleClass = "";
+
+      if (sys >= 140 || dia >= 90) {
+        category = "高血壓 (第1期/第2期)";
+        advice = "血壓偏高，建議休息後再次量測，並洽詢專業醫師定期追蹤。";
+        styleClass = "bg-rose-50 border border-rose-200 text-rose-800";
+      } else if ((sys >= 120 && sys <= 139) || (dia >= 80 && dia <= 89)) {
+        category = "血壓偏高 (高血壓前期)";
+        advice = "處於邊界範圍，注意少鹽飲食、適當運動及規律作息。";
+        styleClass = "bg-amber-50 border border-amber-200 text-amber-800";
+      } else if (sys < 90 || dia < 60) {
+        category = "血壓偏低";
+        advice = "低於一般建議標準，若有頭暈或無力感建議諮詢醫師。";
+        styleClass = "bg-sky-50 border border-sky-200 text-sky-800";
+      } else {
+        category = "標準正常血壓";
+        advice = "數值相當理想！請繼續保持均衡的生活型態與規律紀錄。";
+        styleClass = "bg-emerald-50 border border-emerald-200 text-emerald-800";
+      }
+
+      bpCategoryText.textContent = category;
+      bpAdviceText.textContent = advice;
+      healthSummaryCard.className = `p-3 rounded-xl text-xs flex items-start gap-2.5 ${styleClass}`;
+    }
+
+    function saveCurrentRecord() {
+      const sys = parseInt(systolicInput.value, 10);
+      const dia = parseInt(diastolicInput.value, 10);
+      const pulse = parseInt(pulseInput.value, 10);
+      const timestamp = timestampInput.value;
+      const notes = notesInput.value.trim();
+
+      if (isNaN(sys) || isNaN(dia) || isNaN(pulse)) {
+        showToast('請先填寫或辨識完整的收縮壓、舒張壓與脈搏數值', 'error');
+        return;
+      }
+
+      if (!timestamp) {
+        showToast('請選擇量測時間', 'error');
+        return;
+      }
+
+      const newRecord = {
+        id: 'bp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+        systolic: sys,
+        diastolic: dia,
+        pulse: pulse,
+        timestamp: timestamp,
+        notes: notes,
+        status: bpCategoryText.textContent
+      };
+
+      // Add to front of array
+      bloodPressureRecords.unshift(newRecord);
+      saveRecordsToStorage();
+      renderTable();
+      updateChart();
+
+      showToast('量測紀錄已成功儲存至本機！', 'success');
+
+      // Reset notes field
+      notesInput.value = '';
+    }
+
+    function deleteRecord(id) {
+      bloodPressureRecords = bloodPressureRecords.filter(item => item.id !== id);
+      saveRecordsToStorage();
+      renderTable();
+      updateChart();
+      showToast('已刪除該筆紀錄', 'info');
+    }
+
+    function renderTable() {
+      recordCountBadge.textContent = `${bloodPressureRecords.length} 筆`;
+
+      if (bloodPressureRecords.length === 0) {
+        recordsTableBody.innerHTML = '';
+        noRecordsPlaceholder.classList.remove('hidden');
+        return;
+      }
+
+      noRecordsPlaceholder.classList.add('hidden');
+
+      recordsTableBody.innerHTML = bloodPressureRecords.map((item) => {
+        // Badge color based on category
+        let badgeColor = 'bg-slate-100 text-slate-700';
+        if (item.status.includes('高血壓')) {
+          badgeColor = 'bg-rose-100 text-rose-700';
+        } else if (item.status.includes('標準正常')) {
+          badgeColor = 'bg-emerald-100 text-emerald-700';
+        } else if (item.status.includes('偏高')) {
+          badgeColor = 'bg-amber-100 text-amber-800';
+        } else if (item.status.includes('偏低')) {
+          badgeColor = 'bg-sky-100 text-sky-800';
+        }
+
+        const dateStr = item.timestamp ? item.timestamp.replace('T', ' ') : '—';
+
+        return `
+          <tr class="hover:bg-slate-50 transition border-b border-slate-100 last:border-none">
+            <td class="py-3 px-4 font-mono text-slate-500 whitespace-nowrap">${dateStr}</td>
+            <td class="py-3 px-4 font-bold font-mono text-rose-600">${item.systolic} <span class="text-[10px] text-slate-400 font-normal">mmHg</span></td>
+            <td class="py-3 px-4 font-bold font-mono text-indigo-600">${item.diastolic} <span class="text-[10px] text-slate-400 font-normal">mmHg</span></td>
+            <td class="py-3 px-4 font-bold font-mono text-amber-600">${item.pulse} <span class="text-[10px] text-slate-400 font-normal">bpm</span></td>
+            <td class="py-3 px-4">
+              <span class="px-2 py-0.5 rounded-full font-medium text-[11px] ${badgeColor}">
+                ${item.status}
+              </span>
+            </td>
+            <td class="py-3 px-4 text-slate-500 truncate max-w-[140px]" title="${item.notes || ''}">${item.notes || '—'}</td>
+            <td class="py-3 px-4 text-center">
+              <button onclick="window.handleDeleteClick('${item.id}')" title="刪除紀錄" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition">
+                <i class="fa-solid fa-trash text-xs"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Attach to global window for inline click listener
+    window.handleDeleteClick = function(id) {
+      deleteRecord(id);
+    };
+
+    function initChart() {
+      const ctx = document.getElementById('trendChart').getContext('2d');
+      trendChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [
+            {
+              label: '收縮壓 (SYS)',
+              borderColor: '#f43f5e',
+              backgroundColor: 'rgba(244, 63, 94, 0.1)',
+              borderWidth: 2.5,
+              tension: 0.3,
+              fill: true,
+              data: []
+            },
+            {
+              label: '舒張壓 (DIA)',
+              borderColor: '#6366f1',
+              backgroundColor: 'rgba(99, 102, 241, 0.05)',
+              borderWidth: 2.5,
+              tension: 0.3,
+              fill: true,
+              data: []
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false,
+          },
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              backgroundColor: '#1e293b',
+              padding: 10,
+              cornerRadius: 8
+            }
+          },
+          scales: {
+            y: {
+              min: 40,
+              max: 200,
+              grid: { color: '#f1f5f9' },
+              ticks: { font: { size: 10 } }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { font: { size: 10 } }
+            }
+          }
+        }
+      });
+    }
+
+    function updateChart() {
+      if (!trendChartInstance) return;
+
+      if (bloodPressureRecords.length === 0) {
+        emptyChartMessage.classList.remove('hidden');
+        trendChartInstance.data.labels = [];
+        trendChartInstance.data.datasets[0].data = [];
+        trendChartInstance.data.datasets[1].data = [];
+        trendChartInstance.update();
+        return;
+      }
+
+      emptyChartMessage.classList.add('hidden');
+
+      // Sort chronological for line chart (earliest to latest)
+      const sorted = [...bloodPressureRecords].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)).slice(-15);
+
+      const labels = sorted.map(item => {
+        const parts = item.timestamp.split('T');
+        return parts.length > 1 ? parts[0].slice(5) + ' ' + parts[1] : item.timestamp;
+      });
+
+      const sysData = sorted.map(item => item.systolic);
+      const diaData = sorted.map(item => item.diastolic);
+
+      trendChartInstance.data.labels = labels;
+      trendChartInstance.data.datasets[0].data = sysData;
+      trendChartInstance.data.datasets[1].data = diaData;
+      trendChartInstance.update();
+    }
+
+    function exportToCsv() {
+      if (bloodPressureRecords.length === 0) {
+        showToast('目前尚無任何紀錄可供匯出', 'info');
+        return;
+      }
+
+      let csv = '\uFEFF時間,收縮壓(SYS),舒張壓(DIA),心跳(PULSE),判定,備註\n';
+      bloodPressureRecords.forEach(r => {
+        const safeNotes = (r.notes || '').replace(/"/g, '""');
+        csv += `"${r.timestamp}",${r.systolic},${r.diastolic},${r.pulse},"${r.status}","${safeNotes}"\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `血壓健康日誌_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      showToast('已匯出 CSV 檔案！', 'success');
+    }
+
+    function setupEventListeners() {
+      toggleCameraBtn.addEventListener('click', toggleCamera);
+      captureBtn.addEventListener('click', captureSnapshot);
+      reScanBtn.addEventListener('click', () => {
+        reScanBtn.classList.add('hidden');
+        imagePreview.classList.add('hidden');
+        startCamera();
+      });
+
+      systolicInput.addEventListener('input', evaluateBloodPressure);
+      diastolicInput.addEventListener('input', evaluateBloodPressure);
+
+      saveRecordBtn.addEventListener('click', saveCurrentRecord);
+      exportCsvBtn.addEventListener('click', exportToCsv);
+
+      clearAllRecordsBtn.addEventListener('click', () => {
+        if (bloodPressureRecords.length === 0) return;
+        bloodPressureRecords = [];
+        saveRecordsToStorage();
+        renderTable();
+        updateChart();
+        showToast('已清空全部歷史紀錄', 'info');
+      });
+    }
+
+    // Custom Toast Notification (Replaces native alert)
+    function showToast(message, type = 'info') {
+      const toastBox = document.getElementById('toastBox');
+      const toast = document.createElement('div');
+      
+      let bgStyle = 'bg-slate-900 text-white';
+      let icon = '<i class="fa-solid fa-circle-info text-sky-400"></i>';
+
+      if (type === 'success') {
+        bgStyle = 'bg-slate-900 text-white border-l-4 border-emerald-500';
+        icon = '<i class="fa-solid fa-circle-check text-emerald-400"></i>';
+      } else if (type === 'error') {
+        bgStyle = 'bg-slate-900 text-white border-l-4 border-rose-500';
+        icon = '<i class="fa-solid fa-triangle-exclamation text-rose-400"></i>';
+      } else {
+        bgStyle = 'bg-slate-900 text-white border-l-4 border-sky-500';
+      }
+
+      toast.className = `${bgStyle} px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 text-xs font-semibold transform transition-all duration-300 opacity-0 translate-y-2 pointer-events-auto max-w-sm`;
+      toast.innerHTML = `${icon}<span>${message}</span>`;
+
+      toastBox.appendChild(toast);
+
+      // Trigger enter animation
+      requestAnimationFrame(() => {
+        toast.classList.remove('opacity-0', 'translate-y-2');
+        toast.classList.add('opacity-100', 'translate-y-0');
+      });
+
+      // Auto dismiss
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => {
+          if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+          }
+        }, 300);
+      }, 3500);
+    }
+
+    // Window load entrypoint
+    window.addEventListener('DOMContentLoaded', initApp);
+  </script>
+</body>
+</html>
