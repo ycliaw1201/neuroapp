@@ -27,6 +27,7 @@
             }
             .page-break {
                 page-break-after: always;
+                break-after: page;
                 box-shadow: none !important; /* Removed shadow on print */
                 padding: 0 !important;
                 margin-bottom: 0 !important;
@@ -34,6 +35,7 @@
             }
             .page-break:last-child {
                 page-break-after: auto;
+                break-after: auto;
             }
             
             /* Enforce table borders on print */
@@ -145,23 +147,19 @@
 
             function getTableHeader() {
                 return `
-                    <table class="w-full lg:w-1/2 text-[13px] border-collapse border border-gray-800 text-center bg-white">
+                    <table class="w-full lg:w-1/2 text-[14px] border-collapse border border-gray-800 text-center bg-white">
                         <thead class="bg-gray-100 text-gray-800">
                             <tr>
-                                <th rowspan="2" class="border border-gray-800 py-2 w-[12%]">日期</th>
-                                <th colspan="2" class="border border-gray-800 py-1 w-[38%]">
-                                    早上 <span class="text-[10px] font-normal text-gray-600 block">(起床後、服藥前、早餐前)</span>
-                                </th>
-                                <th colspan="2" class="border border-gray-800 py-1 w-[38%]">
-                                    晚上 <span class="text-[10px] font-normal text-gray-600 block">(睡覺前一小時內)</span>
-                                </th>
-                                <th rowspan="2" class="border border-gray-800 py-1 w-[12%]">備註</th>
+                                <th rowspan="2" class="border border-gray-800 py-3 w-[12%] text-base">日期</th>
+                                <th colspan="2" class="border border-gray-800 py-2 w-[38%] text-base">早上</th>
+                                <th colspan="2" class="border border-gray-800 py-2 w-[38%] text-base">晚上</th>
+                                <th rowspan="2" class="border border-gray-800 py-3 w-[12%] text-base">備註</th>
                             </tr>
-                            <tr class="text-xs">
-                                <th class="border border-gray-800 py-1">第1次<br><span class="text-[10px] text-gray-500 font-normal">高/低/心跳</span></th>
-                                <th class="border border-gray-800 py-1">第2次<br><span class="text-[10px] text-gray-500 font-normal">高/低/心跳</span></th>
-                                <th class="border border-gray-800 py-1">第1次<br><span class="text-[10px] text-gray-500 font-normal">高/低/心跳</span></th>
-                                <th class="border border-gray-800 py-1">第2次<br><span class="text-[10px] text-gray-500 font-normal">高/低/心跳</span></th>
+                            <tr class="text-sm">
+                                <th class="border border-gray-800 py-2">第1次</th>
+                                <th class="border border-gray-800 py-2">第2次</th>
+                                <th class="border border-gray-800 py-2">第1次</th>
+                                <th class="border border-gray-800 py-2">第2次</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -250,6 +248,8 @@
             }
 
             generateBtn.addEventListener('click', generateTables);
+            startDateInput.addEventListener('change', generateTables);
+            durationSelect.addEventListener('change', generateTables);
             
             printBtn.addEventListener('click', () => {
                 window.print();
