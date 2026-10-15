@@ -26,16 +26,16 @@
                 display: none !important;
             }
             .page-break {
-                page-break-after: always;
-                break-after: page;
                 box-shadow: none !important; /* Removed shadow on print */
                 padding: 0 !important;
-                margin-bottom: 0 !important;
+                margin: 0 !important;
                 background-color: transparent !important;
+                page-break-inside: avoid;
+                break-inside: avoid;
             }
-            .page-break:last-child {
-                page-break-after: auto;
-                break-after: auto;
+            .page-break:not(:first-child) {
+                page-break-before: always;
+                break-before: page;
             }
             
             /* Enforce table borders on print */
@@ -54,13 +54,14 @@
             
             /* Ensure the content fits within the page height */
             .record-row td {
-                height: 9.5mm !important; /* Increased cell height significantly for A4 landscape print */
+                height: 8.5mm !important; /* Adjusted cell height to prevent spilling over to next page */
                 padding: 2px 4px !important;
             }
 
             .print-flex-row {
                 display: flex !important;
                 flex-direction: row !important;
+                align-items: flex-start !important;
             }
         }
 
