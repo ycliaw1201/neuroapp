@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>血壓紀錄表</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f3f4f6;
+        }
+
+        /* Print specific styles to ensure it fits A4 perfectly */
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 10mm 15mm; /* Top/Bottom, Left/Right margins */
+            }
+            body {
+                background-color: white;
+                font-size: 11pt; /* Optimal for A4 reading */
+            }
+            .no-print {
+                display: none !important;
+            }
+            .page-break {
+                page-break-after: always;
+            }
+            .page-break:last-child {
+                page-break-after: auto;
+            }
+            
+            /* Enforce table borders on print */
+            table {
+                border-collapse: collapse;
+                width: 100%;
+            }
+            th, td {
+                border: 1px solid #000 !important;
+            }
+            th {
+                background-color: #e5e7eb !important;
+                -webkit-print-color-adjust: exact;
+                color-adjust: exact;
+            }
+            
+            /* Ensure the content fits within the page height */
+            .record-row td {
+                height: 8.2mm; /* Increased cell height for A4 print */
+                padding: 2px 4px !important;
+            }
+        }
+
+        /* Screen aesthetics */
+        .screen-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .paper-shadow {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        /* Increased cell height for screen display */
+        .record-row td {
+            height: 42px; 
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <div class="no-print bg-white border-b border-gray-200 sticky top-0 z-10 paper-shadow mb-6">
+        <div class="screen-container py-4 px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-blue-600 text-white p-2 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-gray-800">血壓紀錄表產生器</h1>
+                    <p class="text-xs text-gray-500">自動排版，A4完美列印</p>
+                </div>
+            </div>
+            
+            <div class="flex flex-wrap items-center gap-3">
+                <div class="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-md border border-gray-200">
+                    <label for="startDate" class="text-sm font-medium text-gray-700 whitespace-nowrap">就診(開始)日期：</label>
+                    <input type="date" id="startDate" class="border border-gray-300 rounded px-2 py-1 text-sm focus:ring-blue-500 focus:border-blue-500 outline-none">
+                </div>
+                
+                <div class="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-md border border-gray-200">
+                    <label for="duration" class="text-sm font-medium text-gray-700 whitespace-nowrap">紀錄期間：</label>
+                    <select id="duration" class="border border-gray-300 rounded px-2 py-1 text-sm focus:ring-blue-500 focus:border-blue-500 outline-none">
+                        <option value="1">1 個月 (1張)</option>
+                        <option value="2">2 個月 (2張)</option>
+                        <option value="3">3 個月 (3張)</option>
+                    </select>
+                </div>
+
+                <button id="generateBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-200 shadow-sm flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    產生表格
+                </button>
+                <button id="printBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-200 shadow-sm flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                    </svg>
+                    列印表單
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="pagesContainer" class="screen-container pb-10 px-2 sm:px-0">
+        <!-- Tables will be injected here via JavaScript -->
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const startDateInput = document.getElementById('startDate');
+            const durationSelect = document.getElementById('duration');
+            const generateBtn = document.getElementById('generateBtn');
+            const printBtn = document.getElementById('printBtn');
+            const pagesContainer = document.getElementById('pagesContainer');
+
+            // Initialize date to Today
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            startDateInput.value = `${year}-${month}-${day}`;
+
+            const daysOfWeek = ['日', '一', '二', '三', '四', '五', '六'];
+
+            function generateTables() {
+                const startDateVal = startDateInput.value;
+                if (!startDateVal) return;
+
+                const startDate = new Date(startDateVal);
+                const monthsToGenerate = parseInt(durationSelect.value, 10);
+                const daysPerPage = 31; // Fix to 31 days to ensure full month fits exactly on A4
+
+                pagesContainer.innerHTML = ''; // Clear existing
+                
+                let currentDate = new Date(startDate);
+
+                for (let page = 0; page < monthsToGenerate; page++) {
+                    // Create page wrapper
+                    const pageDiv = document.createElement('div');
+                    pageDiv.className = 'bg-white p-6 sm:p-8 rounded-lg paper-shadow mb-8 page-break';
+                    
+                    // Construct HTML string for the page
+                    let html = `
+                        <div class="text-center mb-3">
+                            <h2 class="text-2xl font-bold text-gray-800 tracking-wider">血壓紀錄表</h2>
+                        </div>
+                        
+                        <div class="flex justify-between items-end mb-2 text-sm text-gray-700">
+                            <div class="flex gap-6">
+                                <div><span class="font-bold">姓名：</span><span class="inline-block border-b border-gray-400 w-32"></span></div>
+                                <div><span class="font-bold">病歷號：</span><span class="inline-block border-b border-gray-400 w-32"></span></div>
+                            </div>
+                            <div class="bg-blue-50 border border-blue-200 p-2 rounded text-xs">
+                                <strong class="text-blue-800">【722 原則】</strong><br>
+                                <span class="text-blue-700">連續 <strong>7</strong> 天量測 / 每天 <strong>2</strong> 個時段(早、晚) / 每次量 <strong>2</strong> 次(間隔1分鐘)</span>
+                            </div>
+                        </div>
+
+                        <table class="w-full text-sm border-collapse border border-gray-800 text-center">
+                            <thead class="bg-gray-100 text-gray-800">
+                                <tr>
+                                    <th rowspan="2" class="border border-gray-800 py-1 w-24">日期</th>
+                                    <th colspan="2" class="border border-gray-800 py-1 w-[35%]">
+                                        早上 <span class="text-[10px] font-normal text-gray-600">(起床後一小時內、服藥前、早餐前)</span>
+                                    </th>
+                                    <th colspan="2" class="border border-gray-800 py-1 w-[35%]">
+                                        晚上 <span class="text-[10px] font-normal text-gray-600">(睡覺前一小時內)</span>
+                                    </th>
+                                    <th rowspan="2" class="border border-gray-800 py-1 w-auto">備註</th>
+                                </tr>
+                                <tr class="text-xs">
+                                    <th class="border border-gray-800 py-1">第1次 (高 / 低 / 心跳)</th>
+                                    <th class="border border-gray-800 py-1">第2次 (高 / 低 / 心跳)</th>
+                                    <th class="border border-gray-800 py-1">第1次 (高 / 低 / 心跳)</th>
+                                    <th class="border border-gray-800 py-1">第2次 (高 / 低 / 心跳)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+
+                    // Generate 31 rows for the current page
+                    for (let i = 0; i < daysPerPage; i++) {
+                        const m = String(currentDate.getMonth() + 1).padStart(2, '0');
+                        const d = String(currentDate.getDate()).padStart(2, '0');
+                        const dow = daysOfWeek[currentDate.getDay()];
+                        
+                        // Weekend styling for better readability on screen
+                        const isWeekend = (currentDate.getDay() === 0 || currentDate.getDay() === 6);
+                        const dateTextClass = isWeekend ? 'text-red-600 font-medium' : 'font-medium';
+
+                        html += `
+                            <tr class="record-row hover:bg-gray-50">
+                                <td class="border border-gray-800 ${dateTextClass}">${m}/${d} (${dow})</td>
+                                <td class="border border-gray-800 text-gray-300">/ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /</td>
+                                <td class="border border-gray-800 text-gray-300">/ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /</td>
+                                <td class="border border-gray-800 text-gray-300">/ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /</td>
+                                <td class="border border-gray-800 text-gray-300">/ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /</td>
+                                <td class="border border-gray-800"></td>
+                            </tr>
+                        `;
+
+                        // Increment date by 1 day
+                        currentDate.setDate(currentDate.getDate() + 1);
+                    }
+
+                    html += `
+                            </tbody>
+                        </table>
+                    `;
+                    
+                    pageDiv.innerHTML = html;
+                    pagesContainer.appendChild(pageDiv);
+                }
+            }
+
+            generateBtn.addEventListener('click', generateTables);
+            
+            printBtn.addEventListener('click', () => {
+                window.print();
+            });
+
+            // Initial Generation
+            generateTables();
+        });
+    </script>
+</body>
+</html>
