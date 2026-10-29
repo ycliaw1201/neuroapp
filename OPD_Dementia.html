@@ -12,11 +12,10 @@
             background-color: #f1f5f9;
             font-family: 'Noto Sans TC', "Microsoft JhengHei", sans-serif;
             color: #334155;
-            /* 基礎字體稍微加大以利閱讀 */
-            font-size: 17px;
+            font-size: 14px; /* 縮小基礎字體以適應多欄無卷軸設計 */
         }
         
-        /* --- 自定義 Radio & Checkbox 美化 (加大尺寸適合平板) --- */
+        /* --- 自定義 Radio & Checkbox 美化 --- */
         input[type="radio"], input[type="checkbox"] {
             -webkit-appearance: none;
             appearance: none;
@@ -24,16 +23,15 @@
             margin: 0;
             font: inherit;
             color: currentColor;
-            /* 加大尺寸至 1.6em */
-            width: 1.6em;
-            height: 1.6em;
+            width: 1.25em; /* 稍微縮小按鈕 */
+            height: 1.25em;
             border: 2px solid #cbd5e1;
             display: grid;
             place-content: center;
             transition: all 0.2s ease-in-out;
             cursor: pointer;
             flex-shrink: 0;
-            margin-right: 0.75rem; /* 增加與文字的間距 */
+            margin-right: 0.5rem;
             position: relative;
             top: 2px;
         }
@@ -43,13 +41,13 @@
         }
         
         input[type="checkbox"] {
-            border-radius: 0.4em;
+            border-radius: 0.35em;
         }
 
         input[type="radio"]::before {
             content: "";
-            width: 0.8em; /* 加大圓點 */
-            height: 0.8em;
+            width: 0.7em;
+            height: 0.7em;
             border-radius: 50%;
             transform: scale(0);
             transition: 120ms transform ease-in-out;
@@ -58,8 +56,8 @@
 
         input[type="checkbox"]::before {
             content: "";
-            width: 0.8em; /* 加大打勾 */
-            height: 0.8em;
+            width: 0.7em;
+            height: 0.7em;
             transform: scale(0);
             transition: 120ms transform ease-in-out;
             box-shadow: inset 1em 1em #2563eb;
@@ -85,41 +83,70 @@
 
         .section-card {
             background: white;
-            border-radius: 20px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-            padding: 2.5rem; /* 加大內距 */
-            margin-bottom: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            padding: 1rem 1.25rem; /* 大幅縮小內距以減少高度 */
             border: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
         }
 
         .section-title {
-            font-size: 1.4rem; /* 加大標題 */
+            font-size: 1.1rem;
             font-weight: 700;
             color: #1e293b;
-            margin-bottom: 1.75rem;
+            margin-bottom: 0.75rem;
             display: flex;
             align-items: center;
         }
         .section-title::before {
             content: '';
             display: inline-block;
-            width: 8px;
-            height: 1.6em;
+            width: 5px;
+            height: 1.2em;
             background: linear-gradient(to bottom, #3b82f6, #2563eb);
-            margin-right: 1rem;
-            border-radius: 99px;
+            margin-right: 0.5rem;
+            border-radius: 4px;
         }
 
-        /* 優化輸入底線模式 */
         .input-underline {
             border: none;
-            border-bottom: 2px solid #cbd5e1; /* 加深顏色增加對比 */
+            border-bottom: 2px solid #cbd5e1;
             border-radius: 0;
-            padding: 0.5rem 0.75rem; /* 加大點擊範圍 */
+            padding: 0.15rem 0.5rem;
             background: transparent;
             transition: all 0.3s;
             width: 100%;
-            font-size: 1.1rem; /* 加大輸入字體 */
+            font-size: 0.95rem;
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+        }
+        .section-title::before {
+            content: '';
+            display: inline-block;
+            width: 6px;
+            height: 1.4em;
+            background: linear-gradient(to bottom, #3b82f6, #2563eb);
+            margin-right: 0.75rem;
+            border-radius: 4px;
+        }
+
+        .input-underline {
+            border: none;
+            border-bottom: 2px solid #cbd5e1;
+            border-radius: 0;
+            padding: 0.25rem 0.5rem;
+            background: transparent;
+            transition: all 0.3s;
+            width: 100%;
+            font-size: 1rem;
         }
         .input-underline:focus {
             outline: none;
@@ -127,26 +154,24 @@
             background-color: #f8fafc;
         }
 
-        /* 優化輸入框模式 */
         .input-box {
             border: 1px solid #cbd5e1;
-            border-radius: 12px;
-            padding: 0.85rem; /* 加大內距適合手指點擊 */
+            border-radius: 8px;
+            padding: 0.4rem 0.6rem;
             width: 100%;
             transition: border-color 0.2s, box-shadow 0.2s;
-            font-size: 1.1rem;
+            font-size: 0.95rem;
         }
         .input-box:focus {
             outline: none;
             border-color: #3b82f6;
-            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15); /* 加大 focus 光暈 */
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
         }
 
-        /* 按鈕優化 */
         .btn-pill {
-            padding: 0.5rem 1.25rem; /* 加大按鈕尺寸 */
+            padding: 0.2rem 0.6rem;
             border-radius: 9999px;
-            font-size: 1rem;
+            font-size: 0.85rem;
             font-weight: 600;
             transition: all 0.2s;
             white-space: nowrap;
@@ -155,7 +180,6 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            min-width: 80px; /* 確保最小寬度好點擊 */
         }
         .btn-normal {
             background-color: #ecfccb;
@@ -181,17 +205,17 @@
             margin-top: 0;
         }
         .reveal-input.show {
-            max-height: 80px; /* 增加高度以容納更大的輸入框 */
+            max-height: 80px;
             opacity: 1;
-            margin-top: 1rem;
+            margin-top: 0.5rem;
         }
 
         label {
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            padding: 0.6rem 0.25rem; /* 增加垂直間距，避免誤觸上下行 */
-            width: 100%; /* 讓點擊範圍延伸 */
+            padding: 0.2rem 0.1rem;
+            width: 100%;
         }
         
         .bpsd-row {
@@ -200,368 +224,307 @@
         .bpsd-row:hover {
             background-color: #f8fafc;
         }
-        
-        /* 網格間距調整 */
-        .grid-gap-tablet {
-            gap: 1.5rem; /* 增加 grid 間距 */
-        }
     </style>
 </head>
-<body class="p-4 md:p-8 max-w-6xl mx-auto bg-slate-50">
+<body class="p-2 md:p-4 max-w-[1400px] mx-auto bg-slate-50 h-screen flex flex-col overflow-hidden">
 
-    <header class="text-center mb-12">
-        <h1 class="text-4xl font-bold text-gray-800 tracking-tight">失智評估初診問卷</h1>
-        <p class="text-gray-500 mt-3 text-lg">請依照患者實際狀況填寫，以利醫師評估</p>
+    <header class="text-center mb-2 shrink-0">
+        <h1 class="text-2xl font-bold text-gray-800 tracking-tight">失智評估初診問卷</h1>
     </header>
 
-    <form id="assessmentForm" onchange="updateSummary()">
+    <form id="assessmentForm" onchange="updateSummary()" class="flex flex-col gap-3 flex-1 min-h-0">
         
-        <!-- 研究同意 -->
-        <div class="section-card border-l-8 border-l-blue-500 bg-blue-50/40">
-            <div class="flex items-start">
-                <label for="research_consent" class="text-gray-800 font-bold text-xl py-2">
-                    <input type="checkbox" id="research_consent" name="research_consent" class="mt-1">
-                    本人同意提供此問卷資料供學術研究使用（資料將去識別化處理）
-                </label>
-            </div>
+        <!-- 研究同意 (置頂緊湊) -->
+        <div class="bg-blue-50/60 border-l-4 border-blue-500 rounded-lg px-4 py-2 shrink-0 shadow-sm border border-blue-100">
+            <label for="research_consent" class="text-gray-800 font-bold text-sm flex items-center justify-center cursor-pointer w-full !p-0">
+                <input type="checkbox" id="research_consent" name="research_consent" class="mr-2 !w-4 !h-4">
+                本人同意提供此問卷資料供學術研究使用（資料將去識別化處理）
+            </label>
         </div>
 
-        <!-- 基本資料 -->
-        <div class="section-card">
-            <div class="section-title">1. 基本資訊</div>
+        <!-- 左右雙欄主體 (內部捲軸設計) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 overflow-y-auto pr-2 pb-1 flex-1">
             
-            <div class="grid md:grid-cols-2 grid-gap-tablet">
-                <!-- 填寫人關係 -->
-                <div>
-                    <h3 class="text-base font-bold text-gray-500 uppercase tracking-wider mb-4">填寫人之關係</h3>
-                    <div class="flex flex-wrap gap-y-2 gap-x-6">
-                        <label class="w-auto"><input type="radio" name="relationship" value="Patient"> 本人</label>
-                        <label class="w-auto"><input type="radio" name="relationship" value="Spouse"> 配偶</label>
-                        <label class="w-auto"><input type="radio" name="relationship" value="Children"> 子女/媳婿</label>
-                        <label class="w-auto"><input type="radio" name="relationship" value="Sibling"> 兄弟姊妹</label>
-                        <div class="flex items-center w-full sm:w-auto">
-                            <label class="w-auto mr-2"><input type="radio" name="relationship" value="Other" class="toggle-other" data-target="rel_other"> 其他</label>
-                            <input type="text" id="rel_other" class="input-underline flex-1 min-w-[150px] opacity-50 focus:opacity-100" placeholder="請輸入" disabled>
+            <!-- 左欄 -->
+            <div class="flex flex-col gap-4">
+                <!-- 1. 基本資訊 -->
+                <div class="section-card">
+                    <div class="section-title">1. 基本資訊</div>
+                    
+                    <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                        <div class="space-y-3">
+                            <div>
+                                <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">填寫人關係</h3>
+                                <div class="flex flex-wrap gap-1">
+                                    <label class="w-auto"><input type="radio" name="relationship" value="Patient"> 本人</label>
+                                    <label class="w-auto"><input type="radio" name="relationship" value="Spouse"> 配偶</label>
+                                    <label class="w-auto"><input type="radio" name="relationship" value="Children"> 子女</label>
+                                    <label class="w-auto"><input type="radio" name="relationship" value="Sibling"> 手足</label>
+                                    <div class="flex items-center w-full">
+                                        <label class="w-auto mr-2"><input type="radio" name="relationship" value="Other" class="toggle-other" data-target="rel_other"> 其他</label>
+                                        <input type="text" id="rel_other" class="input-underline flex-1 opacity-50 focus:opacity-100 py-0.5" disabled>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">轉介單位</h3>
+                                <div class="flex flex-wrap gap-1">
+                                    <label class="w-auto"><input type="radio" name="referral" value="Self"> 自行就診</label>
+                                    <div class="flex items-center flex-1">
+                                        <label class="w-auto mr-2"><input type="radio" name="referral" value="Other" class="toggle-other" data-target="ref_other"> 其他</label>
+                                        <input type="text" id="ref_other" class="input-underline flex-1 opacity-50 focus:opacity-100 py-0.5" disabled>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3">
+                            <div>
+                                <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">近期重大事件</h3>
+                                <div class="grid grid-cols-2 gap-1 text-sm">
+                                    <label><input type="checkbox" name="events" value="家人生病/過世"> 生病/過世</label>
+                                    <label><input type="checkbox" name="events" value="失業"> 失業</label>
+                                    <label><input type="checkbox" name="events" value="經濟困難"> 經濟困難</label>
+                                    <label><input type="checkbox" name="events" value="意外/天災"> 意外/天災</label>
+                                </div>
+                                <div class="mt-1 flex items-center w-full text-sm">
+                                    <label class="w-auto mr-1"><input type="checkbox" name="events" value="Other" class="toggle-other-check" data-target="event_other"> 其他</label>
+                                    <input type="text" id="event_other" class="input-underline flex-1 opacity-50 disabled:cursor-not-allowed py-0.5" disabled>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">目前使用藥物</h3>
+                                <div class="grid grid-cols-2 gap-1 text-sm">
+                                    <label><input type="checkbox" name="meds" value="憂鬱症藥物"> 憂鬱</label>
+                                    <label><input type="checkbox" name="meds" value="失眠藥物"> 失眠</label>
+                                    <label><input type="checkbox" name="meds" value="甲狀腺藥物"> 甲狀腺</label>
+                                    <label><input type="checkbox" name="meds" value="荷爾蒙藥物"> 荷爾蒙</label>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- 轉介單位 -->
-                <div>
-                    <h3 class="text-base font-bold text-gray-500 uppercase tracking-wider mb-4">轉介單位</h3>
-                    <div class="flex flex-wrap gap-y-2 gap-x-6">
-                        <label class="w-auto"><input type="radio" name="referral" value="Self"> 自行就診</label>
-                        <div class="flex items-center w-full sm:w-auto">
-                            <label class="w-auto mr-2"><input type="radio" name="referral" value="Other" class="toggle-other" data-target="ref_other"> 其他機構</label>
-                            <input type="text" id="ref_other" class="input-underline flex-1 min-w-[150px] opacity-50 focus:opacity-100" placeholder="機構名稱" disabled>
+                <!-- 2. 主訴 -->
+                <div class="section-card flex-1">
+                    <div class="section-title mb-2">2. 就醫目的與主訴</div>
+                    <div class="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                        <span class="font-bold text-gray-700">就醫目的：</span>
+                        <label class="w-auto"><input type="checkbox" name="purpose" value="評估身體狀況"> 評估</label>
+                        <label class="w-auto"><input type="checkbox" name="purpose" value="申請補助"> 補助</label>
+                        <label class="w-auto"><input type="checkbox" name="purpose" value="機構需求"> 機構</label>
+                        <div class="flex items-center flex-1 min-w-[150px]">
+                            <label class="w-auto mr-1"><input type="checkbox" name="purpose" value="Other" class="toggle-other-check" data-target="purpose_other"> 其他</label>
+                            <input type="text" id="purpose_other" class="input-underline flex-1 py-0.5 opacity-50 focus:opacity-100" disabled>
                         </div>
                     </div>
+                    <textarea id="main_problem" rows="3" class="input-box bg-gray-50 resize-none h-full" placeholder="主要問題描述 (CC) 例如：自覺記憶變差..."></textarea>
                 </div>
-            </div>
 
-            <div class="mt-10">
-                <h3 class="text-base font-bold text-gray-500 uppercase tracking-wider mb-4">最近是否有遭遇重大的事件？</h3>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 grid-gap-tablet">
-                    <label><input type="checkbox" name="events" value="家人生病/過世"> 家人生病/過世</label>
-                    <label><input type="checkbox" name="events" value="失業"> 失業</label>
-                    <label><input type="checkbox" name="events" value="經濟困難"> 經濟困難</label>
-                    <label><input type="checkbox" name="events" value="意外/天災"> 意外/天災</label>
-                </div>
-                <!-- 重大事件的其他欄位 -->
-                <div class="mt-4 flex items-center w-full">
-                    <label class="w-auto mr-3 text-gray-700 whitespace-nowrap">
-                        <input type="checkbox" name="events" value="Other" class="toggle-other-check" data-target="event_other"> 其他：
-                    </label>
-                    <input type="text" id="event_other" class="input-underline flex-1 opacity-50 disabled:cursor-not-allowed" placeholder="請敘述..." disabled>
-                </div>
-            </div>
-
-            <div class="mt-10">
-                <h3 class="text-base font-bold text-gray-500 uppercase tracking-wider mb-4">目前使用藥物</h3>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 grid-gap-tablet">
-                    <label><input type="checkbox" name="meds" value="憂鬱症藥物"> 憂鬱症藥物</label>
-                    <label><input type="checkbox" name="meds" value="失眠藥物"> 失眠藥物</label>
-                    <label><input type="checkbox" name="meds" value="甲狀腺藥物"> 甲狀腺藥物</label>
-                    <label><input type="checkbox" name="meds" value="荷爾蒙藥物"> 荷爾蒙藥物</label>
-                </div>
-            </div>
-        </div>
-
-        <!-- 主訴 -->
-        <div class="section-card">
-            <div class="section-title">2. 就醫目的與主訴</div>
-            
-            <div class="mb-8">
-                <span class="text-gray-700 font-bold text-lg block mb-3">就醫目的：</span>
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 grid-gap-tablet items-start">
-                    <label><input type="checkbox" name="purpose" value="評估身體狀況"> 評估身體狀況</label>
-                    <label><input type="checkbox" name="purpose" value="申請補助"> 申請補助</label>
-                    <label><input type="checkbox" name="purpose" value="機構需求"> 機構需求</label>
-                    <div class="col-span-1 sm:col-span-2 md:col-span-1">
-                        <label class="w-auto">
-                            <input type="checkbox" name="purpose" value="Other" class="toggle-other-check" data-target="purpose_other"> 其他
-                        </label>
-                        <input type="text" id="purpose_other" class="reveal-input input-underline w-full" placeholder="請輸入其他目的">
-                    </div>
-                </div>
-            </div>
-
-            <div>
-                <label class="block text-gray-700 font-bold text-lg mb-3">主要問題描述 (CC)：</label>
-                <textarea id="main_problem" rows="3" class="input-box bg-gray-50" placeholder="例如：自覺記憶變差，約一年左右..."></textarea>
-            </div>
-        </div>
-
-        <!-- AD8 -->
-        <div class="section-card">
-            <div class="flex flex-wrap justify-between items-center mb-6 border-b pb-4">
-                <div class="section-title mb-0 border-none">3. AD8 極早期失智症篩檢</div>
-                <div class="text-base bg-blue-50 px-5 py-2 rounded-full font-bold text-blue-700 transition-colors border border-blue-100" id="ad8_badge">
-                    得分：<span id="ad8_score" class="text-2xl">0</span> / 8
-                </div>
-            </div>
-            <p class="text-base text-gray-500 mb-6 italic pl-2">請勾選「過去幾年與以前相比」有明顯改變的項目：</p>
-            
-            <div class="grid gap-4">
-                <label class="hover:bg-gray-50 p-4 rounded-xl transition-colors border border-transparent hover:border-gray-100 shadow-sm hover:shadow">
-                    <input type="checkbox" class="ad8-item" name="ad8_1"> 
-                    <span>1. 判斷力上的困難（如落入圈套、財務決定錯誤）</span>
-                </label>
-                <label class="hover:bg-gray-50 p-4 rounded-xl transition-colors border border-transparent hover:border-gray-100 shadow-sm hover:shadow">
-                    <input type="checkbox" class="ad8-item" name="ad8_2"> 
-                    <span>2. 對活動和嗜好的興趣降低</span>
-                </label>
-                <label class="hover:bg-gray-50 p-4 rounded-xl transition-colors border border-transparent hover:border-gray-100 shadow-sm hover:shadow">
-                    <input type="checkbox" class="ad8-item" name="ad8_3"> 
-                    <span>3. 重複相同問題、故事和陳述</span>
-                </label>
-                <label class="hover:bg-gray-50 p-4 rounded-xl transition-colors border border-transparent hover:border-gray-100 shadow-sm hover:shadow">
-                    <input type="checkbox" class="ad8-item" name="ad8_4"> 
-                    <span>4. 學習使用工具、設備上有困難（遙控器、家電）</span>
-                </label>
-                <label class="hover:bg-gray-50 p-4 rounded-xl transition-colors border border-transparent hover:border-gray-100 shadow-sm hover:shadow">
-                    <input type="checkbox" class="ad8-item" name="ad8_5"> 
-                    <span>5. 忘記正確的月份和年份</span>
-                </label>
-                <label class="hover:bg-gray-50 p-4 rounded-xl transition-colors border border-transparent hover:border-gray-100 shadow-sm hover:shadow">
-                    <input type="checkbox" class="ad8-item" name="ad8_6"> 
-                    <span>6. 處理複雜財物有困難（稅單、帳單）</span>
-                </label>
-                <label class="hover:bg-gray-50 p-4 rounded-xl transition-colors border border-transparent hover:border-gray-100 shadow-sm hover:shadow">
-                    <input type="checkbox" class="ad8-item" name="ad8_7"> 
-                    <span>7. 記住約會的時間有困難</span>
-                </label>
-                <label class="hover:bg-gray-50 p-4 rounded-xl transition-colors border border-transparent hover:border-gray-100 shadow-sm hover:shadow">
-                    <input type="checkbox" class="ad8-item" name="ad8_8"> 
-                    <span>8. 有持續的思考和記憶方面的問題</span>
-                </label>
-            </div>
-        </div>
-
-        <!-- 皮質功能 -->
-        <div class="section-card">
-            <div class="section-title">4. 皮質功能評估</div>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-16 gap-y-10">
-                
-                <div class="flex flex-col gap-3">
-                    <span class="font-bold text-gray-700 text-lg">執行能力</span>
-                    <div class="flex gap-3 items-center">
-                        <input type="text" id="cortical_exec" class="input-box flex-1" placeholder="描述或留空">
-                        <div class="flex gap-2">
+                <!-- 4. 皮質功能 -->
+                <div class="section-card">
+                    <div class="section-title mb-3">4. 皮質功能評估</div>
+                    <div class="grid grid-cols-1 xl:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-gray-700 w-16">執行能力</span>
+                            <input type="text" id="cortical_exec" class="input-box flex-1 py-1 px-2" placeholder="留空或描述">
                             <button type="button" onclick="setValue('cortical_exec', '正常')" class="btn-pill btn-normal">正常</button>
                             <button type="button" onclick="setValue('cortical_exec', '異常')" class="btn-pill btn-abnormal">異常</button>
                         </div>
-                    </div>
-                </div>
-
-                <div class="flex flex-col gap-3">
-                    <span class="font-bold text-gray-700 text-lg">行為表現</span>
-                    <div class="flex gap-3 items-center">
-                        <input type="text" id="cortical_beha" class="input-box flex-1" placeholder="描述或留空">
-                        <div class="flex gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-gray-700 w-16">行為表現</span>
+                            <input type="text" id="cortical_beha" class="input-box flex-1 py-1 px-2" placeholder="留空或描述">
                             <button type="button" onclick="setValue('cortical_beha', '正常')" class="btn-pill btn-normal">正常</button>
                             <button type="button" onclick="setValue('cortical_beha', '異常')" class="btn-pill btn-abnormal">異常</button>
                         </div>
-                    </div>
-                </div>
-
-                <div class="flex flex-col gap-3">
-                    <span class="font-bold text-gray-700 text-lg">空間感</span>
-                    <div class="flex gap-3 items-center">
-                        <input type="text" id="cortical_spatial" class="input-box flex-1" placeholder="描述或留空">
-                        <div class="flex gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-gray-700 w-16">空間感</span>
+                            <input type="text" id="cortical_spatial" class="input-box flex-1 py-1 px-2" placeholder="留空或描述">
                             <button type="button" onclick="setValue('cortical_spatial', '正常')" class="btn-pill btn-normal">正常</button>
                             <button type="button" onclick="setValue('cortical_spatial', '迷路')" class="btn-pill btn-abnormal">異常</button>
                         </div>
-                    </div>
-                </div>
-
-                <div class="flex flex-col gap-3">
-                    <span class="font-bold text-gray-700 text-lg">語言理解</span>
-                    <div class="flex gap-3 items-center">
-                        <input type="text" id="cortical_lang" class="input-box flex-1" placeholder="描述或留空">
-                        <div class="flex gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-gray-700 w-16">語言理解</span>
+                            <input type="text" id="cortical_lang" class="input-box flex-1 py-1 px-2" placeholder="留空或描述">
                             <button type="button" onclick="setValue('cortical_lang', '正常')" class="btn-pill btn-normal">正常</button>
                             <button type="button" onclick="setValue('cortical_lang', '異常')" class="btn-pill btn-abnormal">異常</button>
                         </div>
-                    </div>
-                </div>
-
-                <div class="flex flex-col gap-3">
-                    <span class="font-bold text-gray-700 text-lg">記憶力</span>
-                    <div class="flex gap-3 items-center">
-                        <input type="text" id="cortical_mem" class="input-box flex-1" placeholder="描述或留空">
-                        <div class="flex gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-gray-700 w-16">記憶力</span>
+                            <input type="text" id="cortical_mem" class="input-box flex-1 py-1 px-2" placeholder="留空或描述">
                             <button type="button" onclick="setValue('cortical_mem', '正常')" class="btn-pill btn-normal">正常</button>
                             <button type="button" onclick="setValue('cortical_mem', '受損')" class="btn-pill btn-abnormal">異常</button>
                         </div>
-                    </div>
-                </div>
-
-                <div class="flex flex-col gap-3">
-                    <span class="font-bold text-gray-700 text-lg">視覺辨識</span>
-                    <div class="flex gap-3 items-center">
-                        <input type="text" id="cortical_visual" class="input-box flex-1" placeholder="描述或留空">
-                        <div class="flex gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-gray-700 w-16">視覺辨識</span>
+                            <input type="text" id="cortical_visual" class="input-box flex-1 py-1 px-2" placeholder="留空或描述">
                             <button type="button" onclick="setValue('cortical_visual', '正常')" class="btn-pill btn-normal">正常</button>
                             <button type="button" onclick="setValue('cortical_visual', '異常')" class="btn-pill btn-abnormal">異常</button>
                         </div>
                     </div>
                 </div>
-
             </div>
-        </div>
 
-        <!-- 睡眠與 BPSD -->
-        <div class="section-card">
-            <div class="section-title">5. 睡眠與精神行為症狀</div>
-            
-            <div class="mb-10">
-                <h4 class="font-bold text-gray-600 text-lg mb-5 border-b pb-2">睡眠評估</h4>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
-                    <!-- 昏睡 -->
-                    <div class="flex flex-col sm:flex-row sm:items-center gap-3">
-                        <div class="flex items-center min-w-[150px]">
-                            <span class="font-bold mr-4 text-lg w-28">昏睡/嗜睡</span>
-                            <div class="flex gap-4">
-                                <label class="w-auto"><input type="radio" name="sleep_lethargy" value="No" class="toggle-sleep" checked> 無</label>
-                                <label class="w-auto"><input type="radio" name="sleep_lethargy" value="Yes" class="toggle-sleep" data-target="lethargy_detail"> 有</label>
-                            </div>
+            <!-- 右欄 -->
+            <div class="flex flex-col gap-4">
+                <!-- 3. AD8 -->
+                <div class="section-card">
+                    <div class="flex justify-between items-center mb-2 border-b pb-2">
+                        <div class="section-title mb-0 border-none">3. AD8 極早期失智症篩檢</div>
+                        <div class="text-xs bg-blue-50 px-3 py-1 rounded-full font-bold text-blue-700 border border-blue-100 flex items-center" id="ad8_badge">
+                            得分：<span id="ad8_score" class="text-base ml-1">0</span> / 8
                         </div>
-                        <input type="text" id="lethargy_detail" class="input-underline flex-1 opacity-0 transition-opacity" placeholder="頻率/狀況" disabled>
                     </div>
-                    <!-- 失眠 -->
-                    <div class="flex flex-col sm:flex-row sm:items-center gap-3">
-                        <div class="flex items-center min-w-[150px]">
-                            <span class="font-bold mr-4 text-lg w-28">失眠</span>
-                            <div class="flex gap-4">
-                                <label class="w-auto"><input type="radio" name="sleep_insomnia" value="No" class="toggle-sleep" checked> 無</label>
-                                <label class="w-auto"><input type="radio" name="sleep_insomnia" value="Yes" class="toggle-sleep" data-target="insomnia_detail"> 有</label>
-                            </div>
-                        </div>
-                        <input type="text" id="insomnia_detail" class="input-underline flex-1 opacity-0 transition-opacity" placeholder="狀況描述" disabled>
+                    
+                    <div class="grid grid-cols-1 xl:grid-cols-2 gap-1.5 text-sm mt-1">
+                        <label class="hover:bg-gray-50 p-1.5 rounded transition-colors border border-transparent hover:border-gray-200 flex items-start">
+                            <input type="checkbox" class="ad8-item mt-0.5" name="ad8_1"> 
+                            <span class="leading-snug">1. 判斷力困難（落入圈套、財務錯誤）</span>
+                        </label>
+                        <label class="hover:bg-gray-50 p-1.5 rounded transition-colors border border-transparent hover:border-gray-200 flex items-start">
+                            <input type="checkbox" class="ad8-item mt-0.5" name="ad8_2"> 
+                            <span class="leading-snug">2. 對活動和嗜好的興趣降低</span>
+                        </label>
+                        <label class="hover:bg-gray-50 p-1.5 rounded transition-colors border border-transparent hover:border-gray-200 flex items-start">
+                            <input type="checkbox" class="ad8-item mt-0.5" name="ad8_3"> 
+                            <span class="leading-snug">3. 重複相同問題、故事和陳述</span>
+                        </label>
+                        <label class="hover:bg-gray-50 p-1.5 rounded transition-colors border border-transparent hover:border-gray-200 flex items-start">
+                            <input type="checkbox" class="ad8-item mt-0.5" name="ad8_4"> 
+                            <span class="leading-snug">4. 學習使用工具、設備上有困難</span>
+                        </label>
+                        <label class="hover:bg-gray-50 p-1.5 rounded transition-colors border border-transparent hover:border-gray-200 flex items-start">
+                            <input type="checkbox" class="ad8-item mt-0.5" name="ad8_5"> 
+                            <span class="leading-snug">5. 忘記正確的月份和年份</span>
+                        </label>
+                        <label class="hover:bg-gray-50 p-1.5 rounded transition-colors border border-transparent hover:border-gray-200 flex items-start">
+                            <input type="checkbox" class="ad8-item mt-0.5" name="ad8_6"> 
+                            <span class="leading-snug">6. 處理複雜財物有困難（稅單等）</span>
+                        </label>
+                        <label class="hover:bg-gray-50 p-1.5 rounded transition-colors border border-transparent hover:border-gray-200 flex items-start">
+                            <input type="checkbox" class="ad8-item mt-0.5" name="ad8_7"> 
+                            <span class="leading-snug">7. 記住約會的時間有困難</span>
+                        </label>
+                        <label class="hover:bg-gray-50 p-1.5 rounded transition-colors border border-transparent hover:border-gray-200 flex items-start">
+                            <input type="checkbox" class="ad8-item mt-0.5" name="ad8_8"> 
+                            <span class="leading-snug">8. 有持續思考和記憶方面的問題</span>
+                        </label>
                     </div>
-                    <!-- RBD (移除打鬥文字) -->
-                    <div class="flex flex-col sm:flex-row sm:items-center gap-3 md:col-span-2">
-                        <div class="flex items-center min-w-[150px]">
-                            <span class="font-bold mr-4 text-lg w-28">RBD</span>
-                            <div class="flex gap-4">
-                                <label class="w-auto"><input type="radio" name="sleep_rbd" value="No" class="toggle-sleep" checked> 無</label>
-                                <label class="w-auto"><input type="radio" name="sleep_rbd" value="Yes" class="toggle-sleep" data-target="rbd_detail"> 有</label>
+                </div>
+
+                <!-- 5. 睡眠與 BPSD -->
+                <div class="section-card flex-1">
+                    <div class="section-title mb-2">5. 睡眠與精神行為症狀</div>
+                    
+                    <div class="mb-4">
+                        <div class="grid grid-cols-1 xl:grid-cols-3 gap-2">
+                            <!-- 昏睡 -->
+                            <div class="flex items-center gap-1">
+                                <span class="font-bold text-sm w-10">昏睡</span>
+                                <label class="w-auto py-0 text-sm"><input type="radio" name="sleep_lethargy" value="No" class="toggle-sleep" checked> 無</label>
+                                <label class="w-auto py-0 text-sm"><input type="radio" name="sleep_lethargy" value="Yes" class="toggle-sleep" data-target="lethargy_detail"> 有</label>
+                                <input type="text" id="lethargy_detail" class="input-underline flex-1 opacity-0 transition-opacity py-0.5 px-1 text-sm" placeholder="描述" disabled>
+                            </div>
+                            <!-- 失眠 -->
+                            <div class="flex items-center gap-1">
+                                <span class="font-bold text-sm w-10">失眠</span>
+                                <label class="w-auto py-0 text-sm"><input type="radio" name="sleep_insomnia" value="No" class="toggle-sleep" checked> 無</label>
+                                <label class="w-auto py-0 text-sm"><input type="radio" name="sleep_insomnia" value="Yes" class="toggle-sleep" data-target="insomnia_detail"> 有</label>
+                                <input type="text" id="insomnia_detail" class="input-underline flex-1 opacity-0 transition-opacity py-0.5 px-1 text-sm" placeholder="描述" disabled>
+                            </div>
+                            <!-- RBD -->
+                            <div class="flex items-center gap-1">
+                                <span class="font-bold text-sm w-10">RBD</span>
+                                <label class="w-auto py-0 text-sm"><input type="radio" name="sleep_rbd" value="No" class="toggle-sleep" checked> 無</label>
+                                <label class="w-auto py-0 text-sm"><input type="radio" name="sleep_rbd" value="Yes" class="toggle-sleep" data-target="rbd_detail"> 有</label>
+                                <input type="text" id="rbd_detail" class="input-underline flex-1 opacity-0 transition-opacity py-0.5 px-1 text-sm" placeholder="描述" disabled>
                             </div>
                         </div>
-                        <input type="text" id="rbd_detail" class="input-underline flex-1 opacity-0 transition-opacity" placeholder="夢遊/打鬥狀況描述" disabled>
+                    </div>
+
+                    <div class="flex-1 flex flex-col justify-center">
+                        <div class="grid grid-cols-1 xl:grid-cols-2 gap-2">
+                            <!-- 個性改變 -->
+                            <div class="bpsd-row bg-gray-50 p-2 rounded border border-transparent shadow-sm">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-bold text-sm">個性改變</span>
+                                    <div class="flex gap-2">
+                                        <label class="w-auto py-0 text-sm"><input type="radio" name="bpsd_personality" value="No" class="toggle-bpsd" checked> 否</label>
+                                        <label class="w-auto py-0 text-sm"><input type="radio" name="bpsd_personality" value="Yes" class="toggle-bpsd" data-target="pers_detail"> 是</label>
+                                    </div>
+                                </div>
+                                <input type="text" id="pers_detail" class="input-box text-xs hidden mt-1 py-1 px-2" placeholder="詳述...">
+                            </div>
+                            <!-- 不適切行為 -->
+                            <div class="bpsd-row bg-gray-50 p-2 rounded border border-transparent shadow-sm">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-bold text-sm">不適切行為</span>
+                                    <div class="flex gap-2">
+                                        <label class="w-auto py-0 text-sm"><input type="radio" name="bpsd_behavior" value="No" class="toggle-bpsd" checked> 否</label>
+                                        <label class="w-auto py-0 text-sm"><input type="radio" name="bpsd_behavior" value="Yes" class="toggle-bpsd" data-target="behav_detail"> 是</label>
+                                    </div>
+                                </div>
+                                <input type="text" id="behav_detail" class="input-box text-xs hidden mt-1 py-1 px-2" placeholder="詳述...">
+                            </div>
+                            <!-- 語無倫次 -->
+                            <div class="bpsd-row bg-gray-50 p-2 rounded border border-transparent shadow-sm">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-bold text-sm">言語語無倫次</span>
+                                    <div class="flex gap-2">
+                                        <label class="w-auto py-0 text-sm"><input type="radio" name="bpsd_speech" value="No" class="toggle-bpsd" checked> 否</label>
+                                        <label class="w-auto py-0 text-sm"><input type="radio" name="bpsd_speech" value="Yes" class="toggle-bpsd" data-target="speech_detail"> 是</label>
+                                    </div>
+                                </div>
+                                <input type="text" id="speech_detail" class="input-box text-xs hidden mt-1 py-1 px-2" placeholder="詳述...">
+                            </div>
+                            <!-- 視幻覺 (VH) -->
+                            <div class="bpsd-row bg-gray-50 p-2 rounded border border-transparent shadow-sm">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-bold text-sm">視幻覺 (VH)</span>
+                                    <div class="flex gap-2">
+                                        <label class="w-auto py-0 text-sm"><input type="radio" name="bpsd_visual_hallucination" value="No" class="toggle-bpsd" checked> 否</label>
+                                        <label class="w-auto py-0 text-sm"><input type="radio" name="bpsd_visual_hallucination" value="Yes" class="toggle-bpsd" data-target="v_hallu_detail"> 是</label>
+                                    </div>
+                                </div>
+                                <input type="text" id="v_hallu_detail" class="input-box text-xs hidden mt-1 py-1 px-2" placeholder="詳述...">
+                            </div>
+                            <!-- 聽幻覺 (AH) -->
+                            <div class="bpsd-row bg-gray-50 p-2 rounded border border-transparent shadow-sm">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-bold text-sm">聽幻覺 (AH)</span>
+                                    <div class="flex gap-2">
+                                        <label class="w-auto py-0 text-sm"><input type="radio" name="bpsd_auditory_hallucination" value="No" class="toggle-bpsd" checked> 否</label>
+                                        <label class="w-auto py-0 text-sm"><input type="radio" name="bpsd_auditory_hallucination" value="Yes" class="toggle-bpsd" data-target="a_hallu_detail"> 是</label>
+                                    </div>
+                                </div>
+                                <input type="text" id="a_hallu_detail" class="input-box text-xs hidden mt-1 py-1 px-2" placeholder="詳述...">
+                            </div>
+                            <!-- 妄想 -->
+                            <div class="bpsd-row bg-gray-50 p-2 rounded border border-transparent shadow-sm">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-bold text-sm">妄想(被害/偷)</span>
+                                    <div class="flex gap-2">
+                                        <label class="w-auto py-0 text-sm"><input type="radio" name="bpsd_delusion" value="No" class="toggle-bpsd" checked> 否</label>
+                                        <label class="w-auto py-0 text-sm"><input type="radio" name="bpsd_delusion" value="Yes" class="toggle-bpsd" data-target="delu_detail"> 是</label>
+                                    </div>
+                                </div>
+                                <input type="text" id="delu_detail" class="input-box text-xs hidden mt-1 py-1 px-2" placeholder="詳述...">
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-
-            <div>
-                <h4 class="font-bold text-gray-600 text-lg mb-5 border-b pb-2">精神行為 (BPSD)</h4>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- 個性改變 -->
-                    <div class="bpsd-row bg-gray-50 p-5 rounded-xl border border-transparent shadow-sm">
-                        <div class="flex justify-between items-center mb-4">
-                            <span class="font-bold text-lg">個性改變</span>
-                            <div class="flex gap-4">
-                                <label class="w-auto mr-2"><input type="radio" name="bpsd_personality" value="No" class="toggle-bpsd" checked> 否</label>
-                                <label class="w-auto"><input type="radio" name="bpsd_personality" value="Yes" class="toggle-bpsd" data-target="pers_detail"> 是</label>
-                            </div>
-                        </div>
-                        <input type="text" id="pers_detail" class="input-box text-base hidden" placeholder="詳述改變...">
-                    </div>
-
-                    <!-- 不適切行為 -->
-                    <div class="bpsd-row bg-gray-50 p-5 rounded-xl border border-transparent shadow-sm">
-                        <div class="flex justify-between items-center mb-4">
-                            <span class="font-bold text-lg">不適切行為</span>
-                            <div class="flex gap-4">
-                                <label class="w-auto mr-2"><input type="radio" name="bpsd_behavior" value="No" class="toggle-bpsd" checked> 否</label>
-                                <label class="w-auto"><input type="radio" name="bpsd_behavior" value="Yes" class="toggle-bpsd" data-target="behav_detail"> 是</label>
-                            </div>
-                        </div>
-                        <input type="text" id="behav_detail" class="input-box text-base hidden" placeholder="詳述行為...">
-                    </div>
-
-                    <!-- 語無倫次 -->
-                    <div class="bpsd-row bg-gray-50 p-5 rounded-xl border border-transparent shadow-sm">
-                        <div class="flex justify-between items-center mb-4">
-                            <span class="font-bold text-lg">言語語無倫次</span>
-                            <div class="flex gap-4">
-                                <label class="w-auto mr-2"><input type="radio" name="bpsd_speech" value="No" class="toggle-bpsd" checked> 否</label>
-                                <label class="w-auto"><input type="radio" name="bpsd_speech" value="Yes" class="toggle-bpsd" data-target="speech_detail"> 是</label>
-                            </div>
-                        </div>
-                        <input type="text" id="speech_detail" class="input-box text-base hidden" placeholder="詳述...">
-                    </div>
-
-                    <!-- 視幻覺 (VH) -->
-                    <div class="bpsd-row bg-gray-50 p-5 rounded-xl border border-transparent shadow-sm">
-                        <div class="flex justify-between items-center mb-4">
-                            <span class="font-bold text-lg">視幻覺 (VH)</span>
-                            <div class="flex gap-4">
-                                <label class="w-auto mr-2"><input type="radio" name="bpsd_visual_hallucination" value="No" class="toggle-bpsd" checked> 否</label>
-                                <label class="w-auto"><input type="radio" name="bpsd_visual_hallucination" value="Yes" class="toggle-bpsd" data-target="v_hallu_detail"> 是</label>
-                            </div>
-                        </div>
-                        <input type="text" id="v_hallu_detail" class="input-box text-base hidden" placeholder="詳述視幻覺...">
-                    </div>
-
-                    <!-- 聽幻覺 (AH) -->
-                    <div class="bpsd-row bg-gray-50 p-5 rounded-xl border border-transparent shadow-sm">
-                        <div class="flex justify-between items-center mb-4">
-                            <span class="font-bold text-lg">聽幻覺 (AH)</span>
-                            <div class="flex gap-4">
-                                <label class="w-auto mr-2"><input type="radio" name="bpsd_auditory_hallucination" value="No" class="toggle-bpsd" checked> 否</label>
-                                <label class="w-auto"><input type="radio" name="bpsd_auditory_hallucination" value="Yes" class="toggle-bpsd" data-target="a_hallu_detail"> 是</label>
-                            </div>
-                        </div>
-                        <input type="text" id="a_hallu_detail" class="input-box text-base hidden" placeholder="詳述聽幻覺...">
-                    </div>
-
-                    <!-- 妄想 -->
-                    <div class="bpsd-row bg-gray-50 p-5 rounded-xl border border-transparent shadow-sm">
-                        <div class="flex justify-between items-center mb-4">
-                            <span class="font-bold text-lg">妄想 (被害/被偷)</span>
-                            <div class="flex gap-4">
-                                <label class="w-auto mr-2"><input type="radio" name="bpsd_delusion" value="No" class="toggle-bpsd" checked> 否</label>
-                                <label class="w-auto"><input type="radio" name="bpsd_delusion" value="Yes" class="toggle-bpsd" data-target="delu_detail"> 是</label>
-                            </div>
-                        </div>
-                        <input type="text" id="delu_detail" class="input-box text-base hidden" placeholder="詳述妄想內容...">
-                    </div>
-                </div>
-            </div>
         </div>
 
-        <!-- 摘要區塊 (靜態底部) -->
-        <div class="mt-12 pt-8 border-t-2 border-dashed border-gray-300 pb-12">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-gray-800">English Note (Summary)</h2>
-                <button type="button" onclick="copySummary()" class="bg-gray-800 hover:bg-black text-white px-8 py-3 rounded-lg shadow-lg transition-all active:scale-95 text-lg font-semibold">
+        <!-- 摘要區塊 (固定於底部) -->
+        <div class="bg-gray-100 rounded-xl p-3 shrink-0 shadow-inner border border-gray-200 mt-1">
+            <div class="flex justify-between items-center mb-1">
+                <h2 class="text-sm font-bold text-gray-800">English Note (Summary)</h2>
+                <button type="button" onclick="copySummary()" class="bg-gray-800 hover:bg-black text-white px-4 py-1.5 rounded shadow transition-all active:scale-95 text-xs font-semibold">
                     複製摘要 (Copy)
                 </button>
             </div>
-            <textarea id="summaryOutput" rows="8" class="w-full bg-white border border-gray-300 rounded-xl p-6 font-mono text-base leading-relaxed text-gray-700 focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none shadow-inner" readonly></textarea>
+            <textarea id="summaryOutput" rows="3" class="w-full bg-white border border-gray-300 rounded p-2 font-mono text-sm leading-relaxed text-gray-700 focus:ring-2 focus:ring-blue-100 outline-none resize-none" readonly></textarea>
         </div>
 
     </form>
@@ -575,7 +538,6 @@
             document.querySelectorAll('input[type="radio"][name]').forEach(radio => {
                 radio.addEventListener('change', (e) => {
                     const name = e.target.name;
-                    // Find if there's an "Other" option in this group
                     const otherRadio = document.querySelector(`input[name="${name}"].toggle-other`);
                     if (otherRadio) {
                         const targetId = otherRadio.getAttribute('data-target');
@@ -588,7 +550,7 @@
                             } else {
                                 targetInput.disabled = true;
                                 targetInput.classList.add('opacity-50');
-                                targetInput.value = ''; // Optional: clear when unchecked
+                                targetInput.value = ''; 
                             }
                         }
                     }
@@ -604,7 +566,7 @@
                         if (e.target.checked) {
                             target.disabled = false;
                             target.classList.remove('opacity-50', 'disabled:cursor-not-allowed');
-                            target.classList.add('show'); // For reveal-input class
+                            target.classList.add('show');
                             target.focus();
                         } else {
                             target.disabled = true;
@@ -620,13 +582,12 @@
             document.querySelectorAll('.toggle-sleep').forEach(radio => {
                 radio.addEventListener('change', (e) => {
                    const targetId = e.target.getAttribute('data-target');
-                   if(targetId) { // This is the "Yes" button
+                   if(targetId) {
                        const input = document.getElementById(targetId);
                        input.disabled = false;
                        input.classList.remove('opacity-0');
                        input.focus();
-                   } else { // This is the "No" button
-                       // Find sibling yes button to know which input to hide
+                   } else {
                        const name = e.target.name;
                        const yesBtn = document.querySelector(`input[name="${name}"][data-target]`);
                        if(yesBtn) {
@@ -639,14 +600,14 @@
                 });
             });
 
-            // BPSD Inputs Logic (Show/Hide)
+            // BPSD Inputs Logic
             document.querySelectorAll('.toggle-bpsd').forEach(radio => {
                 radio.addEventListener('change', (e) => {
                     const targetId = e.target.getAttribute('data-target');
-                    if(targetId) { // Yes
+                    if(targetId) {
                         document.getElementById(targetId).classList.remove('hidden');
                         document.getElementById(targetId).focus();
-                    } else { // No
+                    } else {
                         const name = e.target.name;
                         const yesBtn = document.querySelector(`input[name="${name}"][data-target]`);
                         if(yesBtn) {
@@ -663,7 +624,6 @@
             updateSummary();
         });
 
-        // 皮質功能一鍵填入
         function setValue(inputId, text) {
             const input = document.getElementById(inputId);
             input.value = text;
@@ -676,9 +636,9 @@
             document.getElementById('ad8_score').innerText = score;
             
             if (score >= 2) {
-                badge.className = "text-base bg-red-50 px-5 py-2 rounded-full font-bold text-red-700 transition-colors border border-red-100";
+                badge.className = "text-sm bg-red-50 px-4 py-1.5 rounded-full font-bold text-red-700 transition-colors border border-red-100";
             } else {
-                badge.className = "text-base bg-blue-50 px-5 py-2 rounded-full font-bold text-blue-700 transition-colors border border-blue-100";
+                badge.className = "text-sm bg-blue-50 px-4 py-1.5 rounded-full font-bold text-blue-700 transition-colors border border-blue-100";
             }
             updateSummary();
         }
@@ -705,33 +665,20 @@
         }
 
         function updateSummary() {
-            // Permit
             const permit = document.getElementById('research_consent').checked ? 'Yes' : 'No';
 
-            // Provider
             let provider = getVal('relationship');
             if (provider === 'Other') provider = getText('rel_other');
             
-            // From
             let from = getVal('referral');
             if (from === 'Other') from = getText('ref_other');
 
-            // RxHx (Chinese)
             const meds = getMultiVal('meds') || '無';
-
-            // Major Event (Chinese)
             const events = getMultiVal('events', 'event_other') || '無';
-
-            // EvalFor (Chinese)
             const purpose = getMultiVal('purpose', 'purpose_other') || '無';
-
-            // CC
             const cc = getText('main_problem').replace(/\n/g, ' ');
-
-            // AD8
             const ad8Score = document.getElementById('ad8_score').innerText;
 
-            // Cortical Function (Text Inputs)
             const exec = getText('cortical_exec') || '';
             const behavior = getText('cortical_beha') || '';
             const spatial = getText('cortical_spatial') || '';
@@ -739,7 +686,6 @@
             const mem = getText('cortical_mem') || '';
             const visual = getText('cortical_visual') || '';
 
-            // Sleep
             let sleepStr = [];
             if (getVal('sleep_lethargy') === 'Yes') {
                 let d = getText('lethargy_detail');
@@ -755,7 +701,6 @@
             }
             const sleepLine = sleepStr.length > 0 ? sleepStr.join(', ') : 'No Significant Issue';
 
-            // BPSD Helper
             function getBpsdStr(key, detailId, label) {
                 if (getVal(key) === 'Yes') {
                     let d = getText(detailId);
@@ -778,7 +723,6 @@
             const bpsdFlag = bpsdItems.length > 0 ? '+' : '-';
             const bpsdLine = `BPSD(${bpsdFlag}${bpsdItems.length ? ', ' + bpsdItems.join(', ') : ''})`;
 
-            // VH (New)
             const vhVal = getVal('bpsd_visual_hallucination');
             let vhStr = 'VH(-)';
             if (vhVal === 'Yes') {
@@ -786,7 +730,6 @@
                 vhStr = `VH(+${d ? ', ['+d+']' : ''})`;
             }
 
-            // AH (New)
             const ahVal = getVal('bpsd_auditory_hallucination');
             let ahStr = 'AH(-)';
             if (ahVal === 'Yes') {
@@ -794,16 +737,14 @@
                 ahStr = `AH(+${d ? ', ['+d+']' : ''})`;
             }
 
-            // Delusion
             const deluVal = getVal('bpsd_delusion');
-            let delu = ', Delusion(-)';
+            let delu = 'Delusion(-)';
             if (deluVal === 'Yes') {
                 let d = getText('delu_detail');
-                delu = `, Delusion(+${d ? ', ['+d+']' : ''})`;
+                delu = `Delusion(+${d ? ', ['+d+']' : ''})`;
             }
 
-            // Final String Construction
-            const summary = `Dementia (permit: ${permit}), Provider=${provider}, From =${from}, RxHx=${meds}, Major event=${events}, EvalFor=${purpose}, CC=${cc}, AD8=${ad8Score}, Exec=${exec}, Spatial=${spatial}, Mem=${mem}, Beha=${behavior}, Lang=${lang}, Visual=${visual}, Sleep (${sleepLine}), ${bpsdLine}, ${vhStr}, ${ahStr}${delu}`;
+            const summary = `Dementia (permit: ${permit}), Provider=${provider}, From =${from}, RxHx=${meds}, Major event=${events}, EvalFor=${purpose}, CC=${cc}, AD8=${ad8Score}, Exec=${exec}, Spatial=${spatial}, Mem=${mem}, Beha=${behavior}, Lang=${lang}, Visual=${visual}, Sleep (${sleepLine}), ${bpsdLine}, ${vhStr}, ${ahStr}, ${delu}`;
 
             document.getElementById('summaryOutput').value = summary;
         }
