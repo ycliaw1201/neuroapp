@@ -12,193 +12,227 @@
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        /* 隱藏原生單選框，但保留功能 */
+        .custom-radio:checked + span {
+            background-color: #eff6ff; /* blue-50 */
+            border-color: #3b82f6; /* blue-500 */
+            color: #1e40af; /* blue-800 */
+            font-weight: 500;
+        }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen">
+<body class="bg-slate-100 text-slate-800 min-h-screen">
 
-    <div class="max-w-4xl mx-auto px-4 py-8">
-        <div class="flex flex-col gap-8">
+    <div class="max-w-[1400px] mx-auto px-4 py-6">
+        
+        <!-- 上方動作區塊 -->
+        <div class="mb-6 flex justify-end">
+            <button onclick="window.location.reload()" class="flex items-center justify-center gap-2 px-4 py-2 bg-white hover:bg-slate-50 text-slate-600 rounded-xl text-sm font-medium transition-colors border border-slate-200 shadow-sm w-full md:w-auto">
+                <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                <span>重新填寫 (Reset)</span>
+            </button>
+        </div>
+
+        <!-- 三欄式主要內容區 -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
             
-            <!-- 上半部：輸入表單 -->
-            <div class="space-y-6">
-                <header class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                    <div class="flex items-center gap-3 mb-2">
-                        <i data-lucide="stethoscope" class="text-blue-600 w-8 h-8"></i>
-                        <h1 class="text-2xl font-bold text-slate-900">一般頭暈初診問卷</h1>
+            <!-- 【第一欄】 症狀類型與發生時間 -->
+            <div class="space-y-5 flex flex-col">
+                
+                <!-- 1. Symptom Type -->
+                <section class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                    <h2 class="text-base font-semibold mb-4 flex items-center gap-2">
+                        <span class="bg-blue-100 text-blue-700 w-6 h-6 rounded-full flex items-center justify-center text-xs">1</span>
+                        症狀類型 (最符合的一項)
+                    </h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2" id="symptom-type-group">
+                        <label class="relative cursor-pointer">
+                            <input type="radio" name="symptomType" value="lightheadedness" class="custom-radio sr-only">
+                            <span class="flex items-center p-2.5 rounded-xl border border-slate-200 text-sm hover:bg-slate-50 transition-all h-full">頭重腳輕 (Lightheaded)</span>
+                        </label>
+                        <label class="relative cursor-pointer">
+                            <input type="radio" name="symptomType" value="falling" class="custom-radio sr-only">
+                            <span class="flex items-center p-2.5 rounded-xl border border-slate-200 text-sm hover:bg-slate-50 transition-all h-full">快跌倒感 (Falling)</span>
+                        </label>
+                        <label class="relative cursor-pointer">
+                            <input type="radio" name="symptomType" value="balance" class="custom-radio sr-only">
+                            <span class="flex items-center p-2.5 rounded-xl border border-slate-200 text-sm hover:bg-slate-50 transition-all h-full">走路不平衡 (Balance)</span>
+                        </label>
+                        <label class="relative cursor-pointer">
+                            <input type="radio" name="symptomType" value="externalVertigo" class="custom-radio sr-only">
+                            <span class="flex items-center p-2.5 rounded-xl border border-slate-200 text-sm hover:bg-slate-50 transition-all h-full">環境旋轉 (Ext. vertigo)</span>
+                        </label>
+                        <label class="relative cursor-pointer">
+                            <input type="radio" name="symptomType" value="internalVertigo" class="custom-radio sr-only">
+                            <span class="flex items-center p-2.5 rounded-xl border border-slate-200 text-sm hover:bg-slate-50 transition-all h-full">自身旋轉 (Int. vertigo)</span>
+                        </label>
+                        <label class="relative cursor-pointer">
+                            <input type="radio" name="symptomType" value="environmentMoving" class="custom-radio sr-only">
+                            <span class="flex items-center p-2.5 rounded-xl border border-slate-200 text-sm hover:bg-slate-50 transition-all h-full">視野晃動 (Moving)</span>
+                        </label>
+                        <label class="relative cursor-pointer sm:col-span-2">
+                            <input type="radio" name="symptomType" value="other" class="custom-radio sr-only">
+                            <span class="flex items-center p-2.5 rounded-xl border border-slate-200 text-sm hover:bg-slate-50 transition-all">其他 (Other)</span>
+                        </label>
                     </div>
-                    <p class="text-slate-500">請輸入病患填寫的資料，下方將即時生成英文摘要。</p>
-                </header>
-
-                <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-200 space-y-8">
                     
-                    <!-- 1. Symptom Type -->
-                    <section>
-                        <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
-                            <span class="bg-blue-100 text-blue-700 w-6 h-6 rounded-full flex items-center justify-center text-xs">1</span>
-                            症狀類型 (最符合的一項)
-                        </h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="symptom-type-group">
-                            <label class="flex items-center p-3 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50 transition-all has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
-                                <input type="radio" name="symptomType" value="lightheadedness" class="mr-3 w-4 h-4 text-blue-600">
-                                <span class="text-sm">頭重腳輕 (Lightheadedness)</span>
-                            </label>
-                            <label class="flex items-center p-3 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50 transition-all has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
-                                <input type="radio" name="symptomType" value="falling" class="mr-3 w-4 h-4 text-blue-600">
-                                <span class="text-sm">快跌倒的感覺 (Falling tendency)</span>
-                            </label>
-                            <label class="flex items-center p-3 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50 transition-all has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
-                                <input type="radio" name="symptomType" value="balance" class="mr-3 w-4 h-4 text-blue-600">
-                                <span class="text-sm">走路不平衡 (Loss of balance)</span>
-                            </label>
-                            <label class="flex items-center p-3 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50 transition-all has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
-                                <input type="radio" name="symptomType" value="externalVertigo" class="mr-3 w-4 h-4 text-blue-600">
-                                <span class="text-sm">環境在旋轉 (External vertigo)</span>
-                            </label>
-                            <label class="flex items-center p-3 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50 transition-all has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
-                                <input type="radio" name="symptomType" value="internalVertigo" class="mr-3 w-4 h-4 text-blue-600">
-                                <span class="text-sm">自身在旋轉 (Internal vertigo)</span>
-                            </label>
-                            <label class="flex items-center p-3 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50 transition-all has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
-                                <input type="radio" name="symptomType" value="environmentMoving" class="mr-3 w-4 h-4 text-blue-600">
-                                <span class="text-sm">視野晃動 (Environment moving)</span>
-                            </label>
-                            <label class="flex items-center p-3 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50 transition-all has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 md:col-span-2">
-                                <input type="radio" name="symptomType" value="other" class="mr-3 w-4 h-4 text-blue-600">
-                                <span class="text-sm">其他 (Other)</span>
-                            </label>
-                        </div>
-                        
-                        <!-- 其他症狀文字框 -->
-                        <div id="symptom-other-sub" class="hidden mt-3">
-                            <input type="text" id="symptom-other-val" placeholder="請輸入其他症狀描述..." class="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                        </div>
+                    <!-- 其他症狀文字框 -->
+                    <div id="symptom-other-sub" class="hidden mt-3">
+                        <input type="text" id="symptom-other-val" placeholder="請輸入其他症狀描述..." class="w-full p-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50">
+                    </div>
 
-                        <!-- Direction Sub-questions -->
-                        <div id="direction-sub" class="hidden mt-4 p-4 bg-slate-50 rounded-xl border border-dashed border-slate-300">
-                            <p class="text-sm font-medium mb-3">偏向哪一邊？</p>
-                            <div class="flex flex-wrap gap-2">
-                                <button type="button" onclick="setDirection('前')" class="dir-btn px-4 py-1.5 rounded-full border bg-white text-sm hover:border-blue-500 transition-colors">前</button>
-                                <button type="button" onclick="setDirection('後')" class="dir-btn px-4 py-1.5 rounded-full border bg-white text-sm hover:border-blue-500 transition-colors">後</button>
-                                <button type="button" onclick="setDirection('左')" class="dir-btn px-4 py-1.5 rounded-full border bg-white text-sm hover:border-blue-500 transition-colors">左</button>
-                                <button type="button" onclick="setDirection('右')" class="dir-btn px-4 py-1.5 rounded-full border bg-white text-sm hover:border-blue-500 transition-colors">右</button>
-                                <button type="button" onclick="setDirection('不確定')" class="dir-btn px-4 py-1.5 rounded-full border bg-white text-sm hover:border-blue-500 transition-colors">不確定</button>
-                                <button type="button" onclick="setDirection('不定向')" class="dir-btn px-4 py-1.5 rounded-full border bg-white text-sm hover:border-blue-500 transition-colors">不定向</button>
-                            </div>
+                    <!-- Direction Sub-questions -->
+                    <div id="direction-sub" class="hidden mt-4 p-4 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+                        <p class="text-sm font-medium mb-3 text-slate-700">偏向哪一邊？</p>
+                        <div class="flex flex-wrap gap-2">
+                            <button type="button" onclick="setDirection('前')" class="dir-btn px-3 py-1.5 rounded-lg border bg-white text-sm hover:border-blue-500 transition-colors">前</button>
+                            <button type="button" onclick="setDirection('後')" class="dir-btn px-3 py-1.5 rounded-lg border bg-white text-sm hover:border-blue-500 transition-colors">後</button>
+                            <button type="button" onclick="setDirection('左')" class="dir-btn px-3 py-1.5 rounded-lg border bg-white text-sm hover:border-blue-500 transition-colors">左</button>
+                            <button type="button" onclick="setDirection('右')" class="dir-btn px-3 py-1.5 rounded-lg border bg-white text-sm hover:border-blue-500 transition-colors">右</button>
+                            <button type="button" onclick="setDirection('不確定')" class="dir-btn px-3 py-1.5 rounded-lg border bg-white text-sm hover:border-blue-500 transition-colors">不確定</button>
+                            <button type="button" onclick="setDirection('不定向')" class="dir-btn px-3 py-1.5 rounded-lg border bg-white text-sm hover:border-blue-500 transition-colors">不定向</button>
                         </div>
-                    </section>
+                    </div>
+                </section>
 
-                    <!-- 2. Onset -->
-                    <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- 2. Onset -->
+                <section class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                    <h2 class="text-base font-semibold mb-4 flex items-center gap-2">
+                        <span class="bg-blue-100 text-blue-700 w-6 h-6 rounded-full flex items-center justify-center text-xs">2</span>
+                        發生時間與次數
+                    </h2>
+                    <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <h2 class="text-lg font-semibold mb-4">2. 第一次發生的時間</h2>
-                            <input type="text" id="first-onset" placeholder="如：2023年10月" class="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <label class="block text-sm text-slate-600 mb-1">首次發生時間</label>
+                            <input type="text" id="first-onset" placeholder="如: 2023年10月" class="w-full p-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                         </div>
                         <div>
-                            <h2 class="text-lg font-semibold mb-4">這次是第幾次發生？</h2>
-                            <input type="number" id="episode-count" placeholder="次數" class="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <label class="block text-sm text-slate-600 mb-1">本次是第幾次</label>
+                            <input type="number" id="episode-count" placeholder="次數" class="w-full p-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                         </div>
-                    </section>
+                    </div>
+                </section>
 
-                    <!-- 3. Frequency & Duration -->
-                    <section>
-                        <h2 class="text-lg font-semibold mb-4">3. 發生模式與持續時間</h2>
-                        <div class="flex flex-col sm:flex-row gap-3 mb-5">
-                            <label class="flex-1 text-center p-3 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50 transition-all has-[:checked]:border-blue-500 has-[:checked]:bg-blue-100 has-[:checked]:text-blue-800 has-[:checked]:font-medium">
-                                <input type="radio" name="pattern" value="episodic" checked class="hidden">
-                                一陣一陣 (Episodic)
-                            </label>
-                            <label class="flex-1 text-center p-3 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50 transition-all has-[:checked]:border-blue-500 has-[:checked]:bg-blue-100 has-[:checked]:text-blue-800 has-[:checked]:font-medium">
-                                <input type="radio" name="pattern" value="constant" class="hidden">
-                                持續存在 (Constant)
-                            </label>
+                <!-- 3. Frequency & Duration -->
+                <section class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                    <h2 class="text-base font-semibold mb-4 flex items-center gap-2">
+                        <span class="bg-blue-100 text-blue-700 w-6 h-6 rounded-full flex items-center justify-center text-xs">3</span>
+                        發生模式與持續時間
+                    </h2>
+                    <div class="flex gap-2 mb-4">
+                        <label class="flex-1 text-center cursor-pointer">
+                            <input type="radio" name="pattern" value="episodic" checked class="custom-radio sr-only">
+                            <span class="block p-2.5 rounded-xl border border-slate-200 text-sm hover:bg-slate-50 transition-all">一陣一陣 (Episodic)</span>
+                        </label>
+                        <label class="flex-1 text-center cursor-pointer">
+                            <input type="radio" name="pattern" value="constant" class="custom-radio sr-only">
+                            <span class="block p-2.5 rounded-xl border border-slate-200 text-sm hover:bg-slate-50 transition-all">持續存在 (Constant)</span>
+                        </label>
+                    </div>
+                    
+                    <div id="episodic-details" class="flex flex-col gap-3 p-4 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="text-sm text-slate-700 font-medium w-16">持續：</span>
+                            <input type="text" id="duration-val" placeholder="數字" class="w-16 p-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <select id="duration-unit" class="p-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none flex-1">
+                                <option value="seconds">秒</option>
+                                <option value="minutes" selected>分鐘</option>
+                                <option value="hours">小時</option>
+                                <option value="days">天</option>
+                            </select>
                         </div>
-                        <div id="episodic-details" class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-slate-50 rounded-xl border border-dashed border-slate-300">
-                            <div class="flex items-center gap-2">
-                                <span class="text-sm text-slate-700 whitespace-nowrap font-medium">每次持續：</span>
-                                <input type="text" id="duration-val" class="w-20 p-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                                <select id="duration-unit" class="p-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                                    <option value="seconds">秒</option>
-                                    <option value="minutes">分</option>
-                                    <option value="hours">小時</option>
-                                    <option value="days">天</option>
-                                </select>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <span class="text-sm text-slate-700 whitespace-nowrap font-medium">頻率：約</span>
-                                <input type="text" id="freq-val" class="w-20 p-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                                <select id="freq-unit" class="p-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                                    <option value="day">天一次</option>
-                                    <option value="week">週一次</option>
-                                    <option value="month">月一次</option>
-                                </select>
-                            </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="text-sm text-slate-700 font-medium w-16">頻率約：</span>
+                            <input type="text" id="freq-val" placeholder="數字" class="w-16 p-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <select id="freq-unit" class="p-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none flex-1">
+                                <option value="day">次 / 天</option>
+                                <option value="week">次 / 週</option>
+                                <option value="month" selected>次 / 月</option>
+                            </select>
                         </div>
-                    </section>
-
-                    <!-- 4. Associated Symptoms -->
-                    <section>
-                        <h2 class="text-lg font-semibold mb-4">4. 伴隨症狀 (複選)</h2>
-                        <div class="flex flex-wrap gap-2 mb-3" id="associated-container">
-                            <!-- Buttons populated by JS -->
-                        </div>
-                        <div>
-                            <input type="text" id="associated-other" placeholder="其他伴隨症狀 (自由填寫)..." class="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                        </div>
-                    </section>
-
-                    <!-- 5. Triggers -->
-                    <section>
-                        <h2 class="text-lg font-semibold mb-4">5. 誘發因子 (複選)</h2>
-                        <div class="flex flex-wrap gap-2 mb-3" id="trigger-container">
-                            <!-- Buttons populated by JS -->
-                        </div>
-                        <div>
-                            <input type="text" id="trigger-other" placeholder="其他誘發因子 (自由填寫)..." class="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                        </div>
-                    </section>
-
-                    <!-- 6. Better/Worse -->
-                    <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <h2 class="text-lg font-semibold mb-4">6. 什麼狀況下較好？</h2>
-                            <input type="text" id="relieving" placeholder="如：平躺、閉眼" class="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                        </div>
-                        <div>
-                            <h2 class="text-lg font-semibold mb-4">什麼狀況會惡化？</h2>
-                            <input type="text" id="aggravating" placeholder="如：轉頭、光線" class="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                        </div>
-                    </section>
-
-                </div>
+                    </div>
+                </section>
             </div>
 
-            <!-- 下半部：Note Summary -->
-            <div class="space-y-4">
-                <div class="bg-slate-900 rounded-2xl shadow-xl p-6 text-white">
-                    <div class="flex items-center justify-between mb-4 border-b border-slate-700 pb-4">
-                        <h2 class="text-xl font-bold flex items-center gap-2">
-                            <i data-lucide="file-text" class="w-6 h-6 text-blue-400"></i>
+            <!-- 【第二欄】 伴隨症狀與誘發因子 -->
+            <div class="space-y-5 flex flex-col">
+                
+                <!-- 4. Associated Symptoms -->
+                <section class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                    <h2 class="text-base font-semibold mb-4 flex items-center gap-2">
+                        <span class="bg-blue-100 text-blue-700 w-6 h-6 rounded-full flex items-center justify-center text-xs">4</span>
+                        伴隨症狀 (可複選)
+                    </h2>
+                    <div class="flex flex-wrap gap-2 mb-3" id="associated-container">
+                        <!-- Buttons populated by JS -->
+                    </div>
+                    <div>
+                        <input type="text" id="associated-other" placeholder="其他伴隨症狀 (自由填寫)..." class="w-full p-2.5 border border-slate-200 bg-slate-50 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none mt-1">
+                    </div>
+                </section>
+
+                <!-- 5. Triggers -->
+                <section class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                    <h2 class="text-base font-semibold mb-4 flex items-center gap-2">
+                        <span class="bg-blue-100 text-blue-700 w-6 h-6 rounded-full flex items-center justify-center text-xs">5</span>
+                        誘發因子 (可複選)
+                    </h2>
+                    <div class="flex flex-wrap gap-2 mb-3" id="trigger-container">
+                        <!-- Buttons populated by JS -->
+                    </div>
+                    <div>
+                        <input type="text" id="trigger-other" placeholder="其他誘發因子 (自由填寫)..." class="w-full p-2.5 border border-slate-200 bg-slate-50 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none mt-1">
+                    </div>
+                </section>
+
+                <!-- 6. Better/Worse -->
+                <section class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                    <h2 class="text-base font-semibold mb-4 flex items-center gap-2">
+                        <span class="bg-blue-100 text-blue-700 w-6 h-6 rounded-full flex items-center justify-center text-xs">6</span>
+                        舒緩與惡化因素
+                    </h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm text-slate-600 mb-1">什麼狀況下較好？ (Relieving)</label>
+                            <input type="text" id="relieving" placeholder="如：平躺、閉眼" class="w-full p-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-slate-600 mb-1">什麼狀況會惡化？ (Aggravating)</label>
+                            <input type="text" id="aggravating" placeholder="如：轉頭、光線" class="w-full p-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- 【第三欄】 Note Summary (Sticky) -->
+            <div class="lg:sticky lg:top-6 flex flex-col h-full lg:h-[calc(100vh-8rem)]">
+                <div class="bg-slate-900 rounded-2xl shadow-xl flex flex-col h-full border border-slate-800">
+                    
+                    <!-- 標題與複製按鈕 -->
+                    <div class="flex items-center justify-between p-4 border-b border-slate-800 bg-slate-900/50 rounded-t-2xl shrink-0">
+                        <h2 class="text-base font-bold flex items-center gap-2 text-white">
+                            <i data-lucide="file-text" class="w-4 h-4 text-blue-400"></i>
                             Note Summary
                         </h2>
-                        <div class="flex gap-3">
-                            <button onclick="window.location.reload()" class="flex items-center gap-2 px-3 py-1.5 bg-red-900/40 hover:bg-red-900/60 text-red-300 rounded-lg text-sm transition-colors">
-                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                <span>Reset</span>
-                            </button>
-                            <button onclick="copySummary()" class="flex items-center gap-2 px-4 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-medium transition-colors">
-                                <i data-lucide="copy" id="copy-icon" class="w-4 h-4"></i>
-                                <span id="copy-text">Copy</span>
-                            </button>
+                        <button onclick="copySummary()" class="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors shadow-sm">
+                            <i data-lucide="copy" id="copy-icon" class="w-4 h-4"></i>
+                            <span id="copy-text">Copy</span>
+                        </button>
+                    </div>
+
+                    <!-- 成功訊息 -->
+                    <div id="copy-message" class="hidden bg-emerald-500 text-white px-4 py-2 text-center text-sm font-medium transition-all shrink-0">
+                        ✓ Note Summary 已成功複製！
+                    </div>
+
+                    <!-- 輸出結果 (Scrollable) -->
+                    <div class="p-4 flex-1 overflow-y-auto custom-scrollbar">
+                        <div id="summary-output" class="text-[13px] leading-relaxed whitespace-pre-wrap font-mono text-slate-300">
+                            Patient presents with dizziness. Initial assessment...
                         </div>
                     </div>
 
-                    <div id="summary-output" class="bg-slate-800/50 border border-slate-700 rounded-xl p-5 text-[15px] leading-relaxed min-h-[250px] whitespace-pre-wrap font-mono text-slate-200">
-                        Patient presents with dizziness. Initial assessment...
-                    </div>
-
-                    <div id="copy-message" class="hidden mt-4 bg-emerald-500 text-white p-3 rounded-xl text-center text-sm font-medium transition-all">
-                        ✓ Note Summary 已成功複製到剪貼簿！
-                    </div>
                 </div>
             </div>
 
@@ -275,7 +309,7 @@
             const container = document.getElementById(containerId);
             options.forEach(opt => {
                 const btn = document.createElement('button');
-                btn.className = 'px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white transition-all hover:bg-slate-50 text-slate-700';
+                btn.className = 'px-3 py-1.5 rounded-lg border border-slate-200 text-sm bg-white transition-all hover:bg-slate-50 text-slate-700 shadow-sm';
                 btn.innerText = opt.zh;
                 btn.onclick = () => {
                     const index = state[stateKey].indexOf(opt.en);
@@ -342,22 +376,19 @@
                 btn.classList.toggle('text-blue-800', btn.innerText === d);
                 btn.classList.toggle('border-blue-400', btn.innerText === d);
                 btn.classList.toggle('font-medium', btn.innerText === d);
-                
-                // Remove older classes in case they were stuck
-                btn.classList.remove('bg-blue-600', 'text-white'); 
             });
             updateSummary();
         }
 
         function updateSummary() {
-            let summary = "Patient presents with dizziness. \n\n";
+            let summary = "Patient presents with dizziness.\n\n";
 
             // 1. Symptom Type
             if (state.symptomType) {
                 if (state.symptomType === 'other') {
-                    summary += `[Symptom] Primary symptom: ${state.symptomTypeOther || 'Not specified'}. \n`;
+                    summary += `[Symptom] Primary symptom: ${state.symptomTypeOther || 'Not specified'}.\n`;
                 } else {
-                    summary += `[Symptom] Primary symptom: ${symptomMap[state.symptomType]}. \n`;
+                    summary += `[Symptom] Primary symptom: ${symptomMap[state.symptomType]}.\n`;
                 }
                 
                 if (['falling', 'balance'].includes(state.symptomType) && state.direction) {
@@ -369,13 +400,13 @@
                         '不確定': 'unsure direction',
                         '不定向': 'non-directional'
                     };
-                    summary += `          (Direction: ${dMap[state.direction] || state.direction}) \n`;
+                    summary += `          (Direction: ${dMap[state.direction] || state.direction})\n`;
                 }
             }
 
             // 2. Onset & Pattern
-            summary += `[History] Onset: ${state.firstOnset || 'Not specified'}. Episode count: ${state.episodeCount || '1'}. \n`;
-            summary += `          Pattern: ${state.pattern === 'constant' ? 'Constant' : 'Episodic'}. \n`;
+            summary += `[History] Onset: ${state.firstOnset || 'Not specified'}. Episode count: ${state.episodeCount || '1'}.\n`;
+            summary += `          Pattern: ${state.pattern === 'constant' ? 'Constant' : 'Episodic'}.\n`;
 
             if (state.pattern === 'episodic' && state.durationVal) {
                 summary += `          Duration: ~${state.durationVal} ${state.durationUnit}. `;
@@ -389,7 +420,7 @@
             let assocList = associatedOptions.map(opt => {
                 return `${opt.en} (${state.associated.includes(opt.en) ? '+' : '-'})`;
             });
-            summary += `\n[Associated Symptoms]\n${assocList.join(', ')}. \n`;
+            summary += `\n[Associated Symptoms]\n${assocList.join(', ')}.\n`;
             
             if (state.associatedOther) {
                 summary += `Other: ${state.associatedOther}\n`;
@@ -401,22 +432,22 @@
 
             summary += `\n[Triggers & Factors]\n`;
             if (selectedPositional.length === 0) {
-                summary += `Position (-) \n`;
+                summary += `Position (-)\n`;
             } else {
                 const directions = selectedPositional.map(t => t.replace('Positional (', '').replace(')', ''));
-                summary += `Position (+) [${directions.join(', ')}] \n`;
+                summary += `Position (+) [${directions.join(', ')}]\n`;
             }
 
             if (selectedNonPositional.length > 0) {
-                summary += `Other triggers: ${selectedNonPositional.join(', ')} \n`;
+                summary += `Other triggers: ${selectedNonPositional.join(', ')}\n`;
             }
             if (state.triggerOther) {
-                summary += `Additional triggers: ${state.triggerOther} \n`;
+                summary += `Additional triggers: ${state.triggerOther}\n`;
             }
 
             // 5. Relieving / Aggravating
-            if (state.relieving) summary += `Relieved by: ${state.relieving} \n`;
-            if (state.aggravating) summary += `Aggravated by: ${state.aggravating} \n`;
+            if (state.relieving) summary += `Relieved by: ${state.relieving}\n`;
+            if (state.aggravating) summary += `Aggravated by: ${state.aggravating}\n`;
 
             document.getElementById('summary-output').innerText = summary.trim();
         }
@@ -433,7 +464,20 @@
             // UI Feedback
             const msg = document.getElementById('copy-message');
             msg.classList.remove('hidden');
-            setTimeout(() => msg.classList.add('hidden'), 3000);
+            
+            // Change button style briefly
+            const icon = document.getElementById('copy-icon');
+            const textSpan = document.getElementById('copy-text');
+            icon.setAttribute('data-lucide', 'check');
+            textSpan.innerText = 'Copied!';
+            lucide.createIcons();
+
+            setTimeout(() => {
+                msg.classList.add('hidden');
+                icon.setAttribute('data-lucide', 'copy');
+                textSpan.innerText = 'Copy';
+                lucide.createIcons();
+            }, 2500);
         }
 
         window.onload = init;
