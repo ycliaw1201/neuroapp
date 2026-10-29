@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>臨床檢查數據快速整理器 - 醫療報告解析小幫手</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Phosphor Icons for medical and modern UI symbols -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .font-mono-code {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* 自訂滾動條 */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+  <!-- 主要內容區 -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full flex flex-col gap-6">
+
+    <!-- 頂部操作按鈕 -->
+    <div class="flex justify-end items-center">
+      <button id="btn-clear-all" class="px-3.5 py-1.5 rounded-lg border border-red-200 text-red-600 bg-red-50/50 hover:bg-red-50 text-xs font-semibold flex items-center gap-1.5 transition-all">
+        <i class="ph-bold ph-trash"></i>
+        清空全部
+      </button>
+    </div>
+
+    <!-- 上半部：三欄輸入與解析卡片 -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <!-- 1. Holter's Scan 卡片 -->
+      <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm flex flex-col overflow-hidden transition-all focus-within:ring-2 focus-within:ring-blue-500/30">
+        <div class="px-4 py-3 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-6 h-6 rounded-md bg-rose-100 text-rose-600 flex items-center justify-center text-xs font-bold">1</span>
+            <h2 class="text-sm font-bold text-slate-800">Holter's Scan (24h ECG)</h2>
+          </div>
+          <span id="holter-badge" class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">待輸入</span>
+        </div>
+
+        <div class="p-4 flex-1 flex flex-col gap-3">
+          <label class="text-xs font-medium text-slate-500">
+            <span>貼上原始報告文字</span>
+          </label>
+          <textarea id="raw-holter" rows="6" placeholder="請貼報告在此處"
+            class="w-full text-xs font-mono-code p-3 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none"></textarea>
+
+          <!-- 局部編輯與成果 -->
+          <div class="pt-2 border-t border-slate-100 flex flex-col gap-1.5">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-700 flex items-center gap-1">
+                <i class="ph-bold ph-pencil-simple text-blue-500"></i> 解析與微調結果
+              </span>
+              <span class="text-[11px] text-slate-400">可直接手動修改</span>
+            </div>
+            <div class="relative">
+              <span class="absolute left-3 top-2.5 text-xs font-semibold text-slate-400 select-none">Holter's: </span>
+              <input id="parsed-holter-val" type="text"
+                placeholder="xx % of total time in AF/AFL"
+                class="w-full pl-[4.5rem] pr-3 py-2 text-xs font-medium rounded-lg border border-slate-300 bg-amber-50/30 text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all font-mono-code">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. TCD / ECD 卡片 -->
+      <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm flex flex-col overflow-hidden transition-all focus-within:ring-2 focus-within:ring-blue-500/30">
+        <div class="px-4 py-3 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-6 h-6 rounded-md bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold">2</span>
+            <h2 class="text-sm font-bold text-slate-800">TCD / ECD 超音波</h2>
+          </div>
+          <span id="tcd-badge" class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">待輸入</span>
+        </div>
+
+        <div class="p-4 flex-1 flex flex-col gap-3">
+          <label class="text-xs font-medium text-slate-500">
+            <span>貼上原始報告文字</span>
+          </label>
+          <textarea id="raw-tcd" rows="6" placeholder="請貼報告在此處"
+            class="w-full text-xs font-mono-code p-3 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none"></textarea>
+
+          <!-- 局部編輯與成果 -->
+          <div class="pt-2 border-t border-slate-100 flex flex-col gap-1.5">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-700 flex items-center gap-1">
+                <i class="ph-bold ph-pencil-simple text-blue-500"></i> 解析與微調結果
+              </span>
+              <span class="text-[11px] text-slate-400">已自動過濾正常流速/平滑管壁</span>
+            </div>
+            <div class="relative">
+              <span class="absolute left-3 top-2.5 text-xs font-semibold text-slate-400 select-none">TCD/ECD: </span>
+              <textarea id="parsed-tcd-val" rows="2"
+                placeholder="過濾後之異常項目..."
+                class="w-full pl-20 pr-3 py-2 text-xs font-medium rounded-lg border border-slate-300 bg-amber-50/30 text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all font-mono-code resize-none leading-relaxed"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. 心臟超音波 (Echo) 卡片 -->
+      <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm flex flex-col overflow-hidden transition-all focus-within:ring-2 focus-within:ring-blue-500/30">
+        <div class="px-4 py-3 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-6 h-6 rounded-md bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs font-bold">3</span>
+            <h2 class="text-sm font-bold text-slate-800">心臟超音波 (Cardiac Echo)</h2>
+          </div>
+          <span id="echo-badge" class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">待輸入</span>
+        </div>
+
+        <div class="p-4 flex-1 flex flex-col gap-3">
+          <label class="text-xs font-medium text-slate-500">
+            <span>貼上原始報告文字</span>
+          </label>
+          <textarea id="raw-echo" rows="6" placeholder="請貼報告在此處"
+            class="w-full text-xs font-mono-code p-3 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none"></textarea>
+
+          <!-- 局部編輯與成果 -->
+          <div class="pt-2 border-t border-slate-100 flex flex-col gap-1.5">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-700 flex items-center gap-1">
+                <i class="ph-bold ph-pencil-simple text-blue-500"></i> 解析與微調結果
+              </span>
+              <span class="text-[11px] text-slate-400">可調整 LVEF 數值</span>
+            </div>
+            <div class="relative">
+              <span class="absolute left-3 top-2.5 text-xs font-semibold text-slate-400 select-none">Echo: </span>
+              <input id="parsed-echo-val" type="text"
+                placeholder="LVEF = xx%"
+                class="w-full pl-14 pr-3 py-2 text-xs font-medium rounded-lg border border-slate-300 bg-amber-50/30 text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all font-mono-code">
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 下半部：整合成果區塊 (一鍵複製病歷文字) -->
+    <div class="bg-white rounded-2xl border border-blue-200/90 shadow-md p-5 sm:p-6 flex flex-col gap-4 relative overflow-hidden">
+      <div class="absolute -right-16 -top-16 w-48 h-48 bg-blue-50 rounded-full blur-2xl pointer-events-none"></div>
+
+      <div class="flex flex-wrap items-center justify-between gap-3 relative z-10">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-xs">
+            <i class="ph-bold ph-copy-simple text-lg"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-slate-900">病歷整理總結 (Ready to Paste)</h3>
+            <p class="text-xs text-slate-500">三個檢查已合併為標準排版，點擊複製即可貼入病歷系統</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button id="btn-copy-all" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-98 text-white text-xs sm:text-sm font-semibold flex items-center gap-2 shadow-sm shadow-blue-500/30 transition-all">
+            <i class="ph-bold ph-clipboard text-base"></i>
+            <span>複製全部整合文字</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 最終產出預覽與手動微調區 -->
+      <div class="relative z-10">
+        <textarea id="final-output" rows="4"
+          placeholder="解析結果將即時呈現在此處...
+Holter's: xx % of total time in AF/AFL
+TCD/ECD: xxx
+Echo: LVEF = xx%"
+          class="w-full text-sm font-mono-code p-4 rounded-xl border border-slate-200 bg-slate-900 text-emerald-400 shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none leading-relaxed selection:bg-emerald-800 selection:text-white"></textarea>
+      </div>
+
+      <!-- 操作狀態小提醒 / Toast -->
+      <div id="copy-toast" class="hidden items-center gap-2 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3.5 py-2 rounded-lg self-start transition-all">
+        <i class="ph-fill ph-check-circle text-emerald-600 text-base"></i>
+        <span>已成功複製至剪貼簿！可直接切換至病歷介面貼上。</span>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- JavaScript 邏輯 -->
+  <script>
+    // DOM 元素選取
+    const rawHolterEl = document.getElementById('raw-holter');
+    const rawTcdEl = document.getElementById('raw-tcd');
+    const rawEchoEl = document.getElementById('raw-echo');
+
+    const parsedHolterValEl = document.getElementById('parsed-holter-val');
+    const parsedTcdValEl = document.getElementById('parsed-tcd-val');
+    const parsedEchoValEl = document.getElementById('parsed-echo-val');
+
+    const holterBadge = document.getElementById('holter-badge');
+    const tcdBadge = document.getElementById('tcd-badge');
+    const echoBadge = document.getElementById('echo-badge');
+
+    const finalOutputEl = document.getElementById('final-output');
+    const btnCopyAll = document.getElementById('btn-copy-all');
+    const copyToast = document.getElementById('copy-toast');
+    const btnClearAll = document.getElementById('btn-clear-all');
+
+    // ==========================================
+    // 解析函式庫 (Parser Logic)
+    // ==========================================
+
+    /**
+     * 1. Holter 解析器：
+     * 尋找「xx % of total time in AF/AFL」或類似格式
+     */
+    function parseHolter(text) {
+      if (!text || !text.trim()) return '';
+
+      const lines = text.split('\n');
+      for (let rawLine of lines) {
+        const line = rawLine.trim();
+        if (/af\/afl/i.test(line)) {
+          return line.replace(/\s+/g, ' ');
+        }
+      }
+
+      const match = text.match(/([<>]?\s*\d+(?:\.\d+)?\s*%\s*of\s*total\s*time\s*in\s*af\/afl)/i);
+      if (match) {
+        return match[1].trim().replace(/\s+/g, ' ');
+      }
+
+      return '';
+    }
+
+    /**
+     * 2. TCD/ECD 解析器：
+     * - [Doppler], [TCD] 遇到 "No stenotic flow" 則不擷取，其餘異常擷取
+     * - [2D-Echo] 遇到 "Clear vessel walls" 則不擷取，其餘異常擷取
+     */
+    function parseTcdEcd(text) {
+      if (!text || !text.trim()) return '';
+
+      const lines = text.split('\n');
+      let currentSection = '';
+      const abnormalFindings = [];
+
+      for (let line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+
+        if (/^\[Doppler\]/i.test(trimmed)) {
+          currentSection = 'Doppler';
+          continue;
+        } else if (/^\[2D-Echo\]/i.test(trimmed) || /^\[Echo\]/i.test(trimmed)) {
+          currentSection = '2D-Echo';
+          continue;
+        } else if (/^\[TCD\]/i.test(trimmed)) {
+          currentSection = 'TCD';
+          continue;
+        }
+
+        const contentWithoutIndex = trimmed.replace(/^(\d+[\.\)]|\-|\*)\s*/, '').trim();
+
+        let isNormal = false;
+        if (currentSection === 'Doppler' || currentSection === 'TCD') {
+          if (/no\s+stenotic\s+flow/i.test(contentWithoutIndex)) {
+            isNormal = true;
+          }
+        } else if (currentSection === '2D-Echo') {
+          if (/clear\s+vessel\s+walls?/i.test(contentWithoutIndex)) {
+            isNormal = true;
+          }
+        }
+
+        if (/no\s+stenotic\s+flow/i.test(contentWithoutIndex) || /clear\s+vessel\s+walls?/i.test(contentWithoutIndex)) {
+          isNormal = true;
+        }
+
+        if (!isNormal && contentWithoutIndex.length > 0) {
+          abnormalFindings.push(contentWithoutIndex);
+        }
+      }
+
+      if (abnormalFindings.length === 0) {
+        return 'No significant abnormality';
+      }
+
+      return abnormalFindings.join('; ');
+    }
+
+    /**
+     * 3. 心臟超音波 (Echo) 解析器：
+     * 尋找 LVEF: 53% 或 LVEF=53% 或 LVEF 53%
+     */
+    function parseEcho(text) {
+      if (!text || !text.trim()) return '';
+
+      const regex = /LVEF\s*[:=]?\s*([<>]?\s*\d+(?:\.\d+)?)\s*%/i;
+      const match = text.match(regex);
+
+      if (match && match[1]) {
+        const val = match[1].trim();
+        return `LVEF = ${val}%`;
+      }
+
+      const altRegex = /(?:ejection\s+fraction|EF)\s*[:=]?\s*([<>]?\s*\d+(?:\.\d+)?)\s*%/i;
+      const altMatch = text.match(altRegex);
+      if (altMatch && altMatch[1]) {
+        return `LVEF = ${altMatch[1].trim()}%`;
+      }
+
+      return '';
+    }
+
+    // ==========================================
+    // UI 更新與同步 (Sync & Rendering)
+    // ==========================================
+
+    function updateBadge(badgeEl, hasData, label) {
+      if (hasData) {
+        badgeEl.className = "text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200";
+        badgeEl.textContent = label || "已辨識";
+      } else {
+        badgeEl.className = "text-[11px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-500";
+        badgeEl.textContent = "待輸入";
+      }
+    }
+
+    function onHolterInputChange() {
+      const parsed = parseHolter(rawHolterEl.value);
+      parsedHolterValEl.value = parsed;
+      updateBadge(holterBadge, !!parsed, parsed ? "解析成功" : "無匹配");
+      assembleFinalOutput();
+    }
+
+    function onTcdInputChange() {
+      const parsed = parseTcdEcd(rawTcdEl.value);
+      parsedTcdValEl.value = parsed;
+      updateBadge(tcdBadge, !!parsed, parsed ? "異常擷取完成" : "無資料");
+      assembleFinalOutput();
+    }
+
+    function onEchoInputChange() {
+      const parsed = parseEcho(rawEchoEl.value);
+      parsedEchoValEl.value = parsed;
+      updateBadge(echoBadge, !!parsed, parsed ? "LVEF 成功" : "無匹配");
+      assembleFinalOutput();
+    }
+
+    function assembleFinalOutput() {
+      const holterVal = parsedHolterValEl.value.trim();
+      const tcdVal = parsedTcdValEl.value.trim();
+      const echoVal = parsedEchoValEl.value.trim();
+
+      const holterLine = holterVal ? `Holter's: ${holterVal}` : `Holter's: `;
+      const tcdLine = tcdVal ? `TCD/ECD: ${tcdVal}` : `TCD/ECD: `;
+      const echoLine = echoVal ? `Echo: ${echoVal}` : `Echo: `;
+
+      finalOutputEl.value = `${holterLine}\n${tcdLine}\n${echoLine}`;
+    }
+
+    // ==========================================
+    // 事件監聽 (Event Listeners)
+    // ==========================================
+
+    rawHolterEl.addEventListener('input', onHolterInputChange);
+    rawTcdEl.addEventListener('input', onTcdInputChange);
+    rawEchoEl.addEventListener('input', onEchoInputChange);
+
+    parsedHolterValEl.addEventListener('input', assembleFinalOutput);
+    parsedTcdValEl.addEventListener('input', assembleFinalOutput);
+    parsedEchoValEl.addEventListener('input', assembleFinalOutput);
+
+    // 清空全部按鈕
+    btnClearAll.addEventListener('click', () => {
+      rawHolterEl.value = '';
+      rawTcdEl.value = '';
+      rawEchoEl.value = '';
+
+      parsedHolterValEl.value = '';
+      parsedTcdValEl.value = '';
+      parsedEchoValEl.value = '';
+
+      updateBadge(holterBadge, false);
+      updateBadge(tcdBadge, false);
+      updateBadge(echoBadge, false);
+
+      assembleFinalOutput();
+    });
+
+    // 複製文字功能
+    btnCopyAll.addEventListener('click', () => {
+      const text = finalOutputEl.value;
+      if (!text.trim()) return;
+
+      finalOutputEl.select();
+      finalOutputEl.setSelectionRange(0, 99999);
+
+      let success = false;
+      try {
+        success = document.execCommand('copy');
+      } catch (err) {
+        success = false;
+      }
+
+      if (!success && navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          showToast();
+        }).catch(() => {});
+      } else if (success) {
+        showToast();
+      }
+    });
+
+    function showToast() {
+      copyToast.classList.remove('hidden');
+      copyToast.classList.add('flex');
+      setTimeout(() => {
+        copyToast.classList.add('hidden');
+        copyToast.classList.remove('flex');
+      }, 3500);
+    }
+
+    // 初始化空白排版
+    window.onload = function () {
+      assembleFinalOutput();
+    };
+  </script>
+</body>
+</html>
